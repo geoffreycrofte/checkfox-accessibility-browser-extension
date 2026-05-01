@@ -1,0 +1,19 @@
+{
+  "name": "checkfox-browser-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && vite build --config vite.config.content.js",
+    "dev": "concurrently \"vite build --watch\" \"vite build --config vite.config.content.js --watch\"",
+    "generate-icons": "node scripts/generate-icons.js",
+    "mapping:coverage": "node src/mapping/coverage.js"
+  },
+  "dependencies": {
+    "axe-core": "^4.10.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0",
+    "vite": "^8.0.10"
+  }
+}

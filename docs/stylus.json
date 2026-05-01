@@ -1,0 +1,712 @@
+[
+  {
+    "settings": {
+      "disableAll": false,
+      "exposeIframes": false,
+      "exposeStyleName": false,
+      "keepAlive": 0,
+      "keepAliveIdle": false,
+      "newStyleAsUsercss": false,
+      "openEditInWindow": true,
+      "openEditInWindow.popup": false,
+      "patchCsp": false,
+      "show-badge": true,
+      "styleViaASS": false,
+      "styleViaXhr": false,
+      "urlInstaller": true,
+      "windowPosition": {
+        "height": 1059,
+        "left": 667,
+        "top": 38,
+        "width": 1708
+      },
+      "compactWidth": 850,
+      "config.autosave": true,
+      "schemeSwitcher.enabled": "system",
+      "schemeSwitcher.nightStart": "18:00",
+      "schemeSwitcher.nightEnd": "06:00",
+      "popup.enabledFirst": true,
+      "popup.stylesFirst": true,
+      "popup.autoResort": false,
+      "popup.borders": false,
+      "popup.findSort": "u",
+      "manage.onlyEnabled": false,
+      "manage.onlyLocal": false,
+      "manage.onlyUsercss": false,
+      "manage.onlyEnabled.invert": false,
+      "manage.onlyLocal.invert": false,
+      "manage.onlyUsercss.invert": false,
+      "manage.actions.expanded": true,
+      "manage.backup.expanded": true,
+      "manage.filters.expanded": false,
+      "manage.links.expanded": true,
+      "manage.minColumnWidth": 750,
+      "manage.newUI": true,
+      "manage.newUI.favicons": true,
+      "manage.newUI.faviconsGray": true,
+      "manage.newUI.targets": 3,
+      "manage.newUI.sort": "title,asc",
+      "manage.searchMode": "meta",
+      "editor.options": {},
+      "editor.toc.expanded": true,
+      "editor.options.expanded": true,
+      "editor.options.style.expanded": true,
+      "editor.lint.expanded": false,
+      "editor.publish.expanded": true,
+      "editor.lineWrapping": true,
+      "editor.smartIndent": true,
+      "editor.indentWithTabs": false,
+      "editor.tabSize": 4,
+      "editor.keyMap": "default",
+      "editor.theme": "default",
+      "editor.beautify": {
+        "end_with_newline": false,
+        "indent_conditional": true,
+        "newline_after_open_brace": true,
+        "newline_before_close_brace": true,
+        "newline_before_open_brace": false,
+        "newline_between_properties": true,
+        "newline_between_rules": false,
+        "preserve_newlines": true,
+        "selector_separator_newline": true
+      },
+      "editor.beautify.hotkey": "",
+      "editor.lintDelay": 300,
+      "editor.linter": "csslint",
+      "editor.lintReportDelay": 500,
+      "editor.matchHighlight": "token",
+      "editor.autoCloseBrackets": false,
+      "editor.autocompleteOnTyping": false,
+      "editor.contextDelete": true,
+      "editor.selectByTokens": true,
+      "editor.arrowKeysTraverse": true,
+      "editor.appliesToLineWidget": true,
+      "editor.autosaveDraft": 10,
+      "editor.livePreview": false,
+      "editor.livePreview.delay": 0.2,
+      "editor.targetsFirst": true,
+      "editor.colorpicker": true,
+      "editor.colorpicker.hexUppercase": false,
+      "editor.colorpicker.hotkey": "",
+      "editor.colorpicker.color": "#333",
+      "editor.colorpicker.maxHeight": 0,
+      "hotkey._execute_browser_action": "",
+      "hotkey.openManage": "",
+      "hotkey.styleDisableAll": "",
+      "sync.enabled": "none",
+      "iconset": 0,
+      "badgeDisabled": "#8B0000",
+      "badgeNormal": "#006666",
+      "headerWidth.edit": 280,
+      "headerWidth.install": 280,
+      "headerWidth.manage": 280,
+      "popup.search.globals": false,
+      "popupWidth": 246,
+      "popupWidthMax": 280,
+      "updateInterval": 24,
+      "updateOnlyEnabled": false
+    },
+    "order": {
+      "main": [],
+      "prio": []
+    }
+  },
+  {
+    "enabled": false,
+    "installDate": 1724506521757,
+    "name": "app.atticus.io",
+    "sections": [
+      {
+        "code": ".editor-textarea {\n    max-width: 6.5in;\n    margin: 0 auto;\n}\n\n.ant-layout-sider._left {\n    width: 420px !important;\n    max-width: 420px !important;\n    flex-basis: 320px !important;\n}",
+        "domains": [
+          "app.atticus.io"
+        ]
+      }
+    ],
+    "updateDate": 1725625482086,
+    "_id": "b7ce5ad0-d661-4b8a-b7b0-ba42994d1e4b",
+    "_rev": 1777666438720,
+    "id": 1
+  },
+  {
+    "enabled": false,
+    "installDate": 1737730619228,
+    "name": "dropbox.com",
+    "sections": [
+      {
+        "code": "[class^=\"_railButtonLabel_\"] {\n    text-wrap: nowrap!important;\n}",
+        "domains": [
+          "dropbox.com"
+        ]
+      }
+    ],
+    "updateDate": 1737730619228,
+    "_id": "3e05842e-d637-4e6f-9c15-cf0837cfae0b",
+    "_rev": 1777666439753,
+    "id": 2
+  },
+  {
+    "enabled": true,
+    "installDate": 1579328595422,
+    "name": "10.12.Text spacing",
+    "sections": [
+      {
+        "code": "* {\n    line-height: 1.5em !important;\n    letter-spacing: 0.12em !important;\n    word-spacing: 0.16em !important;\n}\np {\n    margin-bottom: 2em !important;\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1648441998720,
+    "id": 3,
+    "_id": "2b949e5a-1781-4be6-a3e7-ec70637db02e",
+    "_rev": 1777666933163
+  },
+  {
+    "enabled": true,
+    "installDate": 1579329196149,
+    "name": "10.08.Textes cachés",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[hidden],\n[aria-hidden=\"true\"] {\n\n    border: 2px solid red!important;\n    background: yellow!important;\n}\n\n[hidden]:before,\n[aria-hidden=\"true\"]:before {\n    display: block!important;\n    font-weight: bold!important;\n    font-size: 100%!important;\n    font-size: 1rem!important;\n}\n\n[hidden]:before {\n    content: 'hidden';\n}\n\n[aria-hidden=\"true\"]:before {\n    content: 'aria-hidden=\"'attr(aria-hidden)'\"'!important;\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1642408462000,
+    "id": 4,
+    "_id": "c4aa1ba6-9037-41d5-bc4d-0258b2f41d7b",
+    "_rev": 1777666932279
+  },
+  {
+    "enabled": true,
+    "installDate": 1579329724750,
+    "name": "06.Liens",
+    "sections": [
+      {
+        "code": "* {\n        box-sizing: border-box!important;\n    }\n\n    [role=\"img\"],\n    img,\n    svg,\n    area,\n    object[type=\"image\"],\n    canvas,\n    embed[type=\"image\"] {\n        max-width: 150px;\n        height: auto;\n        margin-bottom:30px\n    }\n\n    a[href],\n    a[tabindex=\"0\"],\n    a[role=\"link\"]{\n        display: inline-block!important;\n        padding: 10px!important;\n        outline: solid 5px blue!important;\n    }\n\n    a[onclick],\n    a[href^=\"javascript\"],\n    a[href=\"\"],\n    a[href=\"#\"],\n    a:not([href]),\n    a[role] {\n        display: inline-block!important;\n        padding: 10px!important;\n        outline: dashed 3px #962E3F!important;\n    }\n\n    a[tabindex=\"-1\"]{\n        display: inline-block!important;\n        padding: 10px!important;\n        outline: solid 5px orange!important;\n    }\n\n    a[role=\"link\"],\n    [role=\"link\"] {\n        display: inline-block!important;\n        padding: 10px!important;\n        outline: solid 5px blue!important;\n    }\n\n    a [role=\"img\"],\n    a img,\n    a svg,\n    a area,\n    a object[type=\"image\"],\n    a canvas,\n    a embed[type=\"image\"],\n    [role=\"link\"] [role=\"img\"],\n    [role=\"link\"] img,\n    [role=\"link\"] svg,\n    [role=\"link\"] area,\n    [role=\"link\"] object[type=\"image\"],\n    [role=\"link\"] canvas,\n    [role=\"link\"] embed[type=\"image\"] {\n        outline: solid 2px #962E3F!important;\n    }\n\n    a[role]:before,\n    [role=\"link\"]:before{\n        content: 'role=\"'attr(role)'\"'!important;  \n        display: block;\n        font-weight: bold;\n        color: black;\n    }\n\n    a[aria-label]:before,\n    [role=\"link\"][aria-label]:before {\n        content: 'aria-label=\"'attr(aria-label)'\" '!important;\n        color: #000!important;\n        text-decoration: none!important;\n        display: block;\n    }\n\n    a[aria-labelledby]:before,\n    [role=\"link\"][aria-labelledby]:before {\n        content: 'aria-labelledby=\"'attr(aria-labelledby)'\" '!important;\n        color: #000!important;\n        text-decoration: none!important;\n        display: block;\n    }\n\n    a[aria-describedby]:before,\n    [role=\"link\"][aria-describedby]:before {\n        content: 'aria-describedby=\"'attr(aria-describedby)'\" '!important;\n        color: #000!important;\n        text-decoration: none!important;\n        display: block;\n    }\n\n    a *[aria-hidden=\"true\"],\n    a *[hidden],\n    [role=\"link\"] *[aria-hidden=\"true\"],\n    [role=\"link\"] *[hidden]{\n        outline: 3px solid #962E3F;\n        padding: 2px;\n        display: block;\n    }\n\n    a *[aria-hidden=\"true\"]:before,\n    [role=\"link\"] *[aria-hidden=\"true\"]:before{\n        content: 'aria-hidden=\"true\" ';\n        display: block;\n        background: #962E3F;\n        color: white;\n        font-weight: bold;\n    }\n\n    a *[hidden=\"true\"]:before,\n    [aria-hidden=\"true\"] *[hidden=\"true\"]:before{\n        content: 'hidden=\"true\" ';\n        display: block;\n        background: #962E3F;\n        color: white;\n        font-weight: bold;\n    }",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1659086361539,
+    "id": 5,
+    "_id": "4354b5f4-da3f-4e18-895e-3dedb5cad74b",
+    "_rev": 1777666915813
+  },
+  {
+    "enabled": true,
+    "installDate": 1579329990637,
+    "name": "08.09.Detournement de balises",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\nblockquote,\nq {\n    border: 3px solid red!important;\n}\n\nblockquote:before {\n    content: \"<blockquote> \"!important;\n}\n\nq:before {\n    content: \"<q> \"!important;\n}\n\na,p,label,\nul,\nol,\nli,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\n[role=\"heading\"],\n[role=\"list\"],\n[role=\"listitem\"] {\n    border: 3px solid green!important;\n}\n\n/** on recherche les balises dont on a changé la sémantique**/\nul[role],\nli[role],\nol[role],\np[role],\nh1[role],\nh2[role],\nh3[role],\nh4[role],\nh5[role],\nh6[role]{\n    border: 3px solid red!important;\n}\n\np:before {\n    content: \"<p> \"!important;\n}\n\np[role]:before {\n    content: '<p role=\"'attr(role)'\"> '!important;\n}\n\nul:before {\n    content: \"<ul>\"!important;\n}\n\n[role=\"list\"]:before {\n    content: \"role='list'\"!important;\n}\n\nul[role]:before {\n    content: '<ul role=\"'attr(role)'\"> '!important;\n}\n\nli:before {\n    content: \"<li> \"!important;\n}\n\n[role=\"listitem\"]:before {\n    content: \"role='listitem' \"!important;\n}\n\nli[role]:before {\n    content: '<li role=\"'attr(role)'\"> '!important;\n}\n\nol:before {\n    content: \"<ol> \"!important;\n}\n\nol[role]:before {\n    content: '<ol role=\"'attr(role)'\"> '!important;\n}\n\nh1:before,\nh2:before,\nh3:before,\nh4:before,\nh5:before,\nh6:before,\n[role=\"heading\"]:before {\n    content: \"hn \"!important;\n}\n\nh1[role]:before,\nh2[role]:before,\nh3[role]:before,\nh4[role]:before,\nh5[role]:before,\nh6[role]:before{\n    content: '<hx avec role=\"'attr(role)'\"> '!important;\n}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1649690538460,
+    "id": 6,
+    "_id": "bb040473-2d23-4a37-a522-a6b3bb919b35",
+    "_rev": 1777666920271
+  },
+  {
+    "enabled": true,
+    "installDate": 1579330085747,
+    "name": "10.01.Attributs et balises de mise en forme",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[role=\"img\"],\nimg,\nsvg,\narea,\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n    max-width: 150px;\n    height: auto;\n    margin-bottom:30px\n}\n\nhtml {\n    padding-left: 240px;\n    counter-reset: presentation attrwidth elbasefont elblink elcenter elfont elmarquee els elstrike eltt elbig attralign attralink attrbackground attrbgcolor attrborder attrcellpadding attrcellspacing attrchar attrcharoff attrclear attrcompact attrcolor attrframeborder attrheight attrhspace attrlink attrmarginheight  attrmarginwidth attrtext attrvalign attrvlink attrvspace attrsize;\n}\n\nbasefont,\nblink,\ncenter,\nfont,\nmarquee,\ns,\nstrike,\ntt,\nbig,\n[align],\n[alink],\n[background],\n[bgcolor],\n[border],\n[cellpadding],\n[cellspacing],\n[char],\n[charoff],\n[clear],\n[compact],\nfont[color],\nbasefont[color],\nhr[color],\n[frameborder],\n[hspace],\n[link],\n[marginheight],\n[marginwidth],\n[text],\n[valign],\n[vlink],\n[vspace],\n[size],\n[width]:not(img):not(svg):not(canvas):not(object):not(embed),\n[height]:not(img):not(svg):not(canvas):not(object):not(embed){\n    display: block!important;\n    border: 10px solid red;\n}\n\nbasefont { \n    counter-increment: elbasefont presentation;\n}\nbasefont:before {\n    content: \"<basefont>\"!important;\n\n}\nblink {\n    counter-increment: elblink presentation;\n}\nblink:before {\n    content: \"<blink>\"!important;\n}\ncenter {\n    counter-increment: elcenter presentation;\n}\ncenter:before {\n    content: \"<center>\"!important;\n}\nfont {\n    counter-increment: elfont presentation;\n}  \nfont:before {\n    content: \"<font>\"!important;\n}\nmarquee {\n    counter-increment: elmarquee presentation;\n}\nmarquee:before {\n    content: \"<marquee>\"!important;\n}\ns {\n    counter-increment: els presentation;\n}\ns:before {\n    content: \"<s>\"!important;\n}\nstrike {\n    counter-increment: elstrike presentation;\n}\nstrike:before {\n    content: \"<strike>\"!important;\n}\ntt {\n    counter-increment: eltt presentation;\n}\ntt:before {\n    content: \"<tt>\"!important;\n}\nbig {\n    counter-increment: elbig presentation;\n}\nbig:before {\n    content: \"<big>\"!important;\n}\n[align] {\n    counter-increment: attralign presentation;\n}\n[align]:before {\n    content: \"[attr:align]\"!important;\n}\n[alink] {\n    counter-increment: attralink presentation;\n}\n[alink]:before {\n    content: \"[attr:alink]\"!important;\n}\n[background] {\n    counter-increment: attrbackground presentation;\n}\n[background]:before {\n    content: \"[attr:background]\"!important;\n}\n[bgcolor] {\n    counter-increment: attrbgcolor presentation;\n}\n[bgcolor]:before {\n    content: \"[attr:bgcolor]\"!important;\n}\n[border]{\n    counter-increment: attrborder presentation;\n}\n[border]:before {\n    content: \"[attr:border]\"!important;\n}\n[cellpadding] {\n    counter-increment: attrcellpadding presentation;\n}\n[cellpadding]:before {\n    content: \"[attr:cellpadding]\"!important;\n}\n[cellspacing]{\n    counter-increment: attrcellspacing presentation;\n}\n[cellspacing]:before {\n    content: \"[attr:cellspacing]\"!important;\n}\n[char] {\n    counter-increment: attrchar presentation;\n}\n[char]:before {\n    content: \"[attr:char]\"!important;\n}\n[charoff] {\n    counter-increment: attrcharoff presentation;\n}\n[charoff]:before {\n    content: \"[attr:charoff]\"!important;\n}\n[clear] {\n    counter-increment: attrclear presentation;\n}\n[clear]:before {\n    content: \"[attr:clear]\"!important;\n}\n[compact] {\n    counter-increment: attrcompact presentation;\n}\n[compact]:before {\n    content: \"[attr:compact]\"!important;\n}\nfont[color]:before {\n    counter-increment: attrcolor presentation;\n}\nfont[color]:before {\n    content: \"[attr:color]\"!important;\n}\nbasefont[color]:before {\n    counter-increment: attrcolor presentation;\n}\nbasefont[color]:before {\n    content: \"[attr:color]\"!important;\n}\n\nhr[color] {\n    counter-increment: attrcolor presentation;\n}\n\nhr[color]:before {\n    content: \"[attr:color]\"!important;\n}\n[frameborder] {\n    counter-increment: attrframeborder presentation;\n}\n[frameborder]:before {\n    content: \"[attr:frameborder]\"!important;\n}\n[height]:not(img):not(svg):not(canvas):not(object):not(embed) {\n    counter-increment: attrheight presentation;\n}\n\n[height]:not(img):not(svg):not(canvas):not(object):not(embed):before {\n    content: \"[attr:height]\"!important;\n}\n[hspace] {\n    counter-increment: attrhspace presentation;\n}\n[hspace]:before {\n    content: \"[attr:hspace]\"!important;\n}\n[link]{\n    counter-increment: attrlink presentation;\n}\n[link]:before {\n    content: \"[attr:link]\"!important;\n}\n[marginheight] {\n    counter-increment: attrmarginheight presentation;\n}\n[marginheight]:before {\n    content: \"[attr:marginheight]\"!important;\n}\n[marginwidth]{\n    counter-increment: attrmarginwidth presentation;\n}\n\n[marginwidth]:before {\n    content: \"[attr:marginwidth]\"!important;\n}\n[text] {\n    counter-increment: attrtext presentation;\n}\n[text]:before {\n    content: \"[attr:text]\"!important;\n}\n[valign]{\n    counter-increment: attrvalign presentation;\n}\n[valign]:before {\n    content: \"[attr:valign]\"!important;\n}\n[vlink]{\n    counter-increment: attrvlink presentation;\n}\n[vlink]:before {\n    content: \"[attr:vlink]\"!important;\n}\n[vspace] {\n    counter-increment: attrvspace presentation;\n}\n[vspace]:before {\n    content: \"[attr:vspace]\"!important;\n}\n\n[size]{\n    counter-increment: attrsize presentation;\n}\n[size]:before {\n    content: \"[attr:size]\"!important;\n}\n[width]:not(img):not(svg):not(canvas):not(object):not(embed) {\n    counter-increment: attrwidth presentation;\n}\n[width]:not(img):not(svg):not(canvas):not(object):not(embed):before {\n    content: \"[attr:width]\"!important;\n}\n\n\nhtml::after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 12em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"au moins \" counter(presentation) \" \\A attributs ou balises \\A de présentation \\A\\A • <basefont>: \" counter(elbasefont) \" \\A • <blink>: \" counter(elblink) \" \\A • <center>: \" counter(elcenter) \" \\A • <font>: \" counter(elfont) \" \\A • <marquee>: \" counter(elmarquee) \" \\A • <s>: \" counter(els) \" \\A • <strike>: \" counter(elstrike) \" \\A • <tt>: \" counter(eltt) \" \\A • <big>: \" counter(elbig) \" \\A • align: \" counter(attralign) \" \\A • alink: \" counter(attralink) \" \\A • background: \" counter(attrbackground) \" \\A • bgcolor: \" counter(attrbgcolor) \" \\A • border: \" counter(attrborder) \"  \\A • cellpadding: \" counter(attrcellpadding) \" \\A • cellspacing: \" counter(attrcellspacing) \" \\A • char: \" counter(attrchar) \" \\A • charoff: \" counter(attrcharoff) \"  \\A • clear: \" counter(attrclear) \" \\A • compact: \" counter(attrcompact) \" \\A • color: \" counter(attrcolor) \" \\A • frameborder: \" counter(attrframeborder) \" \\A • align: \" counter(attralign) \" \\A • height: \" counter(attrheight) \" \\A • hspace: \" counter(attrhspace) \" \\A • link: \" counter(attrlink) \" \\A • marginheight: \" counter(attrmarginheight) \" \\A • marginwidth: \" counter(attrmarginwidth) \" \\A • text: \" counter(attrtext) \" \\A • valign: \" counter(attrvalign) \" \\A • vlink: \" counter(attrvlink) \" \\A • vspace: \" counter(attrvspace) \" \\A • size: \" counter(attrsize) \" \\A • width: \" counter(attrwidth)\n} ",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:"
+        ]
+      }
+    ],
+    "updateDate": 1741791099489,
+    "id": 7,
+    "_id": "d96730b2-5a85-491f-b8a1-c81b9f5fee24",
+    "_rev": 1777666926012
+  },
+  {
+    "enabled": true,
+    "installDate": 1580720741026,
+    "name": "08.07.Langue",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n:not(html)[lang]:before {\n    display: block;\n    content: \"Indication de langue : \"attr(lang)\"\";\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: green;\n}\n\n:not(html)[lang] {\n    display: inline-block;\n    outline: solid 10px green!important;\n}\n\n\n:not(html)[lang]:before {\n    counter-increment: thematique8-lang;\n}\n\n\nhtml {\n    padding-left: 200px;\n    counter-reset: thematique8-lang;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(thematique8-lang) \" indications\\A de langue \"\n       \n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1657877210414,
+    "id": 9,
+    "_id": "b99c6341-367c-4498-bdca-4ef15463c674",
+    "_rev": 1777666919679
+  },
+  {
+    "enabled": true,
+    "installDate": 1580721540703,
+    "name": "09.02.Structure",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\nheader,\nnav,\nmain,\nfooter {\n    display: block!important;\n    padding: 0 0 20px 0;\n    margin: 20px;\n}\n\nheader:before,\nnav:before,\nmain:before,\nfooter:before {\n    display: block;\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n}\n\nheader:before {\n    background: red;\n}\n\nmain:before {\n    background: blue;\n}\n\nnav:before {\n    background: yellow;\n    color: #000!important;\n}\n\nfooter:before {\n    background: purple;\n}\n\nheader {\n    outline: solid 10px red!important;\n    counter-increment: header;\n}\n\nheader:before {\n    content: '<header role=\"'attr(role)'\">'!important;\n}\n\nnav {\n    outline: solid 10px yellow!important;\n    counter-increment: nav;\n}\n\nnav:before {\n    content: '<nav role=\"'attr(role)'\" aria-label=\"'attr(aria-label)'\">'!important;\n}\n\nmain {\n    outline: solid 10px blue!important;\n    counter-increment: main;\n}\nmain:before {\n    content: '<main role=\"'attr(role)'\">'!important;\n}\n\n\nfooter {\n    outline: solid 10px purple!important;\n    counter-increment: footer;\n}\nfooter:before {\n    content: '<footer role=\"'attr(role)'\">'!important;\n}\n\nhtml {\n    padding-left: 200px;\n    counter-reset: nav header main footer;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(nav) \" nav\\A\" \"\" counter(header) \" header\\A\" \"\" counter(main) \" main\\A\" \"\" counter(footer) \" footer\\A\"\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1628083354850,
+    "id": 10,
+    "_id": "35cdc19d-6675-4a71-9698-76cf599395ce",
+    "_rev": 1777666923712
+  },
+  {
+    "enabled": true,
+    "installDate": 1580723715684,
+    "name": "12.06.Landmarks",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[role=\"main\"],\n[role=\"banner\"],\n[role=\"search\"],\n[role=\"navigation\"],\n[role=\"contentinfo\"],\nheader,\nnav,\nfooter,\nmain {\n    display: block!important;\n    padding: 0 0 20px 0;\n    margin: 20px;\n}\n\n\n[role=\"main\"]:before,\n[role=\"banner\"]:before,\n[role=\"search\"]:before,\n[role=\"navigation\"]:before,\n[role=\"contentinfo\"]:before,\nheader:before,\nnav:before,\nfooter:before,\nmain:before {\n    display: block;\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: green;\n}\n\n/**banner**/\n[role=\"banner\"] {\n    outline: solid 10px purple!important;\n    counter-increment: banner;\n}\n\n[role=\"banner\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\nheader:before {\n    content: '<header ?!>'!important;\n}\n\nheader[role=\"banner\"]:before {\n    content: '<header role=\"'attr(role)'\">'!important;\n}\n\n/**search**/\n[role=\"search\"] {\n    outline: solid 10px green!important;\n    counter-increment: search;\n}\n\n[role=\"search\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n/**navigation**/\n[role=\"navigation\"] {\n    outline: solid 10px blue!important;\n    counter-increment: navigation;\n}\n\n[role=\"navigation\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\nnav:before {\n    content: '<nav ?!>'!important;\n}\n\nnav[role=\"navigation\"]:before {\n    content: '<nav role=\"'attr(role)'\">'!important;\n}\n\n/**main**/\n[role=\"main\"] {\n    outline: solid 10px purple!important;\n    counter-increment: main;\n}\n\n[role=\"main\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\nmain:before {\n    content: '<main ?!>'!important;\n}\n\nmain[role=\"main\"]:before {\n    content: '<main role=\"'attr(role)'\">'!important;\n}\n\n/**contentinfo**/\n[role=\"contentinfo\"] {\n    outline: solid 10px purple!important;\n    counter-increment: contentinfo;\n}\n\n[role=\"contentinfo\"]:before {\n    content: 'role=\"'attr(role)'\"'!important\n}\n\nfooter:before {\n    content: '<footer ?!>'!important\n}\n\nfooter[role=\"contentinfo\"]:before {\n    content: '<footer role=\"'attr(role)'\">'!important\n}\n\n\nhtml {\n    padding-left: 220px;\n    counter-reset: banner navigation search main contentinfo;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 13em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(banner) \" role='banner'\\A\" \"\" counter(navigation) \" role='navigation'\\A\" \"\" counter(search) \" role='search'\\A\" \"\" counter(main) \" role='main'\\A\" \"\" counter(contentinfo) \" role='contentinfo'\\A\"\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1640153022112,
+    "id": 11,
+    "_id": "6ce4d2a2-1fde-493c-8c72-3c1bb7c24ad9",
+    "_rev": 1777666936979
+  },
+  {
+    "enabled": true,
+    "installDate": 1583771538791,
+    "name": "07.ARIA role state properties",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[role]:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"]){\n    margin: 0.5em 0!important;\n    padding: 0 0.5em!important;\n    border: 2px solid red!important;\n}\n\n[aria-activedescendant],\n[aria-autocomplete],\n[aria-busy],\n[aria-checked],\n[aria-colcount],\n[aria-colindex],\n[aria-colspan],\n[aria-controls],\n[aria-current],\n[aria-describedby],\n[aria-details],\n[aria-disabled],\n[aria-dropeffect],\n[aria-errormessage],\n[aria-expanded],\n[aria-flowto],\n[aria-grabbed],\n[aria-haspopup],\n[aria-hidden],\n[aria-invalid],\n[aria-keyshortcuts],\n[aria-label],\n[aria-labelledby],\n[aria-modal],\n[aria-multiline],\n[aria-multiselectable],\n[aria-orientation],\n[aria-owns],\n[aria-placeholder],\n[aria-posinset],\n[aria-pressed],\n[aria-relevant],\n[aria-readonly],\n[aria-required],\n[aria-roledescription],\n[aria-rowcount],\n[aria-rowindex],\n[aria-rowspan],\n[aria-selected],\n[aria-setsize],\n[aria-sort],\n[aria-valuemax],\n[aria-valuemin],\n[aria-valuenow],\n[aria-valuetext] {\n    margin: 0.5em 0!important;\n    padding: 0 0.5em!important;\n    border: 2px solid green!important;\n}\n\n[aria-activedescendant]:before,\n[aria-atomic]:before,\n[aria-autocomplete]:before,\n[aria-busy]:before,\n[aria-checked]:before,\n[aria-colcount]:before,\n[aria-colindex]:before,\n[aria-colspan]:before,\n[aria-controls]:before,\n[aria-current]:before,\n[aria-describedby]:before,\n[aria-details]:before,\n[aria-disabled]:before,\n[aria-dropeffect]:before,\n[aria-errormessage]:before,\n[aria-expanded]:before,\n[aria-flowto]:before,\n[aria-grabbed]:before,\n[aria-haspopup]:before,\n[aria-hidden]:before,\n[aria-invalid]:before,\n[aria-keyshortcuts]:before,\n[aria-label]:before,\n[aria-labelledby]:before,\n[aria-live]:before,\n[aria-modal]:before,\n[aria-multiline]:before,\n[aria-multiselectable]:before,\n[aria-orientation]:before,\n[aria-owns]:before,\n[aria-placeholder]:before,\n[aria-posinset]:before,\n[aria-pressed]:before,\n[aria-relevant]:before,\n[aria-readonly]:before,\n[aria-required]:before,\n[aria-roledescription]:before,\n[aria-rowcount]:before,\n[aria-rowindex]:before,\n[aria-rowspan]:before,\n[aria-selected]:before,\n[aria-setsize]:before,\n[aria-sort]:before,\n[aria-valuemax]:before,\n[aria-valuemin]:before,\n[aria-valuenow]:before,\n[aria-valuetext]:before {\n    content: \"aria properties\"!important;\n}\n\n[role]:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"]):before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"])[aria-label]:before {\n    content: 'aria-label=\"'attr(aria-label)'\"'!important;\n}\n[role]:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"])[aria-label]:before {\n    content: 'role=\"'attr(role)'\" aria-label=\"'attr(aria-label)'\"'!important;\n}\n:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"])[aria-labelledby]:before {\n    content: 'aria-labelledby=\"'attr(aria-labelledby)'\"'!important;\n}\n[role]:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"])[aria-labelledby]:before {\n    content: 'role=\"'attr(role)'\" aria-labelledby=\"'attr(aria-labelledby)'\"'!important;\n}\n:not:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"]):before {\n    content: 'aria-describedby=\"'attr(aria-describedby)'\"'!important;\n}\n[role]:not([role=\"navigation\"],[role=\"main\"],[role=\"banner\"],[role=\"contentinfo\"],[role=\"search\"],[role=\"heading\"],[role=\"img\"],[role=\"alert\"],[role=\"log\"],[role=\"status\"],[role=\"progressbar\"])[aria-describedby]:before {\n    content: 'role=\"'attr(role)'\" aria-describedby=\"'attr(aria-describedby)'\"'!important;\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652673922846,
+    "_id": "f82aa9fd-7e56-4509-b445-b76770313bda",
+    "_rev": 1777666918446,
+    "id": 12
+  },
+  {
+    "enabled": true,
+    "installDate": 1583831045927,
+    "name": "08.10.Direction",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n:not(html)[dir]:before {\n    display: block;\n    content: \"Indication de direction : \"attr(dir)\"\";\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: green;\n}\n\n:not(html)[dir] {\n    display: inline-block;\n    outline: solid 10px green!important;\n}\n\n\n:not(html)[dir]:before {\n    counter-increment: thematique8-dir;\n}\n\n\nhtml {\n    padding-left: 200px;\n    counter-reset: thematique8-dir;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(thematique8-dir) \" indications\\A de direction \"\n       \n}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1657877316943,
+    "_id": "6b6b7545-084c-4b8c-b29b-0bc41787583f",
+    "_rev": 1777666921329,
+    "id": 13
+  },
+  {
+    "enabled": true,
+    "installDate": 1583834622085,
+    "name": "13.Documents bureautiques",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\na[href$=\".doc\"],\na[href$=\".docx\"],\na[href$=\".xls\"],\na[href$=\".xlsx\"],\na[href$=\".ppt\"],\na[href$=\".pptx\"],\na[href$=\".odt\"],\na[href$=\".ods\"],\na[href$=\".pdf\"] {\n    display: block!important;\n    margin-bottom: 3px!important;\n    outline: 5px solid red!important;\n}\n\n[href$=\".doc\"] {counter-increment: doc;}\n[href$=\".docx\"]{counter-increment: docx;}\n[href$=\".xls\"] {counter-increment: xls;}\n[href$=\".xlsx\"] {counter-increment: xlsx;}\n[href$=\".ppt\"] {counter-increment: ppt;}\n[href$=\".pptx\"] {counter-increment: pptx;}\n[href$=\".odt\"] {counter-increment: odt;}\n[href$=\".ods\"] {counter-increment: ods;}\n[href$=\".pdf\"] {counter-increment: pdf;}\n\n\nhtml {\n    padding-left: 200px;\n    counter-reset:  \n                    doc\n                    docx\n                    xls\n                    xlsx\n                    ppt\n                    pptx\n                    odt\n                    ods\n                    pdf;\n}\n\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \n\t\t\t\"\" counter(doc) \" doc\\A\"\n            \"\" counter(docx) \" docx\\A\"\n\t\t\t\"\" counter(xls) \" xls\\A\"\n\t\t\t\"\" counter(xlsx) \" xlsx\\A\"\n\t\t\t\"\" counter(ppt) \" ppt\\A\"\n\t\t\t\"\" counter(pptx) \" pptx\\A\"\n\t\t\t\"\" counter(odt) \" odt\\A\"\n\t\t\t\"\" counter(ods) \" ods\\A\"\n\t\t\t\"\" counter(pdf) \" pdf\\A\"\n}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652675094167,
+    "_id": "8e18b1e3-029f-435e-a816-348962d81e84",
+    "_rev": 1777667032619,
+    "id": 14
+  },
+  {
+    "enabled": true,
+    "installDate": 1584428872377,
+    "name": "10.07.Focus",
+    "sections": [
+      {
+        "code": "body *:focus{outline:5px solid orange!important}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1657716187770,
+    "_id": "2c96453a-6beb-45e6-b5f9-748dcc949e87",
+    "_rev": 1777666928655,
+    "id": 15
+  },
+  {
+    "enabled": false,
+    "installDate": 1584681177191,
+    "name": "Reduction images",
+    "sections": [
+      {
+        "code": "[role=\"img\"],\nimg,\nsvg,\narea,\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n    max-width: 150px;\n    height: auto;\n    margin-bottom:60px\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1652068745049,
+    "_id": "3e7e9349-bc76-479a-a60d-f37c37035551",
+    "_rev": 1741256804106,
+    "id": 16
+  },
+  {
+    "enabled": false,
+    "installDate": 1584681636615,
+    "name": "02.Cadres",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\nframe,\niframe {\n    display: block!important;\n    padding:0 0 20px 0;\n    margin:20px;\n}\n\nframe {\n    outline: solid 10px red!important;\n    counter-increment: frame;\n}\n\n\niframe {\n    outline: solid 10px yellow!important;\n    counter-increment: iframe;\n}\n\n\nhtml {\n    padding-left: 200px;\n    counter-reset:  \n                    frame\n                    iframe;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \n\t\t\t\"\" counter(frame) \" frame\\A\"\n            \"\" counter(iframe) \" iframe\\A\"\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1649865907106,
+    "_id": "a63749e2-d7f7-4c44-a0e7-ce9527c17612",
+    "_rev": 1776950711099,
+    "id": 17
+  },
+  {
+    "enabled": true,
+    "installDate": 1584684001006,
+    "name": "09.01.Titres",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\n[role=\"heading\"],\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n    display: block!important;\n    padding: 0 0 20px 0;\n    margin: 20px;\n}\n\n\n[role=\"heading\"]:before,\nh1:before,\nh2:before,\nh3:before,\nh4:before,\nh5:before,\nh6:before {\n    display: block;\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: green;\n}\n\nh1[role]:before,\nh2[role]:before,\nh3[role]:before,\nh4[role]:before,\nh5[role]:before,\nh6[role]:before {\n    background: red;\n}\n\n[role=\"heading\"] {\n    border: 5px solid orange;\n    counter-increment: roleheading;\n}\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n    border: 5px solid green;\n    counter-increment: heading;\n}\n\n\nh1:before {\n    content: \"<h1>\";\n}\nh2:before {\n    content: \"<h2>\";\n}\nh3:before {\n    content: \"<h3>\";\n}\nh4:before {\n    content: \"<h4>\";\n}\nh5:before {\n    content: \"<h5>\";\n}\nh6:before {\n    content: \"<h6>\";\n}\n\n[role=\"heading\"]:before {\n    content: \"role='heading' aria-level='\"attr( aria-level)\"'\";\n}\n\n\nh1[role]:before {\n    content: \"<h1 role='\"attr( role)\"'>\";\n}\n\nh2[role]:before {\n    content: \"<h2 role='\"attr( role)\"'>\";\n}\nh3[role]:before {\n    content: \"<h3 role='\"attr( role)\"'>\";\n}\n\nh4[role]:before {\n    content: \"<h4 role='\"attr( role)\"'>\";\n}\n\nh5[role]:before {\n    content: \"<h5 role='\"attr( role)\"'>\";\n}\n\nh6[role]:before {\n    content: \"<h6 role='\"attr( role)\"'>\";\n}\n\nh1[aria-hidden]:before {\n    content: \"<h1 aria-hidden='\"attr(aria-hidden)\"'>\";\n    background:red;\n}\n\nh2[aria-hidden]:before {\n    content: \"<h2 aria-hidden='\"attr(aria-hidden)\"'>\";\n    background:red;\n}\n\nh3[aria-hidden]:before {\n    content: \"<h3 aria-hidden='\"attr(aria-hidden)\"'>\";\n    background:red;\n}\n\nh4[aria-hidden]:before {\n    background:red;\n    content: \"<h4 aria-hidden='\"attr(aria-hidden)\"'>\";\n}\n\nh5[aria-hidden]:before {\n    content: \"<h5 aria-hidden='\"attr(aria-hidden)\"'>\";\n    background:red;\n}\n\nh6[aria-hidden]:before {\n    content: \"<h6 aria-hidden='\"attr(aria-hidden)\"'>\";\n    background:red;\n}\n\nhtml {\n    padding-left: 200px;\n    counter-reset: roleheading heading;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(roleheading) \" role='heading'\\A\" \"\" counter(heading) \" headings\\A\"\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652068721763,
+    "_id": "f5ae6632-f24e-455e-9b8d-28db5cb2cb27",
+    "_rev": 1777666922363,
+    "id": 18
+  },
+  {
+    "enabled": true,
+    "installDate": 1584684581873,
+    "name": "09.03.Listes",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\nul,\nol,\nli,\ndl,\n[role=\"list\"],\n[role=\"listitem\"] {\n    border: 3px solid green!important;\n}\n\nul[role],\nol[role],\nli[role],\ndl[role] {\n    border: 3px solid red!important;\n}\n\nul:before {\n    content: \"<ul>\"!important;\n}\n\n[role=\"list\"]:before {\n    content: \"role='list'\"!important;\n}\n\nul[role]:before {\n    content: '<ul role=\"'attr(role)'\">'!important;\n}\nli:before {\n    content: \"<li>\"!important;\n}\n\n[role=\"listitem\"]:before {\n    content: \"role='listitem'\"!important;\n}\n\nli[role]:before {\n    content: '<li role=\"'attr(role)'\">'!important;\n}\n\nol:before {\n    content: \"<ol>\"!important;\n}\n\nol[role]:before {\n    content: '<ol role=\"'attr(role)'\">'!important;\n}\n\ndl:before {\n    content: \"<dl>\"!important;\n}\n\n\ndl[role]:before {\n    content: '<dl role=\"'attr(role)'\">'!important;\n}\n\nimg, svg{max-width:150px}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1649860910568,
+    "_id": "670c95da-665e-4213-aab9-2055d93bb91f",
+    "_rev": 1777666924455,
+    "id": 19
+  },
+  {
+    "enabled": true,
+    "installDate": 1589375848204,
+    "name": "11.5.Regroupements",
+    "sections": [
+      {
+        "code": "\n    * {\n        box-sizing: border-box;\n    }\n\n    fieldset,\n    legend,\n    [role=\"group\"] {\n        display: block!important;\n    }\n\n    fieldset{\n        border: 5px solid #0B1B34;\n        padding: 0;\n    }\n    fieldset>:first-child:not(legend){\n        border: 5px solid #962E3F;\n    }\n\n    fieldset:after,\n    [role=\"group\"]:after,\n    legend:before {\n        display: block;\n        font-family: sans-serif!important;\n        font-size: 1rem!important;\n        color: #fff!important;\n        background: #0B1B34;\n        padding: 5px;\n        font-family: monospace;\n    }\n\n    legend {\n        background: #fff;\n        width: 100%;\n        color: #0B1B34;\n        border: 2px solid #0B1B34;\n        padding: 0;\n    }\n\n    legend:before {\n        content: '<legend>'!important;\n    }\n    \n    fieldset:after {\n        content: '<fieldset>'!important;\n    }\n\n    fieldset[role] {\n       border: 5px solid #962E3F;\n    }\n    fieldset[role]:after {\n        content: '<fieldset role=\"'attr(role)'\">'!important;\n        background: #962E3F;\n        color: #FFF\n    }\n    fieldset[role=\"group\"] {\n       border: 5px solid #0B1B34;\n    }\n    fieldset[role=\"group\"]:after {\n       background: #0B1B34;\n    }\n\n    legend[role] {\n        border: 2px solid #962E3F;\n    }\n    legend[role]:before {\n        content: '<legend role=\"'attr(role)'\">'!important;\n        background: #962E3F;\n        color: #fff\n    }\n\n    [role=\"group\"] {\n        border: 5px solid #962E3F;\n        padding: 0;\n    }\n    [role=\"group\"][aria-label],\n    [role=\"group\"][aria-labelledby]{\n        border: 5px solid #0B1B34;\n    }\n    [role=\"group\"]:after {\n        content: 'role=\"group\" [PAS DE LÉGENDE]'!important;\n        background: #962E3F\n    }\n    [role=\"group\"][aria-label]:after {\n        content: 'role=\"group\" aria-label=\"'attr(aria-label)'\"'!important;\n        background: #0B1B34\n    }\n    [role=\"group\"][aria-labelledby]:after {\n        content: 'role=\"group\" aria-labelledby=\"'attr(aria-labelledby)'\"'!important;\n        background: #0B1B34\n    }",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1657714740746,
+    "_id": "08f48b9e-7651-4c56-9ad0-52fddd1745a2",
+    "_rev": 1777666935445,
+    "id": 23
+  },
+  {
+    "enabled": true,
+    "installDate": 1589900054263,
+    "name": "11.9.Boutons",
+    "sections": [
+      {
+        "code": "* {\n     box-sizing: border-box;\n    }\n\n    *:before,\n    *:after {\n        display: block!important;\n        background: #0B1B34!important;\n        color: #fff!important;\n        font-size: 100%!important;\n        font-size: 1rem!important;\n        text-transform: initial;\n    }\n\n    button[tabindex=\"-1\"],\n    input[type=\"submit\"][tabindex=\"-1\"],\n    input[type=\"cancel\"][tabindex=\"-1\"],\n    input[type=\"button\"][tabindex=\"-1\"],\n    [role=\"button\"][tabindex=\"-1\"] {\n        outline: solid 5px orange!important;\n    }\n\n    button[role],\n    input[type=\"submit\"][role],\n    input[type=\"cancel\"][role],\n    input[type=\"button\"][role] {\n        display: block!important;\n        padding: 5px!important;\n        outline: solid 5px #962E3F!important;\n    }\n\n    button[role=\"button\"],\n    input[type=\"submit\"],\n    input[type=\"cancel\"],\n    input[type=\"button\"],\n    [role=\"button\"] {\n        display: block!important;\n        padding: 5px!important;\n        outline: solid 5px #0B1B34!important;\n    } \n    \n    button[role=\"button\"] {\n        outline: solid 5px #0B1B34!important;\n    }\n    button:before{\n        content: '<button>'!important;\n    }\n    button[aria-label]:before {\n        content: '<button aria-label=\"'attr(aria-label)'\">'!important;\n    }\n    button[aria-labelledby]:before {\n        content: '<button aria-labelledby=\"'attr(aria-labelledby)'\">'!important;\n    }\n    button[role]:before {\n        content: '<button role=\"'attr(role)'\">'!important;\n        background-color: #962E3F!important;\n    }\n    button[role][aria-labelledby]:before {\n        content: '<button  role=\"'attr(role)'\" aria-labelledby=\"'attr(aria-labelledby)'\">'!important;\n        background-color: #962E3F!important;\n    }\n    button[role][aria-label]:before {\n        content: '<button role=\"'attr(role)'\" aria-label=\"'attr(aria-label)'\">'!important;\n        background-color: #962E3F!important;\n    }\n    button[role=\"button\"]:before {\n        background-color: #0B1B34!important;\n    }\n    button[role=\"button\"][aria-labelledby]:before {\n        content: '<button role=\"button\" aria-labelledby=\"'attr(aria-labelledby)'\">'!important;\n        background-color: #0B1B34!important;\n    }\n    button[role=\"button\"][aria-label]:before {\n        content: '<button role=\"button\" aria-label=\"'attr(aria-label)'\">'!important;\n        background-color: #0B1B34!important;\n    }\n    [role=\"button\"]:before {\n        content: 'role=\"button\"'!important;\n    }\n    [role=\"button\"][aria-label]:before {\n        content: 'role=\"'attr(role)'\" aria-label=\"'attr(aria-label)'\"'!important;\n    }\n    [role=\"button\"][aria-labelledby]:before {\n        content: 'role=\"'attr(role)'\" aria-labelledby=\"'attr(aria-labelledby)'\"'!important;\n    }",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1657722663043,
+    "_id": "6c5299f8-a19e-40af-b6df-f7bcea9f01a4",
+    "_rev": 1777666936229,
+    "id": 24
+  },
+  {
+    "enabled": true,
+    "installDate": 1589961525444,
+    "name": "12.8.Tabindex",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[tabindex]:before {\n    display: block;\n    content: \"tabindex : \"attr(tabindex)\"\";\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: red;\n}\n\n[dir] {\n    display: inline-block;\n    outline: solid 10px green!important;\n}\n\n\n[dir]:before {\n    counter-increment: thematique8-dir;\n}\n\n\nhtml {\n    padding-left: 200px;\n    counter-reset: thematique8-dir;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(thematique8-dir) \" indications\\A de direction \"\n       \n}\n",
+        "urls": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1594148791047,
+    "_id": "92771a2a-d20e-4378-bea5-2193aab4f7b4",
+    "_rev": 1777667031537,
+    "id": 25
+  },
+  {
+    "enabled": true,
+    "installDate": 1594281589370,
+    "name": "12.08. Tabindex",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n*:before,\n*:after {\n    display: block!important;\n    background: #f2f2f2!important;\n    color: #000!important;\n    font-weight: bold!important;\n    font-size: 16px!important;\n}\n\na[tabindex],\n[role=\"link\"][tabindex],\n[role=\"button\"][tabindex],\nbutton[tabindex],\ninput[tabindex],\nselect[tabindex],\ntextarea[tabindex]{display:block;outline:5px #d33500 solid!important}\n\na[tabindex=\"-1\"],\n[role=\"link\"][tabindex=\"-1\"],\n[role=\"button\"][tabindex=\"-1\"],\nbutton[tabindex=\"-1\"],\ninput[tabindex=\"-1\"],\nselect[tabindex=\"-1\"],\ntextarea[tabindex=\"-1\"]{display:block;outline:5px #d33500 dashed!important}\n\n\na[tabindex=\"0\"],\n[role=\"link\"][tabindex=\"0\"],\n[role=\"button\"][tabindex=\"0\"],\nbutton[tabindex=\"0\"],\ninput[tabindex=\"0\"],\nselect[tabindex=\"0\"],\ntextarea[tabindex=\"0\"]{display:block;outline:3px #915e00 dotted!important}\n\n\na[tabindex]:after,\n[role=\"link\"][tabindex]:after,\n[role=\"button\"][tabindex]:after,\nbutton[tabindex]:after,\ninput[tabindex]:after,\nselect[tabindex]:after,\ntextarea[tabindex]:after{\n    content:'tabindex=\"'attr(tabindex)'\"'!important;\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1657889019607,
+    "_id": "482d0b3e-896f-41bd-9d32-0b134e777fa7",
+    "_rev": 1777666937929,
+    "id": 32
+  },
+  {
+    "enabled": true,
+    "installDate": 1607697632848,
+    "name": "10.02 Content in CSS",
+    "sections": [
+      {
+        "code": "*::before,\n*::after {\n    border: 3px blueviolet dashed !important;\n}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652068672594,
+    "_id": "09f580ac-3dc0-4a40-bee5-670e011caa2a",
+    "_rev": 1777666926795,
+    "id": 34
+  },
+  {
+    "enabled": true,
+    "installDate": 1616511526455,
+    "name": "11.1 Étiquettes et champs",
+    "sections": [
+      {
+        "code": "label:not([for]){\n    border: 2px solid yellow;\n}\n\ninput:not([aria-label]):not([title]):not([id]) {\n    border: 2px solid red;\n}",
+        "urlPrefixes": [
+          "http"
+        ]
+      }
+    ],
+    "updateDate": 1628253601038,
+    "_id": "d85265bd-b760-4310-a71d-4452ffcb2423",
+    "_rev": 1777666933896,
+    "id": 35
+  },
+  {
+    "enabled": true,
+    "installDate": 1622642700572,
+    "name": "05. Tableaux",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\n[role=\"table\"]:before,\ntable:before {\n\tdisplay:block;\n    content: \"Tableau\";\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:green;\n    line-height:2em!important;\n    margin-bottom:0.5em\n}\ntable[summary]:before {\n    content: 'Tableau - summary=\"'attr(summary)'\"';\n}\n\n\n[role=\"table\"],\ntable {\n    display: block;\n    outline: solid 10px green!important;\n}\n\n[role=\"table\"],\ntable {\n    counter-increment: thematique5;\n}\n\n[role=\"columnheader\"],\n[role=\"rowheader\"],\nth {\n    outline: solid 5px #a020ad!important;\n    line-height:2em!important;\n    margin-bottom:0.5em\n}\n\n[role=\"columnheader\"]:before,\n[role=\"rowheader\"]:before,\nth:before {\n\tdisplay:block;\n    content: 'th scope=\"'attr(scope)'\"';\n    font-family: sans-serif!important;\n    font-size: 0.75rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:#a020ad;\n}\n\ncaption {\n    display: block;\n    outline: solid 10px #1027d5!important;\n}\n\ncaption:before {\n\tdisplay:block;\n    content: \"caption\";\n    font-family: sans-serif!important;\n    font-size: 0.75rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:#1027d5;\n}\n\nhtml {\n    padding-left: 200px;\n    counter-reset: thematique5;\n}\n\ntable[role]:after {\n       content: '<table role=\"'attr(role)'\">'!important;\n\n}\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(thematique5) \" tableaux\"\n}\n\nhtml {\n    margin-top: 2em\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652674208573,
+    "_id": "b4418d88-088e-4f9f-b99b-f26d18e8785b",
+    "_rev": 1777666915096,
+    "id": 38,
+    "_isUswLinked": true,
+    "tmpSourceCode": "* {\n    box-sizing: border-box;\n}\n\n\n[role=\"table\"]:before,\ntable:before {\n\tdisplay:block;\n    content: \"Tableau\";\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:green;\n}\ntable[summary]:before {\n    content: 'Tableau - summary=\"'attr(summary)'\"';\n}\n\n\n[role=\"table\"],\ntable {\n    display: block;\n    outline: solid 10px green!important;\n}\n\n[role=\"table\"],\ntable {\n    counter-increment: thematique5;\n}\n\n[role=\"columnheader\"],\n[role=\"rowheader\"],\nth {\n    outline: solid 5px #a020ad!important;\n}\n\n[role=\"columnheader\"]:before,\n[role=\"rowheader\"]:before,\nth:before {\n\tdisplay:block;\n    content: \"TH\";\n    font-family: sans-serif!important;\n    font-size: 2rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:#a020ad;\n}\n\ncaption {\n    display: block;\n    outline: solid 10px #1027d5!important;\n}\n\ncaption:before {\n\tdisplay:block;\n    content: \"caption\";\n    font-family: sans-serif!important;\n    font-size: 2rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background:#1027d5;\n}\n\nhtml {\n    padding-left: 200px;\n    counter-reset: thematique5;\n}\n\ntable[role]:after {\n       content: '<table role=\"'attr(role)'\">'!important;\n\n}\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(thematique5) \" tableaux\"\n}\n\nhtml {\n    margin-top: 2em\n}"
+  },
+  {
+    "enabled": true,
+    "installDate": 1628271716988,
+    "name": "09.4 Citations",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n*:before,\n*:after {\n    display: block!important;\n    color: #000!important;\n    font-weight: bold!important;\n    font-size: 100%!important;\n    font-size: 1rem!important;\n}\n\nblockquote,\nq {\n    outline: 3px solid green!important;\n}\n\nblockquote {\n    counter-increment: blockquote;\n}\n\nq {\n    counter-increment: q;\n}\n\nblockquote[role],\nq[role] {\n    outline: 3px solid red!important;\n}\n\nblockquote:before {\n    content: \"<blockquote>\"!important;\n    background: #f2f2f2!important;\n}\n\nblockquote[role]:before {\n    content: '<blockquote role=\\\"'attr(role)'\\\">'!important;\n    background: #f2f2f2!important;\n}\n\nq:before {\n    content: \"<q>\"!important;\n    background: #f2f2f2!important;\n}\n\nq[role]:before {\n    content: '<q role=\\\"'attr(role)'\\\">'!important;\n    background: #f2f2f2!important;\n}\n\nhtml {\n    counter-reset:  \n                    blockquote\n                    q;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 20px!important;\n    font-weight:bold;\n    color: #fff!important;\n    position: fixed!important;\n    top: 300px!important;\n    right: 0!important;\n    white-space: pre!important;\n    width: 12em!important;\n    padding: 15px!important;\n    background: #0B1B34!important;\n    border:5px solid #fff;\n    border-right:0;\n    z-index: 100000!important;\n    content: \n\t\t\t\"\" counter(blockquote) \" blockquote\\A\"\n            \"\" counter(q) \" q\\A\"\n}\n\nhtml {\n    margin-top: 2em;\n}\n",
+        "urlPrefixes": [
+          "https://",
+          "http://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1649861277917,
+    "_id": "43c06bef-95d2-4a39-bec2-9752e657ed2b",
+    "_rev": 1777666925271,
+    "id": 39
+  },
+  {
+    "enabled": true,
+    "installDate": 1652672823768,
+    "name": "07.05. Messages status",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n[role=\"alert\"],\n[role=\"status\"],\n[role=\"log\"],\n[role=\"progressbar\"],\n[aria-live]\n{\n    display: block!important;\n    padding: 0 0 20px 0;\n    margin: 20px;\n}\n\n[role=\"alert\"]:before,\n[role=\"status\"]:before,\n[role=\"log\"]:before,\n[role=\"progressbar\"]:before,\n[aria-live]:before{\n    display: block;\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #fff!important;\n    background: green;\n}\n\n/**alert**/\n[role=\"alert\"] {\n    outline: solid 10px purple!important;\n    counter-increment: alert;\n}\n\n[role=\"alert\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n\n/**status**/\n[role=\"status\"] {\n    outline: solid 10px green!important;\n    counter-increment: status;\n}\n\n[role=\"status\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n/**log**/\n[role=\"log\"] {\n    outline: solid 10px blue!important;\n    counter-increment: log;\n}\n\n[role=\"log\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n/**progressbar**/\n[role=\"progressbar\"] {\n    outline: solid 10px purple!important;\n    counter-increment: progressbar;\n}\n\n[role=\"progressbar\"]:before {\n    content: 'role=\"'attr(role)'\"'!important;\n}\n\n\n/**contentinfo**/\n[aria-live] {\n    outline: solid 10px purple!important;\n    counter-increment: arialive;\n}\n\n[aria-live]:before {\n    content: 'aria-live=\"'attr(role)'\"'!important\n}\n\n\nhtml {\n    padding-left: 220px;\n    counter-reset: alert status log progressbar arialive;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight: bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 13em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \"\" counter(alert) \" role='alert'\\A\" \"\" counter(log) \" role='log'\\A\" \"\" counter(progressbar) \" role='progressbar'\\A\" \"\" counter(arialive) \" aria-live\\A\" \"\"\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1652673349621,
+    "_id": "061c4047-4175-4217-9c81-d72bdb898e1a",
+    "_rev": 1777666917796,
+    "id": 42
+  },
+  {
+    "enabled": true,
+    "installDate": 1652793322388,
+    "name": "07.01. DP Button",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\n\n[role=\"button\"]{\n    display: inline-block!important;\n    padding: 3px!important;\n    border: dotted 4px #a24444!important;\n}\n\n[role=\"img\"],\nimg,\nsvg,\narea,\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n    max-width: 150px;\n    height: auto;\n    margin-bottom:30px\n}\n\n\n[role=\"button\"] {counter-increment: rolebtn;}\n\nhtml {\n    padding-left: 200px;\n    counter-reset:  \n                    rolebtn\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \n\t\t\t\"\" counter(rolebtn) \" role='button'\\A\"\n}\n\nhtml {\n    margin-top: 2em\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://"
+        ]
+      }
+    ],
+    "updateDate": 1652793353636,
+    "_id": "f9d6b04a-0398-4b78-9d86-729bf2b21a3c",
+    "_rev": 1777666916963,
+    "id": 43
+  },
+  {
+    "enabled": false,
+    "installDate": 1662448945418,
+    "name": "surcharge-color",
+    "sections": [
+      {
+        "code": "body{color:red}"
+      }
+    ],
+    "updateDate": 1662448953647,
+    "_id": "5195dc60-5ffa-4a82-b935-bdf3c31dcdab",
+    "_rev": 1741256804106,
+    "id": 45
+  },
+  {
+    "enabled": true,
+    "installDate": 1579328249172,
+    "name": "01.Images",
+    "sections": [
+      {
+        "code": "* {\n    box-sizing: border-box;\n}\n\na,\n[role=\"link\"],\nbutton,\n[role=\"button\"]{\n    display: inline-block!important;\n    padding: 3px!important;\n    border: dotted 4px #6e6e72!important;\n}\n\n[role=\"img\"],\nimg,\nsvg,\narea,\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n    max-width: 150px;\n    height: auto;\n    margin-bottom:30px\n}\n\nimg,\ninput[type=\"image\"],\n[role=\"img\"] {\n    outline: solid 10px #632f60!important;\n}\n\nimg:not([alt]) {\n    outline: 10px solid red!important;\n}\n\nsvg {\n    outline: solid 10px green!important;\n}\n\nsvg[aria-hidden=\"true\"] {\n    background: green!important;\n}\n\n[role=\"img\"][aria-hidden=\"true\"] {\n    background: #632f60!important;\n}\n\narea {\n    outline: solid 10px orange!important;\n}\n\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n    outline: solid 10px green!important;\n}\n\nimg {counter-increment: eltimg;}\n[longdesc] {counter-increment: longdesc;}\n[role=\"img\"] {counter-increment: roleimg;}\nsvg {counter-increment: imgsvg;}\nsvg[role=\"img\"]{counter-increment: imgsvg;}\nembed {counter-increment: imgembed;}\nobject{counter-increment: imgobject;}\n\nhtml {\n    padding-left: 200px;\n    counter-reset:  \n                    eltimg\n                    longdesc\n                    roleimg\n                    imgsvg\n                    imgembed\n                    imgobject;\n}\n\nhtml:after {\n    font-family: sans-serif!important;\n    font-size: 1rem!important;\n    font-weight:bold;\n    color: #000!important;\n    position: fixed!important;\n    top: 0!important;\n    left: 0!important;\n    white-space: pre!important;\n    width: 10em!important;\n    padding: 15px!important;\n    background: #eee!important;\n    z-index: 100000!important;\n    content: \n\t\t\t\"\" counter(eltimg) \" img\\A\"\n            \"\" counter(longdesc) \" longdesc\\A\"\n\t\t\t\"\" counter(roleimg) \" role='img'\\A\"\n\t\t\t\"\" counter(imgsvg) \" svg\\A\"\n\t\t\t\"\" counter(imgembed) \" embed\\A\"\n\t\t\t\"\" counter(imgobject) \" object\\A\"\n}\n\nhtml {\n    margin-top: 2em\n}",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1658757558784,
+    "_id": "10e7d5a4-a75e-496b-8305-67c57e2a6742",
+    "_rev": 1777666433587,
+    "id": 46
+  },
+  {
+    "enabled": true,
+    "installDate": 1579328477719,
+    "name": "0.Thématiques NA",
+    "sections": [
+      {
+        "code": "[role=\"img\"],\nimg,\nsvg,\narea,\nobject[type=\"image\"],\ncanvas,\nembed[type=\"image\"] {\n\tmax-width:150px;\n\tmax-height:150px;\n}\n\nimg { counter-increment: thematique1-img; }\ncanvas { counter-increment: thematique1-canvas; }\nembed { counter-increment: thematique1-embed; }\nobject { counter-increment: thematique1-object; }\nsvg { counter-increment: thematique1-svg; }\n[role=\"img\"] { counter-increment: thematique1-img; }\n[longdesc] { counter-increment: thematique1-longdesc; }\nfigure { counter-increment: thematique1-figure; }\nmap { counter-increment: thematique1-map; }\narea { counter-increment: thematique1-area; }\n\niframe { counter-increment: thematique2; }\n\naudio,video { counter-increment: thematique4; }\n\ntable,\n[role=\"table\"] { counter-increment: thematique5; }\n\n[lang]:not(html),\n[xml:lang]:not(html){ counter-increment: lang; }\n\n\ndir:not(html){ counter-increment: dir; }\n\ninput,\nselect,\ntextarea,\ndatalist,\noptgroup,\noption,\nkeygen,\noutput,\nprogress,\nmeter {\t counter-increment: thematique11-form; }\n\nfieldset { counter-increment: thematique11-regroupement; }\n\n[role=\"group\"] { counter-increment: aria-group; }\n\nhidden,[aria-hidden] { counter-increment: caches; }\n\nhtml {\n\tpadding-left:200px;\n\tcounter-reset:\t\t\n\t\t\t\t\tthematique1-img\n\t\t\t\t\tthematique1-canvas\n\t\t\t\t\tthematique1-embed\n\t\t\t\t\tthematique1-object\n\t\t\t\t\tthematique1-svg\n\t\t\t\t\tthematique1-longdesc\n\t\t\t\t\tthematique1-figure\n\t\t\t\t\tthematique1-map\n\t\t\t\t\tthematique1-area\n\t\t\t\t\tthematique2\n\t\t\t\t\tthematique4\n\t\t\t\t\tthematique5\n\t\t\t\t\tlang\n\t\t\t\t\tdir\n\t\t\t\t\tthematique11-form\n\t\t\t\t\tthematique11-regroupement\n\t\t\t\t\tcaches\n\t\t\t\t\taria-group\n}\n\nbody{padding-left:15px}\n\nhtml:after {\n\tfont-family:sans-serif!important;\n\tfont-size:1.5rem!important;\n\tcolor:#000!important;\n\tposition:fixed!important;\n\ttop:0!important;\n\tbottom:0!important;\n\tleft:0!important;\n\twhite-space:pre!important;\n\twidth:200px!important;\n\tpadding:15px!important;\n\tpadding-top:100px!important;\n\tbackground:#eee!important;\n\tz-index:100000!important;\n  \tcontent: \n\t\t\t\"\" counter(thematique1-img) \" img ou role,\\A\"\n\t\t\t\"\" counter(thematique1-longdesc) \" attribut longdesc,\\A\"\n\t\t\t\"\" counter(thematique1-svg) \" svg,\\A\"\n\t\t\t\"\" counter(thematique1-embed) \" embed,\\A\"\n\t\t\t\"\" counter(thematique1-object) \" object,\\A\"\n\t\t\t\"\" counter(thematique1-canvas) \" canvas,\\A\"\n\t\t\t\"\" counter(thematique1-figure) \" figure,\\A\"\n\t\t\t\"\" counter(thematique1-map) \" map,\\A\"\n\t\t\t\"\" counter(thematique1-map) \" area,\\A\"\n\t\t\t\"\" counter(thematique2) \" cadres\\A\"\n\t\t\t\"\" counter(thematique4) \" balises video/audio\\A\"\n\t\t\t\"\" counter(thematique5) \" tableau\\A \"\n\t\t\t\"\" counter(thematique11-form) \" champs de formulaires\\A \"\n\t\t\t\"\" counter(thematique11-regroupement) \" fieldset\\A \"\n\t\t\t\"\" counter(caches) \" hidden ou aria-hidden\\A \"\n\t\t\t\"\" counter(lang) \" indication de langue\\A \"\n\t\t\t\"\" counter(dir) \" indication de direction\\A \"\n\t\t\t\"\" counter(aria-group) \" role group\\A \"!important\n}\n",
+        "urlPrefixes": [
+          "http://",
+          "https://",
+          "file:///"
+        ]
+      }
+    ],
+    "updateDate": 1652068735019,
+    "_id": "0b3c38e1-76a0-48ae-8b06-d675472e2181",
+    "_rev": 1777666430165,
+    "id": 47
+  },
+  {
+    "enabled": false,
+    "installDate": 1750750606765,
+    "name": "www.example.com/abcd",
+    "sections": [
+      {
+        "code": "h1 { color: red!important;\n}",
+        "urlPrefixes": [
+          "www.foyer.lu/fr"
+        ]
+      }
+    ],
+    "updateDate": 1750750694547,
+    "_id": "27c0b55f-9bf5-40a6-a0c3-7c5f14069e45",
+    "_rev": 1777666442842,
+    "id": 48
+  }
+]

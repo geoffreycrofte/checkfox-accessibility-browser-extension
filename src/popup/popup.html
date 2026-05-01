@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CheckFox</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header class="header">
+      <span class="header__logo" aria-hidden="true">🦊</span>
+      <h1 class="header__title">CheckFox</h1>
+      <span class="header__subtitle">Accessibility Scanner</span>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Panel">
+      <button class="tab tab--active" role="tab" aria-selected="true"  aria-controls="panel-scan"  id="tab-scan">Scan</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-tools" id="tab-tools">Tools</button>
+    </nav>
+
+    <main id="panel-scan" class="main" role="tabpanel" aria-labelledby="tab-scan">
+      <button id="scan-btn" type="button" class="btn btn--primary">
+        Run accessibility scan
+      </button>
+
+      <div id="status" class="status" hidden role="status" aria-live="polite"></div>
+
+      <div id="results" hidden aria-live="polite"></div>
+    </main>
+
+    <section id="panel-tools" class="main" role="tabpanel" aria-labelledby="tab-tools" hidden>
+      <div id="tools-list" class="tools-list"></div>
+    </section>
+
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>
