@@ -41,6 +41,7 @@ async function runScan() {
     ruleId: v.id,
     impact: v.impact,
     description: v.description,
+    help: v.help,
     helpUrl: v.helpUrl,
     wcagTags: v.tags.filter(t => /^wcag\d/.test(t) || t === 'best-practice'),
     nodes: v.nodes.map(n => ({

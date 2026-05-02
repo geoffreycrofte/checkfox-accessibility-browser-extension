@@ -86,26 +86,29 @@ The auditor always validates or overrides pre-filled data. The extension is a **
 
 ---
 
-### Session 4 — CheckFox API integration
+### Session 4 — CheckFox API integration ✅
 > Goal: bidirectional sync between extension and CheckFox
 
-**Pre-requisite: CheckFox API endpoints must be defined before this session.**
-
-API contract to design before starting:
-- `GET /api/audits?status=active` — list auditor's active audits with their samples
-- `GET /api/audits/:id/samples` — list samples (URL + sampleId) for an audit
-- `POST /api/audits/:id/samples/:sampleId/prefill` — push raw violations (mapped to criteria) for server-side enrichment into findings
-- `GET /api/audits/:id/samples/:sampleId/findings` — pull existing findings back into extension
+**API contract (live — Supabase Edge Functions):**
+- Base URL: configurable (users can self-host); default is the Supabase deployment.
+- Auth: `Authorization: Bearer cfx_live_<token>` — generated in CheckFox > Settings > Integrations > API Keys. Stored alongside base URL in `chrome.storage.local`.
+- `GET /api/v1/audits?status=active` → `{ audits: [{ id, name, website, guideline, status, due_date, created_at }] }`
+- `GET /api/v1/audits/:auditId/samples` → `{ samples: [{ id, name, identifier, sample_type, description, created_at }] }` — `identifier` is the page URL
+- `GET /api/v1/audits/:auditId/samples/:sampleId/findings` → `{ sample_id, findings: [{ criterion_id, criterion_num, status, comment: { problem, solution }, scanner_source, … }] }`
+- `POST /api/v1/audits/:auditId/samples/:sampleId/prefill` — body: `{ violations: [{ ruleId, impact, description, help, helpUrl, nodes: [{ html, failureSummary }], criteria: { wcag, rgaa, raweb } }] }` → `{ applied, skipped_count, mappings, skipped }`
+- CORS: `chrome-extension://` origins whitelisted.
+- Prefill behaviour: only writes to criteria that are `not_tested` or absent — never overwrites a human verdict.
 
 Extension tasks:
-- [ ] Auth panel: input for CheckFox URL + Bearer token, store in `chrome.storage.local`
-- [ ] On popup open: match active tab URL against known sample URLs fetched from API
-- [ ] If match found: show matched audit/sample context in popup
-- [ ] Push button: send mapped violations to `prefill` endpoint for the matched sample
-- [ ] Pull button: fetch existing findings and display as read-only context in popup
-- [ ] Handle no-match gracefully (manual audit selection fallback)
-
-> When done: check off and document the final API contract.
+- [x] New `src/api/index.js` module — typed `ConfigError`/`ApiError`, `loadConfig`/`saveConfig`, `pingConnection`, `api.audits/samples/findings/prefill`
+- [x] Settings tab: URL + masked API-key inputs, Save & Connect (tests connection before saving), Show/Hide toggle
+- [x] On popup open: fetch active audits + all their samples in parallel (2-minute session cache), match `sample.identifier` against active tab URL (exact or path-prefix)
+- [x] If match: context card shows audit name, sample name, identifier URL, `✓ Match` badge
+- [x] If no match: manual selector (audit dropdown → sample dropdown populates from cache)
+- [x] Push button: enabled after scan completes; sends enriched violations to `prefill`, shows `N criteria pre-filled, M skipped` result
+- [x] Pull button: fetches findings, renders read-only list sorted by status (non-compliant first), close button
+- [x] `help` field added to axe-runner mapper so violations include it in the push payload
+- [x] Context area runs async on popup open (scan button immediately available)
 
 ---
 
@@ -129,6 +132,16 @@ Extension tasks:
 - **RAWeb is a 7-topic subset of RGAA**: same criterion numbering within shared topics; RAWeb adds 5 EN 301 549-only criteria (4.14–4.18) with no WCAG anchor and no axe rule — these are manual-only and stored in `RAWEB_NORM_ONLY`.
 - **35 WCAG 2.2 SCs have no RGAA/RAWeb mapping** — all are AAA-level or WCAG 2.2 additions not yet incorporated into RGAA 4.1.2 or RAWeb 1.1.
 - **`scripting` permission added** to manifest to support on-demand injection (fixes "Could not reach the page" on pre-existing tabs).
+
+---
+
+### Session 4
+- **`src/api/index.js`** — thin fetch wrapper; all four API calls + `pingConnection` for the settings test-before-save flow. `ConfigError` (not configured) and `ApiError` (HTTP failure) are distinct so the context area can show targeted messages.
+- **Context area** renders into `#context-area` async on popup open without blocking the scan button. Uses `chrome.storage.session` to cache audits + samples for 2 minutes so repeated popup opens don't re-fetch.
+- **URL matching** normalises trailing slashes and checks exact match, then path-prefix (stops at `/`, `?`, `#`) to avoid false prefix matches (e.g. `/about` not matching `/about-us`).
+- **`apiCtx` object** threads mutable state (`context`, `violations`, `refreshPush`) between `initContextArea` and `initScanPanel` so the Push button can be enabled once both are set.
+- **Push payload** maps `htmlSnippet → html` for the API shape; `help` field added to axe-runner's `mapRule`.
+- **Settings tab** uses `pingConnection` (direct fetch, bypasses stored config) to test with new values before saving — user gets immediate feedback.
 
 ---
 

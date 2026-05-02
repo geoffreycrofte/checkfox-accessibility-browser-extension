@@ -14,11 +14,15 @@
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Panel">
-      <button class="tab tab--active" role="tab" aria-selected="true"  aria-controls="panel-scan"  id="tab-scan">Scan</button>
-      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-tools" id="tab-tools">Tools</button>
+      <button class="tab tab--active" role="tab" aria-selected="true"  aria-controls="panel-scan"     id="tab-scan">Scan</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-tools"    id="tab-tools">Tools</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-settings" id="tab-settings">Settings</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-about"    id="tab-about">About</button>
     </nav>
 
     <main id="panel-scan" class="main" role="tabpanel" aria-labelledby="tab-scan">
+      <div id="context-area"></div>
+
       <button id="scan-btn" type="button" class="btn btn--primary">
         Run accessibility scan
       </button>
@@ -26,10 +30,78 @@
       <div id="status" class="status" hidden role="status" aria-live="polite"></div>
 
       <div id="results" hidden aria-live="polite"></div>
+
+      <div id="findings-area" hidden aria-live="polite"></div>
     </main>
 
     <section id="panel-tools" class="main" role="tabpanel" aria-labelledby="tab-tools" hidden>
       <div id="tools-list" class="tools-list"></div>
+    </section>
+
+    <section id="panel-settings" class="main settings-panel" role="tabpanel" aria-labelledby="tab-settings" hidden>
+      <div class="settings-section">
+        <h2 class="settings-heading">CheckFox Connection</h2>
+
+        <div class="settings-field">
+          <label class="settings-label" for="settings-token">API Key</label>
+          <div class="settings-input-row">
+            <input type="password" id="settings-token" class="settings-input"
+                   placeholder="cfx_live_…"
+                   autocomplete="off" spellcheck="false" />
+            <button type="button" id="settings-token-toggle" class="settings-toggle-btn" aria-label="Show API key">Show</button>
+          </div>
+        </div>
+
+        <button type="button" id="settings-save-btn" class="btn btn--primary">Save &amp; Connect</button>
+        <div id="settings-feedback" hidden class="settings-feedback"></div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-heading">Display</h2>
+        <div class="settings-toggle-row">
+          <div class="settings-toggle-info">
+            <span class="settings-label">Open as sidebar</span>
+            <p class="settings-hint">When on, the extension icon opens a persistent side panel instead of a popup.</p>
+          </div>
+          <button type="button" id="settings-sidebar-toggle" class="tool-toggle" aria-pressed="false" aria-label="Toggle sidebar mode"></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="panel-about" class="main about-panel" role="tabpanel" aria-labelledby="tab-about" hidden>
+      <div class="about-section">
+        <h2 class="about-heading">What is CheckFox?</h2>
+        <p class="about-text">CheckFox is a browser extension for auditing web accessibility. It combines automated scanning with visual debugging tools to help identify and fix barriers for users with disabilities.</p>
+      </div>
+
+      <div class="about-section">
+        <h2 class="about-heading">Scan engine</h2>
+        <div class="about-engine-row">
+          <span class="about-engine-name">axe-core</span>
+          <span class="about-engine-desc">Industry-standard WCAG rule engine by Deque. Powers the Scan tab — runs automated checks against WCAG 2.x success criteria.</span>
+        </div>
+        <div class="about-engine-row">
+          <span class="about-engine-name">Custom scanners</span>
+          <span class="about-engine-desc">CheckFox-specific rules that extend axe-core results with RGAA and RAWeb criteria mappings.</span>
+        </div>
+      </div>
+
+      <div class="about-section">
+        <h2 class="about-heading">Visual tools inspiration</h2>
+        <p class="about-text">The Tools tab uses CSS- and JS-based highlighting techniques inspired by these open-source projects:</p>
+        <ul class="about-sources">
+          <li class="about-source">
+            <a href="https://github.com/lorenzodelijser/lint-html-with-css" target="_blank" rel="noopener noreferrer" class="about-source__link">lint-html-with-css</a>
+            <span class="about-source__author">by lorenzodelijser</span>
+            <span class="about-source__desc">Uses pure CSS selectors to surface structural HTML issues directly on the page.</span>
+          </li>
+          <li class="about-source">
+            <a href="https://github.com/ffoodd/a11y.css" target="_blank" rel="noopener noreferrer" class="about-source__link">a11y.css</a>
+            <span class="about-source__author">by ffoodd</span>
+            <span class="about-source__desc">A diagnostic stylesheet that highlights accessibility errors, warnings, and best-practice deviations via CSS.</span>
+          </li>
+        </ul>
+      </div>
     </section>
 
     <footer class="popup-footer">

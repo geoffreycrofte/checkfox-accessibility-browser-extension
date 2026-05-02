@@ -24,28 +24,39 @@ const C = { ok: '#22c55e', err: '#ef4444', warn: '#f97316', caution: '#eab308', 
 
 export const TOOLS = [
 
-  // ── STRUCTURE ────────────────────────────────────────────────────────────────
+  // ── 1. IMAGES ────────────────────────────────────────────────────────────────
 
   {
-    id: 'headings',
-    group: 'Structure',
-    label: 'Headings',
-    description: 'Show heading hierarchy and levels',
-    criteria: ['09.01'],
+    id: 'images',
+    group: 'Images',
+    label: 'Images',
+    description: 'Shows alt text on each image and outlines by accessibility status',
+    criteria: ['01.01', '01.02', '01.03'],
+    legend: [
+      { border: `2px solid ${C.purple}`, label: 'img — has alt text' },
+      { border: `2px solid ${C.ok}`,     label: 'img — decorative (alt="")' },
+      { border: `3px solid ${C.err}`,    label: 'img — missing alt attribute' },
+      { border: `2px dashed ${C.ok}`,    label: 'svg / role="img" — hidden from AT' },
+    ],
     type: 'js',
     args: [SHARED_CSS],
     inject: (css) => {
-      const ID = 'headings'
+      const ID = 'images'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
       const style = document.createElement('style')
       style.id = `__checkfox_${ID}`
       style.textContent = css +
-        'h1,h2,h3,h4,h5,h6{outline:2px solid #22c55e!important}' +
-        '[role="heading"]{outline:2px solid #eab308!important}' +
-        'h1[role],h2[role],h3[role],h4[role],h5[role],h6[role]{outline:2px solid #ef4444!important}' +
-        'h1[aria-hidden],h2[aria-hidden],h3[aria-hidden],h4[aria-hidden],h5[aria-hidden],h6[aria-hidden]{outline:2px solid #ef4444!important}'
+        'img{outline:2px solid #a855f7!important;max-width:150px}' +
+        'img:not([alt]){outline:3px solid #ef4444!important}' +
+        'img[alt=""]{outline:2px solid #22c55e!important}' +
+        'svg{outline:2px solid #22c55e!important;max-width:150px}' +
+        'svg[aria-hidden="true"]{outline:2px dashed #22c55e!important}' +
+        '[role="img"]{outline:2px solid #a855f7!important}' +
+        '[role="img"][aria-hidden="true"]{outline:2px dashed #a855f7!important}' +
+        'area{outline:2px solid #f97316!important}' +
+        'input[type="image"]{outline:2px solid #a855f7!important}'
       document.head.appendChild(style)
 
       const mk = (text, v) => {
@@ -56,186 +67,81 @@ export const TOOLS = [
         return b
       }
 
-      document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      document.querySelectorAll('img').forEach(img => {
+        const alt = img.getAttribute('alt')
+        let badge
+        if (alt === null) {
+          badge = mk('ALT MISSING', 'err')
+        } else if (alt === '') {
+          badge = mk('alt="" (decorative)', 'mute')
+        } else {
+          badge = mk(`alt="${alt}"`, 'ok')
+        }
+        img.insertAdjacentElement('afterend', badge)
+      })
+    },
+    remove: () => {
+      const ID = 'images'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  // ── 2. FRAMES ────────────────────────────────────────────────────────────────
+
+  {
+    id: 'frames',
+    group: 'Frames',
+    label: 'Frames & iframes',
+    description: 'Show frame and iframe title attributes',
+    criteria: ['02.01', '02.02'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'frames'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'frame{outline:3px solid #ef4444!important}' +
+        'iframe{outline:3px solid #eab308!important}' +
+        'iframe[title]{outline:2px solid #22c55e!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('frame,iframe').forEach(el => {
         const tag = el.tagName.toLowerCase()
-        const role = el.getAttribute('role')
-        const ariaHidden = el.getAttribute('aria-hidden')
-        if (role) {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
-        } else if (ariaHidden !== null) {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag} aria-hidden='${ariaHidden}'>`, 'err'))
+        const title = el.getAttribute('title')
+        if (!title) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}> — NO TITLE`, 'err'))
+        } else if (title.trim() === '') {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} title=""> — empty title`, 'warn'))
         } else {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} title="${title}">`, 'ok'))
         }
-      })
-
-      document.querySelectorAll('[role="heading"]').forEach(el => {
-        if (/^h[1-6]$/i.test(el.tagName)) return
-        const level = el.getAttribute('aria-level') ?? ''
-        el.insertAdjacentElement('beforebegin', mk(`role='heading' aria-level='${level}'`, 'warn'))
       })
     },
     remove: () => {
-      const ID = 'headings'
+      const ID = 'frames'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
     },
   },
 
-  {
-    id: 'landmarks',
-    group: 'Structure',
-    label: 'Landmarks',
-    description: 'Highlight ARIA landmark roles and structural elements',
-    criteria: ['12.06'],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'landmarks'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        '[role="main"],main{outline:2px solid #6366f1!important}' +
-        '[role="banner"],header{outline:2px solid #a855f7!important}' +
-        '[role="navigation"],nav{outline:2px solid #22c55e!important}' +
-        '[role="search"]{outline:2px solid #f97316!important}' +
-        '[role="contentinfo"],footer{outline:2px solid #eab308!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      const seen = new WeakSet()
-
-      const badge = (el, text, v) => {
-        if (seen.has(el)) return
-        seen.add(el)
-        el.insertAdjacentElement('beforebegin', mk(text, v))
-      }
-
-      document.querySelectorAll('main,[role="main"]').forEach(el => {
-        const hasRole = el.getAttribute('role') === 'main'
-        if (el.tagName.toLowerCase() === 'main' && !hasRole) {
-          badge(el, `<main — no role='main'>`, 'err')
-        } else {
-          badge(el, `role='main'`, 'info')
-        }
-      })
-
-      document.querySelectorAll('header,[role="banner"]').forEach(el => {
-        const hasRole = el.getAttribute('role') === 'banner'
-        if (el.tagName.toLowerCase() === 'header' && !hasRole) {
-          badge(el, `<header — no role='banner'>`, 'err')
-        } else {
-          badge(el, `role='banner'`, 'purple')
-        }
-      })
-
-      document.querySelectorAll('nav,[role="navigation"]').forEach(el => {
-        const hasRole = el.getAttribute('role') === 'navigation'
-        if (el.tagName.toLowerCase() === 'nav' && !hasRole) {
-          badge(el, `<nav — no role='navigation'>`, 'err')
-        } else {
-          badge(el, `role='navigation'`, 'ok')
-        }
-      })
-
-      document.querySelectorAll('[role="search"]').forEach(el => {
-        badge(el, `role='search'`, 'warn')
-      })
-
-      document.querySelectorAll('footer,[role="contentinfo"]').forEach(el => {
-        const hasRole = el.getAttribute('role') === 'contentinfo'
-        if (el.tagName.toLowerCase() === 'footer' && !hasRole) {
-          badge(el, `<footer — no role='contentinfo'>`, 'err')
-        } else {
-          badge(el, `role='contentinfo'`, 'yellow')
-        }
-      })
-    },
-    remove: () => {
-      const ID = 'landmarks'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
-
-  {
-    id: 'lists',
-    group: 'Structure',
-    label: 'Lists',
-    description: 'Show list elements and role overrides',
-    criteria: ['09.03'],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'lists'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        'ul,ol,dl,[role="list"]{outline:2px solid #22c55e!important}' +
-        'li,[role="listitem"]{outline:1px solid #22c55e!important}' +
-        'ul[role],ol[role],li[role],dl[role]{outline:2px solid #ef4444!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      document.querySelectorAll('ul,ol,dl').forEach(el => {
-        const tag = el.tagName.toLowerCase()
-        const role = el.getAttribute('role')
-        if (role) {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
-        } else {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
-        }
-      })
-
-      document.querySelectorAll('li').forEach(el => {
-        const role = el.getAttribute('role')
-        if (role) {
-          el.insertAdjacentElement('beforebegin', mk(`<li role='${role}'>`, 'err'))
-        } else {
-          el.insertAdjacentElement('beforebegin', mk(`<li>`, 'mute'))
-        }
-      })
-
-      document.querySelectorAll('[role="list"]').forEach(el => {
-        if (/^(ul|ol|dl)$/i.test(el.tagName)) return
-        el.insertAdjacentElement('beforebegin', mk(`role='list'`, 'ok'))
-      })
-
-      document.querySelectorAll('[role="listitem"]').forEach(el => {
-        if (/^li$/i.test(el.tagName)) return
-        el.insertAdjacentElement('beforebegin', mk(`role='listitem'`, 'mute'))
-      })
-    },
-    remove: () => {
-      const ID = 'lists'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
+  // ── 5. TABLES ────────────────────────────────────────────────────────────────
 
   {
     id: 'tables',
-    group: 'Structure',
+    group: 'Tables',
     label: 'Tables',
     description: 'Highlight tables, headers, captions and scope attributes',
     criteria: ['05.01', '05.02', '05.03', '05.04'],
@@ -296,72 +202,11 @@ export const TOOLS = [
     },
   },
 
-  // ── CONTENT ──────────────────────────────────────────────────────────────────
-
-  {
-    id: 'images',
-    group: 'Content',
-    label: 'Images',
-    description: 'Shows alt text on each image and outlines by accessibility status',
-    criteria: ['01.01', '01.02', '01.03'],
-    legend: [
-      { border: `2px solid ${C.purple}`, label: 'img — has alt text' },
-      { border: `2px solid ${C.ok}`,     label: 'img — decorative (alt="")' },
-      { border: `3px solid ${C.err}`,    label: 'img — missing alt attribute' },
-      { border: `2px dashed ${C.ok}`,    label: 'svg / role="img" — hidden from AT' },
-    ],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'images'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        'img{outline:2px solid #a855f7!important;max-width:150px}' +
-        'img:not([alt]){outline:3px solid #ef4444!important}' +
-        'img[alt=""]{outline:2px solid #22c55e!important}' +
-        'svg{outline:2px solid #22c55e!important;max-width:150px}' +
-        'svg[aria-hidden="true"]{outline:2px dashed #22c55e!important}' +
-        '[role="img"]{outline:2px solid #a855f7!important}' +
-        '[role="img"][aria-hidden="true"]{outline:2px dashed #a855f7!important}' +
-        'area{outline:2px solid #f97316!important}' +
-        'input[type="image"]{outline:2px solid #a855f7!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      document.querySelectorAll('img').forEach(img => {
-        const alt = img.getAttribute('alt')
-        let badge
-        if (alt === null) {
-          badge = mk('ALT MISSING', 'err')
-        } else if (alt === '') {
-          badge = mk('alt="" (decorative)', 'mute')
-        } else {
-          badge = mk(`alt="${alt}"`, 'ok')
-        }
-        img.insertAdjacentElement('afterend', badge)
-      })
-    },
-    remove: () => {
-      const ID = 'images'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
+  // ── 6. LINKS ─────────────────────────────────────────────────────────────────
 
   {
     id: 'links',
-    group: 'Content',
+    group: 'Links',
     label: 'Links',
     description: 'Audit link types, accessible names and hidden children',
     criteria: ['06.01', '06.02'],
@@ -420,141 +265,11 @@ export const TOOLS = [
     },
   },
 
-  {
-    id: 'lang',
-    group: 'Content',
-    label: 'Language',
-    description: 'Show lang and dir attribute values on all elements',
-    criteria: ['08.03', '08.04', '08.07', '08.08', '08.10'],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'lang'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        ':not(html)[lang]{outline:2px solid #22c55e!important}' +
-        ':not(html)[dir]{outline:2px solid #6366f1!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      document.querySelectorAll('[lang]').forEach(el => {
-        if (el.tagName.toLowerCase() === 'html') return
-        el.insertAdjacentElement('beforebegin', mk(`lang='${el.getAttribute('lang')}'`, 'ok'))
-      })
-
-      document.querySelectorAll('[dir]').forEach(el => {
-        if (el.tagName.toLowerCase() === 'html') return
-        el.insertAdjacentElement('beforebegin', mk(`dir='${el.getAttribute('dir')}'`, 'info'))
-      })
-    },
-    remove: () => {
-      const ID = 'lang'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
-
-  {
-    id: 'hidden',
-    group: 'Content',
-    label: 'Hidden content',
-    description: 'Reveal hidden and aria-hidden elements',
-    criteria: ['10.08'],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'hidden'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        '[hidden]{display:block!important;outline:2px solid #ef4444!important;background:rgba(239,68,68,0.08)!important}' +
-        '[aria-hidden="true"]{outline:2px solid #f97316!important;background:rgba(247,115,22,0.08)!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      document.querySelectorAll('[hidden]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`hidden`, 'err'))
-      })
-
-      document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`aria-hidden='true'`, 'warn'))
-      })
-    },
-    remove: () => {
-      const ID = 'hidden'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
-
-  // ── INTERACTION ──────────────────────────────────────────────────────────────
-
-  {
-    id: 'focus',
-    group: 'Interaction',
-    label: 'Focus / Tab order',
-    description: 'Highlight focus ring and tabindex values on interactive elements',
-    criteria: ['10.07', '12.08'],
-    type: 'js',
-    args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'focus'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-
-      const style = document.createElement('style')
-      style.id = `__checkfox_${ID}`
-      style.textContent = css +
-        '*:focus{outline:3px solid #f97316!important;outline-offset:2px!important}' +
-        'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]{outline:2px solid #ef4444!important}' +
-        'a[tabindex="-1"],button[tabindex="-1"],input[tabindex="-1"],select[tabindex="-1"],textarea[tabindex="-1"],[role="button"][tabindex="-1"],[role="link"][tabindex="-1"]{outline:2px dashed #ef4444!important}' +
-        'a[tabindex="0"],button[tabindex="0"],input[tabindex="0"],select[tabindex="0"],textarea[tabindex="0"]{outline:2px dotted #eab308!important}'
-      document.head.appendChild(style)
-
-      const mk = (text, v) => {
-        const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
-        b.dataset.cf = ID
-        b.textContent = text
-        return b
-      }
-
-      const sel = 'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]'
-      document.querySelectorAll(sel).forEach(el => {
-        el.insertAdjacentElement('afterend', mk(`tabindex='${el.getAttribute('tabindex')}'`, 'err'))
-      })
-    },
-    remove: () => {
-      const ID = 'focus'
-      document.getElementById(`__checkfox_${ID}`)?.remove()
-      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
-    },
-  },
+  // ── 7. SCRIPTS ───────────────────────────────────────────────────────────────
 
   {
     id: 'aria',
-    group: 'Interaction',
+    group: 'Scripts',
     label: 'ARIA roles & states',
     description: 'Show ARIA roles and state/property attributes',
     criteria: ['07.01', '07.02', '07.03'],
@@ -634,8 +349,582 @@ export const TOOLS = [
   },
 
   {
+    id: 'status',
+    group: 'Scripts',
+    label: 'Status messages',
+    description: 'Show live regions and ARIA status roles',
+    criteria: ['07.05'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'status'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[role="alert"]{outline:2px solid #ef4444!important}' +
+        '[role="status"]{outline:2px solid #22c55e!important}' +
+        '[role="log"]{outline:2px solid #6366f1!important}' +
+        '[role="progressbar"]{outline:2px solid #a855f7!important}' +
+        '[aria-live]{outline:2px solid #eab308!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[role="alert"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='alert'`, 'err'))
+      })
+      document.querySelectorAll('[role="status"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='status'`, 'ok'))
+      })
+      document.querySelectorAll('[role="log"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='log'`, 'info'))
+      })
+      document.querySelectorAll('[role="progressbar"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='progressbar'`, 'purple'))
+      })
+      document.querySelectorAll('[aria-live]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`aria-live='${el.getAttribute('aria-live')}'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'status'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  // ── 8. MANDATORY ELEMENTS ────────────────────────────────────────────────────
+
+  {
+    id: 'lang',
+    group: 'Mandatory elements',
+    label: 'Language',
+    description: 'Show lang and dir attribute values on all elements',
+    criteria: ['08.03', '08.04', '08.07', '08.08', '08.10'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'lang'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        ':not(html)[lang]{outline:2px solid #22c55e!important}' +
+        ':not(html)[dir]{outline:2px solid #6366f1!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[lang]').forEach(el => {
+        if (el.tagName.toLowerCase() === 'html') return
+        el.insertAdjacentElement('beforebegin', mk(`lang='${el.getAttribute('lang')}'`, 'ok'))
+      })
+
+      document.querySelectorAll('[dir]').forEach(el => {
+        if (el.tagName.toLowerCase() === 'html') return
+        el.insertAdjacentElement('beforebegin', mk(`dir='${el.getAttribute('dir')}'`, 'info'))
+      })
+    },
+    remove: () => {
+      const ID = 'lang'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'tag-misuse',
+    group: 'Mandatory elements',
+    label: 'Tag misuse',
+    description: 'Detect semantic elements used for visual layout only',
+    criteria: ['08.09'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'tag-misuse'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'blockquote,q{outline:2px solid #22c55e!important}' +
+        'b,i,u{outline:2px solid #eab308!important}' +
+        'center,font,marquee,blink{outline:3px solid #ef4444!important}' +
+        '[role="none"],[role="presentation"]{outline:2px solid #f97316!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('blockquote,q').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+      })
+
+      document.querySelectorAll('b,i,u').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        el.insertAdjacentElement('beforebegin', mk(`<${tag}> — use <strong>/<em> instead?`, 'warn'))
+      })
+
+      document.querySelectorAll('center,font,marquee,blink').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`<${el.tagName.toLowerCase()}> — deprecated`, 'err'))
+      })
+
+      document.querySelectorAll('[role="none"],[role="presentation"]').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const role = el.getAttribute('role')
+        el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'> — semantic removed`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'tag-misuse'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  // ── 9. INFORMATION STRUCTURE ─────────────────────────────────────────────────
+
+  {
+    id: 'headings',
+    group: 'Information structure',
+    label: 'Headings',
+    description: 'Show heading hierarchy and levels',
+    criteria: ['09.01'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'headings'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'h1,h2,h3,h4,h5,h6{outline:2px solid #22c55e!important}' +
+        '[role="heading"]{outline:2px solid #eab308!important}' +
+        'h1[role],h2[role],h3[role],h4[role],h5[role],h6[role]{outline:2px solid #ef4444!important}' +
+        'h1[aria-hidden],h2[aria-hidden],h3[aria-hidden],h4[aria-hidden],h5[aria-hidden],h6[aria-hidden]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const role = el.getAttribute('role')
+        const ariaHidden = el.getAttribute('aria-hidden')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
+        } else if (ariaHidden !== null) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} aria-hidden='${ariaHidden}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+        }
+      })
+
+      document.querySelectorAll('[role="heading"]').forEach(el => {
+        if (/^h[1-6]$/i.test(el.tagName)) return
+        const level = el.getAttribute('aria-level') ?? ''
+        el.insertAdjacentElement('beforebegin', mk(`role='heading' aria-level='${level}'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'headings'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'document-structure',
+    group: 'Information structure',
+    label: 'Document structure',
+    description: 'Check structural landmark elements for uniqueness and correct use',
+    criteria: ['09.02'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'document-structure'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'header,main,footer,nav,aside,section,article{outline:2px solid #6366f1!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const mainEls = document.querySelectorAll('main')
+      const headerEls = [...document.querySelectorAll('header')].filter(el => el.closest('article,section,aside') === null)
+      const footerEls = [...document.querySelectorAll('footer')].filter(el => el.closest('article,section,aside') === null)
+
+      document.querySelectorAll('header,main,footer,nav,aside,section,article').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const ariaLabel = el.getAttribute('aria-label') ?? el.getAttribute('aria-labelledby') ?? ''
+        const label = ariaLabel ? ` (${ariaLabel})` : ''
+        let variant = 'ok'
+        let note = ''
+
+        if (tag === 'main' && mainEls.length > 1) { variant = 'err'; note = ' — MULTIPLE MAIN' }
+        else if (tag === 'header' && headerEls.length > 1 && headerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ' — duplicate' }
+        else if (tag === 'footer' && footerEls.length > 1 && footerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ' — duplicate' }
+
+        el.insertAdjacentElement('beforebegin', mk(`<${tag}${label}>${note}`, variant))
+      })
+    },
+    remove: () => {
+      const ID = 'document-structure'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'lists',
+    group: 'Information structure',
+    label: 'Lists',
+    description: 'Show list elements and role overrides',
+    criteria: ['09.03'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'lists'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'ul,ol,dl,[role="list"]{outline:2px solid #22c55e!important}' +
+        'li,[role="listitem"]{outline:1px solid #22c55e!important}' +
+        'ul[role],ol[role],li[role],dl[role]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('ul,ol,dl').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const role = el.getAttribute('role')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+        }
+      })
+
+      document.querySelectorAll('li').forEach(el => {
+        const role = el.getAttribute('role')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<li role='${role}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<li>`, 'mute'))
+        }
+      })
+
+      document.querySelectorAll('[role="list"]').forEach(el => {
+        if (/^(ul|ol|dl)$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk(`role='list'`, 'ok'))
+      })
+
+      document.querySelectorAll('[role="listitem"]').forEach(el => {
+        if (/^li$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk(`role='listitem'`, 'mute'))
+      })
+    },
+    remove: () => {
+      const ID = 'lists'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'citations',
+    group: 'Information structure',
+    label: 'Citations',
+    description: 'Highlight block and inline quotations',
+    criteria: ['09.04'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'citations'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'blockquote{outline:2px solid #22c55e!important}' +
+        'q{outline:2px solid #6366f1!important}' +
+        'cite{outline:2px solid #a855f7!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('blockquote').forEach(el => {
+        const cite = el.getAttribute('cite')
+        el.insertAdjacentElement('beforebegin', mk(cite ? `<blockquote cite="${cite}">` : `<blockquote>`, 'ok'))
+      })
+
+      document.querySelectorAll('q').forEach(el => {
+        const cite = el.getAttribute('cite')
+        el.insertAdjacentElement('beforebegin', mk(cite ? `<q cite="${cite}">` : `<q>`, 'info'))
+      })
+
+      document.querySelectorAll('cite').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`<cite>`, 'purple'))
+      })
+    },
+    remove: () => {
+      const ID = 'citations'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  // ── 10. PRESENTATION OF INFORMATION ──────────────────────────────────────────
+
+  {
+    id: 'presentation-attrs',
+    group: 'Presentation of information',
+    label: 'Presentation attributes',
+    description: 'Detect deprecated HTML presentation attributes and elements',
+    criteria: ['10.01'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'presentation-attrs'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[align],[bgcolor],[color],[face],[hspace],[vspace]{outline:3px solid #ef4444!important}' +
+        '[border]:not(img):not(table){outline:2px solid #f97316!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const PRES_ATTRS = ['align', 'bgcolor', 'color', 'face', 'hspace', 'vspace', 'border']
+      const seen = new WeakSet()
+
+      document.querySelectorAll(PRES_ATTRS.map(a => `[${a}]`).join(',')).forEach(el => {
+        if (seen.has(el)) return
+        seen.add(el)
+        const found = PRES_ATTRS.filter(a => el.hasAttribute(a)).map(a => `${a}="${el.getAttribute(a)}"`)
+        el.insertAdjacentElement('beforebegin', mk(`${el.tagName.toLowerCase()} ${found.join(' ')}`, 'err'))
+      })
+    },
+    remove: () => {
+      const ID = 'presentation-attrs'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'css-content',
+    group: 'Presentation of information',
+    label: 'CSS generated content',
+    description: 'Outline elements with ::before or ::after pseudo-elements carrying content',
+    criteria: ['10.02'],
+    type: 'css',
+    css: `
+/* CheckFox: CSS generated content (RAWeb 10.02) */
+*::before,
+*::after {
+  outline: 2px dashed #a855f7 !important;
+}
+`,
+  },
+
+  {
+    id: 'no-css',
+    group: 'Presentation of information',
+    label: 'Disable CSS',
+    description: 'Toggle all page stylesheets off to inspect unstyled structure',
+    criteria: ['10.03'],
+    type: 'js',
+    inject: () => {
+      Array.from(document.styleSheets).forEach(sheet => {
+        if (sheet.ownerNode?.id?.startsWith('__checkfox')) return
+        try { sheet.disabled = true } catch (_) {}
+      })
+      document.documentElement.setAttribute('data-checkfox-nocss', 'on')
+    },
+    remove: () => {
+      Array.from(document.styleSheets).forEach(sheet => {
+        if (sheet.ownerNode?.id?.startsWith('__checkfox')) return
+        try { sheet.disabled = false } catch (_) {}
+      })
+      document.documentElement.removeAttribute('data-checkfox-nocss')
+    },
+  },
+
+  {
+    id: 'focus',
+    group: 'Presentation of information',
+    label: 'Focus / Tab order',
+    description: 'Highlight focus ring and tabindex values on interactive elements',
+    criteria: ['10.07', '12.08'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'focus'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '*:focus{outline:3px solid #f97316!important;outline-offset:2px!important}' +
+        'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]{outline:2px solid #ef4444!important}' +
+        'a[tabindex="-1"],button[tabindex="-1"],input[tabindex="-1"],select[tabindex="-1"],textarea[tabindex="-1"],[role="button"][tabindex="-1"],[role="link"][tabindex="-1"]{outline:2px dashed #ef4444!important}' +
+        'a[tabindex="0"],button[tabindex="0"],input[tabindex="0"],select[tabindex="0"],textarea[tabindex="0"]{outline:2px dotted #eab308!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const sel = 'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]'
+      document.querySelectorAll(sel).forEach(el => {
+        el.insertAdjacentElement('afterend', mk(`tabindex='${el.getAttribute('tabindex')}'`, 'err'))
+      })
+    },
+    remove: () => {
+      const ID = 'focus'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'hidden',
+    group: 'Presentation of information',
+    label: 'Hidden content',
+    description: 'Reveal hidden and aria-hidden elements',
+    criteria: ['10.08'],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'hidden'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[hidden]{display:block!important;outline:2px solid #ef4444!important;background:rgba(239,68,68,0.08)!important}' +
+        '[aria-hidden="true"]{outline:2px solid #f97316!important;background:rgba(247,115,22,0.08)!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[hidden]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`hidden`, 'err'))
+      })
+
+      document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`aria-hidden='true'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'hidden'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'text-spacing',
+    group: 'Presentation of information',
+    label: 'Text spacing',
+    description: 'Apply WCAG 1.4.12 text spacing overrides to test reflow',
+    criteria: ['10.12'],
+    type: 'css',
+    css: `
+/* CheckFox: text spacing (WCAG 1.4.12) */
+* {
+  line-height: 1.5em !important;
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+}
+p { margin-bottom: 2em !important; }
+`,
+  },
+
+  // ── 11. FORMS ────────────────────────────────────────────────────────────────
+
+  {
     id: 'forms',
-    group: 'Interaction',
+    group: 'Forms',
     label: 'Forms & buttons',
     description: 'Audit labels, fieldsets, button accessible names',
     criteria: ['11.01', '11.05', '11.09'],
@@ -724,27 +1013,29 @@ export const TOOLS = [
     },
   },
 
+  // ── 12. NAVIGATION ───────────────────────────────────────────────────────────
+
   {
-    id: 'status',
-    group: 'Interaction',
-    label: 'Status messages',
-    description: 'Show live regions and ARIA status roles',
-    criteria: ['07.05'],
+    id: 'landmarks',
+    group: 'Navigation',
+    label: 'Landmarks',
+    description: 'Highlight ARIA landmark roles and structural elements',
+    criteria: ['12.06'],
     type: 'js',
     args: [SHARED_CSS],
     inject: (css) => {
-      const ID = 'status'
+      const ID = 'landmarks'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
       const style = document.createElement('style')
       style.id = `__checkfox_${ID}`
       style.textContent = css +
-        '[role="alert"]{outline:2px solid #ef4444!important}' +
-        '[role="status"]{outline:2px solid #22c55e!important}' +
-        '[role="log"]{outline:2px solid #6366f1!important}' +
-        '[role="progressbar"]{outline:2px solid #a855f7!important}' +
-        '[aria-live]{outline:2px solid #eab308!important}'
+        '[role="main"],main{outline:2px solid #6366f1!important}' +
+        '[role="banner"],header{outline:2px solid #a855f7!important}' +
+        '[role="navigation"],nav{outline:2px solid #22c55e!important}' +
+        '[role="search"]{outline:2px solid #f97316!important}' +
+        '[role="contentinfo"],footer{outline:2px solid #eab308!important}'
       document.head.appendChild(style)
 
       const mk = (text, v) => {
@@ -755,75 +1046,113 @@ export const TOOLS = [
         return b
       }
 
-      document.querySelectorAll('[role="alert"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`role='alert'`, 'err'))
+      const seen = new WeakSet()
+
+      const badge = (el, text, v) => {
+        if (seen.has(el)) return
+        seen.add(el)
+        el.insertAdjacentElement('beforebegin', mk(text, v))
+      }
+
+      document.querySelectorAll('main,[role="main"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'main'
+        if (el.tagName.toLowerCase() === 'main' && !hasRole) {
+          badge(el, `<main — no role='main'>`, 'err')
+        } else {
+          badge(el, `role='main'`, 'info')
+        }
       })
-      document.querySelectorAll('[role="status"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`role='status'`, 'ok'))
+
+      document.querySelectorAll('header,[role="banner"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'banner'
+        if (el.tagName.toLowerCase() === 'header' && !hasRole) {
+          badge(el, `<header — no role='banner'>`, 'err')
+        } else {
+          badge(el, `role='banner'`, 'purple')
+        }
       })
-      document.querySelectorAll('[role="log"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`role='log'`, 'info'))
+
+      document.querySelectorAll('nav,[role="navigation"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'navigation'
+        if (el.tagName.toLowerCase() === 'nav' && !hasRole) {
+          badge(el, `<nav — no role='navigation'>`, 'err')
+        } else {
+          badge(el, `role='navigation'`, 'ok')
+        }
       })
-      document.querySelectorAll('[role="progressbar"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`role='progressbar'`, 'purple'))
+
+      document.querySelectorAll('[role="search"]').forEach(el => {
+        badge(el, `role='search'`, 'warn')
       })
-      document.querySelectorAll('[aria-live]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`aria-live='${el.getAttribute('aria-live')}'`, 'warn'))
+
+      document.querySelectorAll('footer,[role="contentinfo"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'contentinfo'
+        if (el.tagName.toLowerCase() === 'footer' && !hasRole) {
+          badge(el, `<footer — no role='contentinfo'>`, 'err')
+        } else {
+          badge(el, `role='contentinfo'`, 'yellow')
+        }
       })
     },
     remove: () => {
-      const ID = 'status'
+      const ID = 'landmarks'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
     },
   },
 
-  // ── PRESENTATION ─────────────────────────────────────────────────────────────
+  // ── 13. CONSULTATION ─────────────────────────────────────────────────────────
 
   {
-    id: 'text-spacing',
-    group: 'Presentation',
-    label: 'Text spacing',
-    description: 'Apply WCAG 1.4.12 text spacing overrides to test reflow',
-    criteria: ['10.12'],
-    type: 'css',
-    css: `
-/* CheckFox: text spacing (WCAG 1.4.12) */
-* {
-  line-height: 1.5em !important;
-  letter-spacing: 0.12em !important;
-  word-spacing: 0.16em !important;
-}
-p { margin-bottom: 2em !important; }
-`,
-  },
-
-  {
-    id: 'no-css',
-    group: 'Presentation',
-    label: 'Disable CSS',
-    description: 'Toggle all page stylesheets off to inspect unstyled structure',
-    criteria: [],
+    id: 'office-docs',
+    group: 'Consultation',
+    label: 'Office documents',
+    description: 'Highlight links to downloadable office and PDF files',
+    criteria: ['13.03', '13.04'],
     type: 'js',
-    inject: () => {
-      Array.from(document.styleSheets).forEach(sheet => {
-        if (sheet.ownerNode?.id?.startsWith('__checkfox')) return
-        try { sheet.disabled = true } catch (_) {}
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'office-docs'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const EXT_RE = /\.(pdf|docx?|xlsx?|pptx?|od[tsp]|rtf|csv)(\?[^"]*)?$/i
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'a[data-cfext]{outline:2px solid #f97316!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('a[href]').forEach(el => {
+        const href = el.getAttribute('href') ?? ''
+        const m = href.match(EXT_RE)
+        if (!m) return
+        el.setAttribute('data-cfext', m[1].toLowerCase())
+        el.insertAdjacentElement('afterend', mk(`.${m[1].toLowerCase()} — check accessible version`, 'warn'))
       })
-      document.documentElement.setAttribute('data-checkfox-nocss', 'on')
     },
     remove: () => {
-      Array.from(document.styleSheets).forEach(sheet => {
-        if (sheet.ownerNode?.id?.startsWith('__checkfox')) return
-        try { sheet.disabled = false } catch (_) {}
-      })
-      document.documentElement.removeAttribute('data-checkfox-nocss')
+      const ID = 'office-docs'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cfext]').forEach(e => e.removeAttribute('data-cfext'))
     },
   },
+
+  // ── CUSTOM ───────────────────────────────────────────────────────────────────
 
   {
     id: 'custom',
-    group: 'Presentation',
+    group: 'Custom',
     label: 'Custom CSS',
     description: 'Inject your own CSS into the page',
     criteria: [],
