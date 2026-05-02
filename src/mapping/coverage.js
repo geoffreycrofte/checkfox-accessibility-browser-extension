@@ -5,6 +5,7 @@
 import { decodeWcagTag, WCAG_SC_LIST } from './wcag-sc-list.js'
 import { WCAG_TO_RGAA } from './wcag-to-rgaa.js'
 import { WCAG_TO_RAWEB, RAWEB_NORM_ONLY } from './wcag-to-raweb.js'
+import { RULE_CRITERIA } from './rule-overrides.js'
 import { tagsToWcagScs, scsToRgaa, scsToRaweb } from './index.js'
 
 let pass = 0
@@ -95,6 +96,26 @@ const rawebWcagIds = new Set(Object.values(WCAG_TO_RAWEB).flat())
 const normOnlyConflicts = RAWEB_NORM_ONLY.filter(c => rawebWcagIds.has(c.id)).map(c => c.id)
 assert('RAWEB_NORM_ONLY IDs do not overlap with WCAG-anchored RAWeb criteria', normOnlyConflicts.length === 0, normOnlyConflicts.join(', '))
 
+// ── 3b. Rule-level override integrity ────────────────────────────────────────
+console.log('\n[3b] Rule override integrity')
+
+// All RAWeb criteria in overrides must also appear in the RGAA override (shared numbering)
+const overrideSubsetViolations = []
+for (const [rule, { rgaa, raweb }] of Object.entries(RULE_CRITERIA)) {
+  for (const id of raweb) {
+    if (!rgaa.includes(id)) overrideSubsetViolations.push(`${rule}: RAWeb ${id} not in RGAA override`)
+  }
+}
+assert('Override RAWeb criteria are a subset of override RGAA criteria', overrideSubsetViolations.length === 0, overrideSubsetViolations.slice(0, 3).join('; '))
+
+// All criterion IDs in overrides must match format /^\d+\.\d+$/
+const badOverrideIds = Object.entries(RULE_CRITERIA).flatMap(([rule, { rgaa, raweb }]) =>
+  [...rgaa, ...raweb].filter(id => !/^\d+\.\d+$/.test(id)).map(id => `${rule}→${id}`)
+)
+assert('Override criterion IDs all have correct format', badOverrideIds.length === 0, badOverrideIds.join(', '))
+
+console.log(`  Rule overrides defined: ${Object.keys(RULE_CRITERIA).length} rules`)
+
 // ── 4. Coverage gaps ──────────────────────────────────────────────────────────
 console.log('\n[4] Coverage report')
 
@@ -132,6 +153,22 @@ assert('image-alt → rgaa includes 1.1 (from 1.1.1)', enriched.criteria.rgaa.in
 assert('image-alt → raweb includes 1.1 (from 1.1.1)', enriched.criteria.raweb.includes('1.1'))
 assert('image-alt → rgaa includes 1.2 (from 4.1.2)', enriched.criteria.rgaa.includes('1.2'))
 assert('image-alt → wcag does NOT include conformance-level tags', !enriched.criteria.wcag.includes('wcag2a'))
+
+// Rule-level override smoke tests
+import { enrichViolation } from './index.js'
+
+const listViolation = enrichViolation({ ruleId: 'list', impact: 'moderate', wcagTags: ['wcag131', 'wcag2a'], nodes: [] })
+assert('list → rgaa is exactly [9.3]', JSON.stringify(listViolation.criteria.rgaa) === '["9.3"]')
+assert('list → raweb is empty (RAWeb has no list topic)', listViolation.criteria.raweb.length === 0)
+assert('list → wcag includes 1.3.1', listViolation.criteria.wcag.includes('1.3.1'))
+
+const labelViolation = enrichViolation({ ruleId: 'label', impact: 'critical', wcagTags: ['wcag412', 'wcag2a'], nodes: [] })
+assert('label → rgaa is [11.1, 11.2]', JSON.stringify(labelViolation.criteria.rgaa) === '["11.1","11.2"]')
+assert('label → raweb is empty (RAWeb has no forms topic)', labelViolation.criteria.raweb.length === 0)
+
+const colorViolation = enrichViolation({ ruleId: 'color-contrast', impact: 'serious', wcagTags: ['wcag143', 'wcag2aa'], nodes: [] })
+assert('color-contrast → rgaa is [3.2]', JSON.stringify(colorViolation.criteria.rgaa) === '["3.2"]')
+assert('color-contrast → raweb is [3.2] (shared topic)', JSON.stringify(colorViolation.criteria.raweb) === '["3.2"]')
 
 console.log(`\n  Enriched sample:\n${JSON.stringify(enriched, null, 4)}`)
 

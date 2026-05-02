@@ -26,7 +26,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content/axe-runner.js"],
+      "js": ["content/axe-core.js", "content/axe-runner.js"],
       "run_at": "document_idle"
     }
   ],

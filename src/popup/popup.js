@@ -95,9 +95,11 @@ async function initToolsPanel(tabId) {
     for (const id of activeIds) {
       const tool = TOOL_MAP[id]
       if (tool?.type === 'css') await injectCSS(tabId, tool.css)
-      else if (tool?.type === 'js') await executeFunc(tabId, tool.inject)
+      else if (tool?.type === 'js') await executeFunc(tabId, tool.inject, tool.args ?? [])
     }
   }
+
+  const refreshSubtitle = () => updateHeaderSubtitle(activeIds, tabId, stateKey)
 
   // Render groups
   for (const group of TOOL_GROUPS) {
@@ -106,12 +108,51 @@ async function initToolsPanel(tabId) {
     container.append(groupLabel)
 
     for (const tool of TOOLS.filter(t => t.group === group)) {
-      container.append(buildToolRow(tool, activeIds.has(tool.id), tabId, activeIds, stateKey))
+      container.append(buildToolRow(tool, activeIds.has(tool.id), tabId, activeIds, stateKey, refreshSubtitle))
     }
   }
+
+  refreshSubtitle()
 }
 
-function buildToolRow(tool, isActive, tabId, activeIds, stateKey) {
+function updateHeaderSubtitle(activeIds, tabId, stateKey) {
+  const subtitleEl = document.getElementById('header-subtitle')
+  if (activeIds.size === 0) {
+    subtitleEl.textContent = 'Accessibility Scanner'
+    return
+  }
+  const count = activeIds.size
+  subtitleEl.replaceChildren()
+  const countSpan = document.createElement('span')
+  countSpan.textContent = `${count} tool${count !== 1 ? 's' : ''} selected`
+  const deselectBtn = document.createElement('button')
+  deselectBtn.textContent = 'Deselect all'
+  deselectBtn.className = 'header__deselect-btn'
+  deselectBtn.addEventListener('click', async () => {
+    await deactivateAll(tabId, activeIds, stateKey)
+    updateHeaderSubtitle(activeIds, tabId, stateKey)
+  })
+  subtitleEl.append(countSpan, deselectBtn)
+}
+
+async function deactivateAll(tabId, activeIds, stateKey) {
+  for (const id of [...activeIds]) {
+    const tool = TOOL_MAP[id]
+    if (!tool || !tabId) continue
+    if (tool.type === 'css') await removeCSS(tabId, tool.css)
+    else if (tool.type === 'js') await executeFunc(tabId, tool.remove)
+    else if (tool.type === 'custom') await removeCSS(tabId, null, '__checkfox_custom')
+  }
+  activeIds.clear()
+  await chrome.storage.session.set({ [stateKey]: [] })
+  document.querySelectorAll('.tool-toggle--on').forEach(t => {
+    t.classList.remove('tool-toggle--on')
+    t.setAttribute('aria-pressed', 'false')
+  })
+  document.querySelectorAll('.tool-row--active').forEach(r => r.classList.remove('tool-row--active'))
+}
+
+function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitle) {
   const row = el('div', { class: `tool-row${isActive ? ' tool-row--active' : ''}` })
 
   // Toggle button
@@ -137,6 +178,19 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey) {
       criteriaEl.append(badge)
     }
     info.append(criteriaEl)
+  }
+
+  if (tool.legend?.length > 0) {
+    const legendEl = el('div', { class: 'tool-legend' })
+    for (const item of tool.legend) {
+      const legendItem = el('div', { class: 'tool-legend-item' })
+      const swatch = el('span', { class: 'tool-legend-swatch', style: `border: ${item.border}` })
+      const swatchLabel = el('span')
+      swatchLabel.textContent = item.label
+      legendItem.append(swatch, swatchLabel)
+      legendEl.append(legendItem)
+    }
+    info.append(legendEl)
   }
 
   row.append(toggle, info)
@@ -168,7 +222,7 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey) {
 
       if (tabId) {
         if (tool.type === 'css')    await injectCSS(tabId, tool.css)
-        else if (tool.type === 'js') await executeFunc(tabId, tool.inject)
+        else if (tool.type === 'js') await executeFunc(tabId, tool.inject, tool.args ?? [])
       }
     } else {
       activeIds.delete(tool.id)
@@ -184,6 +238,7 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey) {
     }
 
     await chrome.storage.session.set({ [stateKey]: [...activeIds] })
+    refreshSubtitle()
   })
 
   return row
@@ -225,9 +280,9 @@ async function removeCSS(tabId, css, id) {
   }
 }
 
-async function executeFunc(tabId, func) {
+async function executeFunc(tabId, func, args = []) {
   try {
-    await chrome.scripting.executeScript({ target: { tabId }, func })
+    await chrome.scripting.executeScript({ target: { tabId }, func, args })
   } catch (err) {
     console.warn('[CheckFox] executeFunc failed:', err)
   }

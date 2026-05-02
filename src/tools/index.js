@@ -1,24 +1,24 @@
-// ─── Shared label style fragments ────────────────────────────────────────────
-// Applied to ::before / ::after pseudo-elements in injected CSS.
-// Replaces the raw sans-serif / colored-background labels from the Stylus originals.
+// ─── Shared badge CSS (injected via args:[SHARED_CSS] into page context) ──────
+// Evaluated at module load time (extension context), serialized by Chrome,
+// received as the first param of inject(css) in page context.
 
-const B = 'font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace !important; font-size: 11px !important; font-weight: 600 !important; line-height: 1.5 !important; padding: 2px 8px !important; border-radius: 4px !important; display: block !important; width: max-content !important; max-width: 100% !important; margin-bottom: 2px !important;'
+const SHARED_CSS = [
+  '.__cfbadge{font-family:ui-monospace,"Cascadia Code","Fira Code",monospace!important;',
+  'font-size:11px!important;font-weight:600!important;padding:2px 6px!important;',
+  'border-radius:3px!important;display:block!important;width:max-content!important;',
+  'max-width:100%!important;margin:2px 0!important;pointer-events:none!important;line-height:1.5!important}',
+  '.__cfbadge--ok{background:#052e16!important;color:#86efac!important;border:1px solid #14532d!important}',
+  '.__cfbadge--err{background:#3b1010!important;color:#fca5a5!important;border:1px solid #7f1d1d!important}',
+  '.__cfbadge--warn{background:#431407!important;color:#fed7aa!important;border:1px solid #78350f!important}',
+  '.__cfbadge--info{background:#1e1b4b!important;color:#a5b4fc!important;border:1px solid #3730a3!important}',
+  '.__cfbadge--mute{background:#262636!important;color:#9898b0!important;border:1px solid #3a3a52!important}',
+  '.__cfbadge--purple{background:#3b0764!important;color:#e9d5ff!important;border:1px solid #7e22ce!important}',
+  '.__cfbadge--yellow{background:#2d2200!important;color:#fcd34d!important;border:1px solid #78350f!important}',
+].join('')
 
-const OK   = `${B} background: #052e16 !important; color: #86efac !important; border: 1px solid #14532d !important;`
-const ERR  = `${B} background: #3b1010 !important; color: #fca5a5 !important; border: 1px solid #7f1d1d !important;`
-const WARN = `${B} background: #431407 !important; color: #fed7aa !important; border: 1px solid #78350f !important;`
-const INFO = `${B} background: #1e1b4b !important; color: #a5b4fc !important; border: 1px solid #3730a3 !important;`
-const MUTE = `${B} background: #262636 !important; color: #9898b0 !important; border: 1px solid #3a3a52 !important;`
-
-// Outline colours (replaces raw green/red/blue/orange/yellow/purple)
-const C = {
-  ok:    '#22c55e',
-  err:   '#ef4444',
-  warn:  '#f97316',
-  caution: '#eab308',
-  info:  '#6366f1',
-  purple:'#a855f7',
-}
+// ─── Outline colour palette (used in inject CSS strings and legend arrays) ────
+// These are module-scope — do NOT reference inside inject/remove function bodies.
+const C = { ok: '#22c55e', err: '#ef4444', warn: '#f97316', caution: '#eab308', info: '#6366f1', purple: '#a855f7' }
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -32,37 +32,54 @@ export const TOOLS = [
     label: 'Headings',
     description: 'Show heading hierarchy and levels',
     criteria: ['09.01'],
-    type: 'css',
-    css: `
-/* CheckFox: headings */
-h1,h2,h3,h4,h5,h6 { outline: 2px solid ${C.ok} !important; }
-[role="heading"]   { outline: 2px solid ${C.caution} !important; }
-h1[role],h2[role],h3[role],h4[role],h5[role],h6[role] { outline: 2px solid ${C.err} !important; }
-h1[aria-hidden],h2[aria-hidden],h3[aria-hidden],h4[aria-hidden],h5[aria-hidden],h6[aria-hidden] { outline: 2px solid ${C.err} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'headings'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-h1::before { content: "<h1>"; ${OK} }
-h2::before { content: "<h2>"; ${OK} }
-h3::before { content: "<h3>"; ${OK} }
-h4::before { content: "<h4>"; ${OK} }
-h5::before { content: "<h5>"; ${OK} }
-h6::before { content: "<h6>"; ${OK} }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'h1,h2,h3,h4,h5,h6{outline:2px solid #22c55e!important}' +
+        '[role="heading"]{outline:2px solid #eab308!important}' +
+        'h1[role],h2[role],h3[role],h4[role],h5[role],h6[role]{outline:2px solid #ef4444!important}' +
+        'h1[aria-hidden],h2[aria-hidden],h3[aria-hidden],h4[aria-hidden],h5[aria-hidden],h6[aria-hidden]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
 
-[role="heading"]::before { content: "role='heading' aria-level='" attr(aria-level) "'"; ${WARN} }
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
 
-h1[role]::before { content: "<h1 role='" attr(role) "'>"; ${ERR} }
-h2[role]::before { content: "<h2 role='" attr(role) "'>"; ${ERR} }
-h3[role]::before { content: "<h3 role='" attr(role) "'>"; ${ERR} }
-h4[role]::before { content: "<h4 role='" attr(role) "'>"; ${ERR} }
-h5[role]::before { content: "<h5 role='" attr(role) "'>"; ${ERR} }
-h6[role]::before { content: "<h6 role='" attr(role) "'>"; ${ERR} }
+      document.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const role = el.getAttribute('role')
+        const ariaHidden = el.getAttribute('aria-hidden')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
+        } else if (ariaHidden !== null) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} aria-hidden='${ariaHidden}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+        }
+      })
 
-h1[aria-hidden]::before { content: "<h1 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-h2[aria-hidden]::before { content: "<h2 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-h3[aria-hidden]::before { content: "<h3 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-h4[aria-hidden]::before { content: "<h4 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-h5[aria-hidden]::before { content: "<h5 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-h6[aria-hidden]::before { content: "<h6 aria-hidden='" attr(aria-hidden) "'>"; ${ERR} }
-`,
+      document.querySelectorAll('[role="heading"]').forEach(el => {
+        if (/^h[1-6]$/i.test(el.tagName)) return
+        const level = el.getAttribute('aria-level') ?? ''
+        el.insertAdjacentElement('beforebegin', mk(`role='heading' aria-level='${level}'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'headings'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -71,27 +88,84 @@ h6[aria-hidden]::before { content: "<h6 aria-hidden='" attr(aria-hidden) "'>"; $
     label: 'Landmarks',
     description: 'Highlight ARIA landmark roles and structural elements',
     criteria: ['12.06'],
-    type: 'css',
-    css: `
-/* CheckFox: landmarks */
-[role="main"],main         { outline: 2px solid ${C.info} !important; }
-[role="banner"],header     { outline: 2px solid ${C.purple} !important; }
-[role="navigation"],nav    { outline: 2px solid ${C.ok} !important; }
-[role="search"]            { outline: 2px solid ${C.warn} !important; }
-[role="contentinfo"],footer{ outline: 2px solid ${C.caution} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'landmarks'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-[role="main"]::before,main::before         { content: "role='main'";        ${INFO} }
-[role="banner"]::before,header::before     { content: "role='banner'";      ${B} background:#3b0764!important;color:#e9d5ff!important;border:1px solid #7e22ce!important; }
-[role="navigation"]::before,nav::before   { content: "role='navigation'";  ${OK} }
-[role="search"]::before                   { content: "role='search'";       ${WARN} }
-[role="contentinfo"]::before,footer::before { content: "role='contentinfo'"; ${B} background:#2d2200!important;color:#fcd34d!important;border:1px solid #78350f!important; }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[role="main"],main{outline:2px solid #6366f1!important}' +
+        '[role="banner"],header{outline:2px solid #a855f7!important}' +
+        '[role="navigation"],nav{outline:2px solid #22c55e!important}' +
+        '[role="search"]{outline:2px solid #f97316!important}' +
+        '[role="contentinfo"],footer{outline:2px solid #eab308!important}'
+      document.head.appendChild(style)
 
-/* Unroles: semantic element without matching ARIA role */
-header:not([role="banner"])::before   { content: "<header — no role='banner'>"; ${ERR} }
-nav:not([role="navigation"])::before  { content: "<nav — no role='navigation'>"; ${ERR} }
-main:not([role="main"])::before       { content: "<main — no role='main'>"; ${ERR} }
-footer:not([role="contentinfo"])::before { content: "<footer — no role='contentinfo'>"; ${ERR} }
-`,
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const seen = new WeakSet()
+
+      const badge = (el, text, v) => {
+        if (seen.has(el)) return
+        seen.add(el)
+        el.insertAdjacentElement('beforebegin', mk(text, v))
+      }
+
+      document.querySelectorAll('main,[role="main"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'main'
+        if (el.tagName.toLowerCase() === 'main' && !hasRole) {
+          badge(el, `<main — no role='main'>`, 'err')
+        } else {
+          badge(el, `role='main'`, 'info')
+        }
+      })
+
+      document.querySelectorAll('header,[role="banner"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'banner'
+        if (el.tagName.toLowerCase() === 'header' && !hasRole) {
+          badge(el, `<header — no role='banner'>`, 'err')
+        } else {
+          badge(el, `role='banner'`, 'purple')
+        }
+      })
+
+      document.querySelectorAll('nav,[role="navigation"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'navigation'
+        if (el.tagName.toLowerCase() === 'nav' && !hasRole) {
+          badge(el, `<nav — no role='navigation'>`, 'err')
+        } else {
+          badge(el, `role='navigation'`, 'ok')
+        }
+      })
+
+      document.querySelectorAll('[role="search"]').forEach(el => {
+        badge(el, `role='search'`, 'warn')
+      })
+
+      document.querySelectorAll('footer,[role="contentinfo"]').forEach(el => {
+        const hasRole = el.getAttribute('role') === 'contentinfo'
+        if (el.tagName.toLowerCase() === 'footer' && !hasRole) {
+          badge(el, `<footer — no role='contentinfo'>`, 'err')
+        } else {
+          badge(el, `role='contentinfo'`, 'yellow')
+        }
+      })
+    },
+    remove: () => {
+      const ID = 'landmarks'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -100,25 +174,63 @@ footer:not([role="contentinfo"])::before { content: "<footer — no role='conten
     label: 'Lists',
     description: 'Show list elements and role overrides',
     criteria: ['09.03'],
-    type: 'css',
-    css: `
-/* CheckFox: lists */
-ul,ol,dl,[role="list"] { outline: 2px solid ${C.ok} !important; }
-li,[role="listitem"]    { outline: 1px solid ${C.ok} !important; }
-ul[role],ol[role],li[role],dl[role] { outline: 2px solid ${C.err} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'lists'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-ul::before                { content: "<ul>"; ${OK} }
-ol::before                { content: "<ol>"; ${OK} }
-dl::before                { content: "<dl>"; ${OK} }
-li::before                { content: "<li>"; ${MUTE} }
-[role="list"]::before     { content: "role='list'"; ${OK} }
-[role="listitem"]::before { content: "role='listitem'"; ${MUTE} }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'ul,ol,dl,[role="list"]{outline:2px solid #22c55e!important}' +
+        'li,[role="listitem"]{outline:1px solid #22c55e!important}' +
+        'ul[role],ol[role],li[role],dl[role]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
 
-ul[role]::before { content: "<ul role='" attr(role) "'>"; ${ERR} }
-ol[role]::before { content: "<ol role='" attr(role) "'>"; ${ERR} }
-li[role]::before { content: "<li role='" attr(role) "'>"; ${ERR} }
-dl[role]::before { content: "<dl role='" attr(role) "'>"; ${ERR} }
-`,
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('ul,ol,dl').forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const role = el.getAttribute('role')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}>`, 'ok'))
+        }
+      })
+
+      document.querySelectorAll('li').forEach(el => {
+        const role = el.getAttribute('role')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<li role='${role}'>`, 'err'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<li>`, 'mute'))
+        }
+      })
+
+      document.querySelectorAll('[role="list"]').forEach(el => {
+        if (/^(ul|ol|dl)$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk(`role='list'`, 'ok'))
+      })
+
+      document.querySelectorAll('[role="listitem"]').forEach(el => {
+        if (/^li$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk(`role='listitem'`, 'mute'))
+      })
+    },
+    remove: () => {
+      const ID = 'lists'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -127,22 +239,61 @@ dl[role]::before { content: "<dl role='" attr(role) "'>"; ${ERR} }
     label: 'Tables',
     description: 'Highlight tables, headers, captions and scope attributes',
     criteria: ['05.01', '05.02', '05.03', '05.04'],
-    type: 'css',
-    css: `
-/* CheckFox: tables */
-table,[role="table"] { outline: 2px solid ${C.ok} !important; }
-th,[role="columnheader"],[role="rowheader"] { outline: 2px solid ${C.purple} !important; }
-caption { outline: 2px solid ${C.info} !important; }
-table[role]::after { content: "<table role='" attr(role) "'>"; ${ERR} }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'tables'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-table::before,[role="table"]::before { content: "table"; ${OK} }
-table[summary]::before { content: "table summary='" attr(summary) "'"; ${WARN} }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'table,[role="table"]{outline:2px solid #22c55e!important}' +
+        'th,[role="columnheader"],[role="rowheader"]{outline:2px solid #a855f7!important}' +
+        'caption{outline:2px solid #6366f1!important}' +
+        'table[role]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
 
-th::before,[role="columnheader"]::before,[role="rowheader"]::before {
-  content: "th scope='" attr(scope) "'"; ${B} background:#3b0764!important;color:#e9d5ff!important;border:1px solid #7e22ce!important;
-}
-caption::before { content: "caption"; ${INFO} }
-`,
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('table').forEach(el => {
+        const role = el.getAttribute('role')
+        const summary = el.getAttribute('summary')
+        if (role) {
+          el.insertAdjacentElement('beforebegin', mk(`<table role='${role}'>`, 'err'))
+        } else if (summary !== null) {
+          el.insertAdjacentElement('beforebegin', mk(`table summary='${summary}'`, 'warn'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`table`, 'ok'))
+        }
+      })
+
+      document.querySelectorAll('[role="table"]').forEach(el => {
+        if (/^table$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk(`role='table'`, 'ok'))
+      })
+
+      document.querySelectorAll('th,[role="columnheader"],[role="rowheader"]').forEach(el => {
+        const scope = el.getAttribute('scope') ?? 'none'
+        el.insertAdjacentElement('beforebegin', mk(`th scope='${scope}'`, 'purple'))
+      })
+
+      document.querySelectorAll('caption').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`caption`, 'info'))
+      })
+    },
+    remove: () => {
+      const ID = 'tables'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   // ── CONTENT ──────────────────────────────────────────────────────────────────
@@ -151,29 +302,61 @@ caption::before { content: "caption"; ${INFO} }
     id: 'images',
     group: 'Content',
     label: 'Images',
-    description: 'Show alt text and flag missing or decorative attributes',
+    description: 'Shows alt text on each image and outlines by accessibility status',
     criteria: ['01.01', '01.02', '01.03'],
-    type: 'css',
-    css: `
-/* CheckFox: images */
-img                      { outline: 2px solid ${C.purple} !important; max-width: 150px; }
-img:not([alt])           { outline: 3px solid ${C.err} !important; }
-img[alt=""]              { outline: 2px solid ${C.ok} !important; }
-svg                      { outline: 2px solid ${C.ok} !important; max-width: 150px; }
-svg[aria-hidden="true"]  { outline: 2px dashed ${C.ok} !important; }
-[role="img"]             { outline: 2px solid ${C.purple} !important; }
-[role="img"][aria-hidden="true"] { outline: 2px dashed ${C.purple} !important; }
-area                     { outline: 2px solid ${C.warn} !important; }
-input[type="image"]      { outline: 2px solid ${C.purple} !important; }
+    legend: [
+      { border: `2px solid ${C.purple}`, label: 'img — has alt text' },
+      { border: `2px solid ${C.ok}`,     label: 'img — decorative (alt="")' },
+      { border: `3px solid ${C.err}`,    label: 'img — missing alt attribute' },
+      { border: `2px dashed ${C.ok}`,    label: 'svg / role="img" — hidden from AT' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'images'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-img:not([alt])::before           { content: "img — ALT MISSING"; ${ERR} }
-img[alt=""]::before              { content: "img alt='' (decorative)"; ${OK} }
-img[alt]:not([alt=""])::before   { content: "alt='" attr(alt) "'"; ${OK} }
-svg[role="img"]::before          { content: "svg role='img' — " attr(aria-label); ${OK} }
-svg[aria-hidden="true"]::before  { content: "svg aria-hidden='true' (decorative)"; ${MUTE} }
-[role="img"][aria-label]::before { content: "role='img' aria-label='" attr(aria-label) "'"; ${OK} }
-[role="img"]:not([aria-label]):not([aria-labelledby])::before { content: "role='img' — NO LABEL"; ${ERR} }
-`,
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'img{outline:2px solid #a855f7!important;max-width:150px}' +
+        'img:not([alt]){outline:3px solid #ef4444!important}' +
+        'img[alt=""]{outline:2px solid #22c55e!important}' +
+        'svg{outline:2px solid #22c55e!important;max-width:150px}' +
+        'svg[aria-hidden="true"]{outline:2px dashed #22c55e!important}' +
+        '[role="img"]{outline:2px solid #a855f7!important}' +
+        '[role="img"][aria-hidden="true"]{outline:2px dashed #a855f7!important}' +
+        'area{outline:2px solid #f97316!important}' +
+        'input[type="image"]{outline:2px solid #a855f7!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('img').forEach(img => {
+        const alt = img.getAttribute('alt')
+        let badge
+        if (alt === null) {
+          badge = mk('ALT MISSING', 'err')
+        } else if (alt === '') {
+          badge = mk('alt="" (decorative)', 'mute')
+        } else {
+          badge = mk(`alt="${alt}"`, 'ok')
+        }
+        img.insertAdjacentElement('afterend', badge)
+      })
+    },
+    remove: () => {
+      const ID = 'images'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -182,28 +365,59 @@ svg[aria-hidden="true"]::before  { content: "svg aria-hidden='true' (decorative)
     label: 'Links',
     description: 'Audit link types, accessible names and hidden children',
     criteria: ['06.01', '06.02'],
-    type: 'css',
-    css: `
-/* CheckFox: links */
-a[href],a[tabindex="0"],a[role="link"],[role="link"] { outline: 2px solid ${C.info} !important; }
-a[onclick],a[href^="javascript"],a[href=""],a[href="#"],a:not([href]) { outline: 2px dashed ${C.err} !important; }
-a[tabindex="-1"] { outline: 2px solid ${C.warn} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'links'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-a[role]::before,[role="link"]::before { content: "role='" attr(role) "'"; ${WARN} }
-a[aria-label]::before,[role="link"][aria-label]::before { content: "aria-label='" attr(aria-label) "'"; ${OK} }
-a[aria-labelledby]::before { content: "aria-labelledby='" attr(aria-labelledby) "'"; ${INFO} }
-a[aria-describedby]::before { content: "aria-describedby='" attr(aria-describedby) "'"; ${MUTE} }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'a[href],a[tabindex="0"],[role="link"]{outline:2px solid #6366f1!important}' +
+        'a[onclick],a[href^="javascript"],a[href=""],a[href="#"],a:not([href]){outline:2px dashed #ef4444!important}' +
+        'a[tabindex="-1"]{outline:2px solid #f97316!important}' +
+        'a *[aria-hidden="true"],[role="link"] *[aria-hidden="true"]{outline:2px solid #ef4444!important}'
+      document.head.appendChild(style)
 
-a *[aria-hidden="true"],a *[hidden],[role="link"] *[aria-hidden="true"] {
-  outline: 2px solid ${C.err} !important;
-}
-a *[aria-hidden="true"]::before,[role="link"] *[aria-hidden="true"]::before {
-  content: "aria-hidden='true' inside link"; ${ERR}
-}
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
 
-/* Images inside links */
-a img,a svg,a [role="img"],[role="link"] img,[role="link"] svg { outline: 2px solid ${C.err} !important; }
-`,
+      document.querySelectorAll('a,[role="link"]').forEach(el => {
+        const role = el.getAttribute('role')
+        const ariaLabel = el.getAttribute('aria-label')
+        const ariaLabelledby = el.getAttribute('aria-labelledby')
+        const href = el.getAttribute('href')
+        const tabindex = el.getAttribute('tabindex')
+
+        if (ariaLabel) {
+          el.insertAdjacentElement('afterend', mk(`aria-label='${ariaLabel}'`, 'ok'))
+        } else if (ariaLabelledby) {
+          el.insertAdjacentElement('afterend', mk(`aria-labelledby='${ariaLabelledby}'`, 'info'))
+        } else if (role && role !== 'link') {
+          el.insertAdjacentElement('afterend', mk(`role='${role}'`, 'warn'))
+        } else if (el.tagName.toLowerCase() === 'a' && (href === null || href === '' || href === '#' || (href && href.startsWith('javascript')))) {
+          el.insertAdjacentElement('afterend', mk(`bad href: ${href ?? 'missing'}`, 'err'))
+        } else if (tabindex === '-1') {
+          el.insertAdjacentElement('afterend', mk(`tabindex='-1'`, 'warn'))
+        }
+      })
+
+      document.querySelectorAll('a *[aria-hidden="true"],[role="link"] *[aria-hidden="true"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`aria-hidden inside link`, 'err'))
+      })
+    },
+    remove: () => {
+      const ID = 'links'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -212,15 +426,43 @@ a img,a svg,a [role="img"],[role="link"] img,[role="link"] svg { outline: 2px so
     label: 'Language',
     description: 'Show lang and dir attribute values on all elements',
     criteria: ['08.03', '08.04', '08.07', '08.08', '08.10'],
-    type: 'css',
-    css: `
-/* CheckFox: language */
-:not(html)[lang] { outline: 2px solid ${C.ok} !important; }
-:not(html)[lang]::before { content: "lang='" attr(lang) "'"; ${OK} }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'lang'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-:not(html)[dir] { outline: 2px solid ${C.info} !important; }
-:not(html)[dir]::before { content: "dir='" attr(dir) "'"; ${INFO} }
-`,
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        ':not(html)[lang]{outline:2px solid #22c55e!important}' +
+        ':not(html)[dir]{outline:2px solid #6366f1!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[lang]').forEach(el => {
+        if (el.tagName.toLowerCase() === 'html') return
+        el.insertAdjacentElement('beforebegin', mk(`lang='${el.getAttribute('lang')}'`, 'ok'))
+      })
+
+      document.querySelectorAll('[dir]').forEach(el => {
+        if (el.tagName.toLowerCase() === 'html') return
+        el.insertAdjacentElement('beforebegin', mk(`dir='${el.getAttribute('dir')}'`, 'info'))
+      })
+    },
+    remove: () => {
+      const ID = 'lang'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -229,15 +471,41 @@ a img,a svg,a [role="img"],[role="link"] img,[role="link"] svg { outline: 2px so
     label: 'Hidden content',
     description: 'Reveal hidden and aria-hidden elements',
     criteria: ['10.08'],
-    type: 'css',
-    css: `
-/* CheckFox: hidden content */
-[hidden]          { outline: 2px solid ${C.err} !important; background: rgba(239,68,68,0.08) !important; }
-[aria-hidden="true"] { outline: 2px solid ${C.warn} !important; background: rgba(247,115,22,0.08) !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'hidden'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-[hidden]::before          { content: "hidden"; ${ERR} }
-[aria-hidden="true"]::before { content: "aria-hidden='" attr(aria-hidden) "'"; ${WARN} }
-`,
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[hidden]{display:block!important;outline:2px solid #ef4444!important;background:rgba(239,68,68,0.08)!important}' +
+        '[aria-hidden="true"]{outline:2px solid #f97316!important;background:rgba(247,115,22,0.08)!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[hidden]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`hidden`, 'err'))
+      })
+
+      document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`aria-hidden='true'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'hidden'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   // ── INTERACTION ──────────────────────────────────────────────────────────────
@@ -248,25 +516,40 @@ a img,a svg,a [role="img"],[role="link"] img,[role="link"] svg { outline: 2px so
     label: 'Focus / Tab order',
     description: 'Highlight focus ring and tabindex values on interactive elements',
     criteria: ['10.07', '12.08'],
-    type: 'css',
-    css: `
-/* CheckFox: focus / tab order */
-*:focus { outline: 3px solid ${C.warn} !important; outline-offset: 2px !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'focus'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex] {
-  outline: 2px solid ${C.err} !important;
-}
-a[tabindex="-1"],button[tabindex="-1"],input[tabindex="-1"],select[tabindex="-1"],textarea[tabindex="-1"],[role="button"][tabindex="-1"],[role="link"][tabindex="-1"] {
-  outline: 2px dashed ${C.err} !important;
-}
-a[tabindex="0"],button[tabindex="0"],input[tabindex="0"],select[tabindex="0"],textarea[tabindex="0"] {
-  outline: 2px dotted ${C.caution} !important;
-}
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '*:focus{outline:3px solid #f97316!important;outline-offset:2px!important}' +
+        'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]{outline:2px solid #ef4444!important}' +
+        'a[tabindex="-1"],button[tabindex="-1"],input[tabindex="-1"],select[tabindex="-1"],textarea[tabindex="-1"],[role="button"][tabindex="-1"],[role="link"][tabindex="-1"]{outline:2px dashed #ef4444!important}' +
+        'a[tabindex="0"],button[tabindex="0"],input[tabindex="0"],select[tabindex="0"],textarea[tabindex="0"]{outline:2px dotted #eab308!important}'
+      document.head.appendChild(style)
 
-a[tabindex]::after,button[tabindex]::after,input[tabindex]::after,select[tabindex]::after,textarea[tabindex]::after,[role="button"][tabindex]::after,[role="link"][tabindex]::after {
-  content: "tabindex='" attr(tabindex) "'"; ${ERR}
-}
-`,
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const sel = 'a[tabindex],button[tabindex],input[tabindex],select[tabindex],textarea[tabindex],[role="button"][tabindex],[role="link"][tabindex]'
+      document.querySelectorAll(sel).forEach(el => {
+        el.insertAdjacentElement('afterend', mk(`tabindex='${el.getAttribute('tabindex')}'`, 'err'))
+      })
+    },
+    remove: () => {
+      const ID = 'focus'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -275,32 +558,79 @@ a[tabindex]::after,button[tabindex]::after,input[tabindex]::after,select[tabinde
     label: 'ARIA roles & states',
     description: 'Show ARIA roles and state/property attributes',
     criteria: ['07.01', '07.02', '07.03'],
-    type: 'css',
-    css: `
-/* CheckFox: ARIA roles & states */
-[role]:not([role="navigation"],[role="main"],[role="banner"],[role="contentinfo"],[role="search"],[role="heading"],[role="img"],[role="alert"],[role="log"],[role="status"],[role="progressbar"],[role="list"],[role="listitem"]) {
-  outline: 2px solid ${C.err} !important;
-}
-[aria-label],[aria-labelledby],[aria-describedby],[aria-expanded],[aria-pressed],[aria-checked],[aria-selected],[aria-disabled],[aria-required],[aria-invalid],[aria-live],[aria-controls],[aria-owns],[aria-haspopup],[aria-current] {
-  outline: 2px solid ${C.ok} !important;
-}
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'aria'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-[role]:not([role="navigation"],[role="main"],[role="banner"],[role="contentinfo"],[role="search"],[role="heading"],[role="img"],[role="alert"],[role="log"],[role="status"],[role="progressbar"],[role="list"],[role="listitem"])::before {
-  content: "role='" attr(role) "'"; ${ERR}
-}
-[role][aria-label]:not([role="navigation"],[role="main"],[role="banner"],[role="contentinfo"],[role="search"])::before {
-  content: "role='" attr(role) "' aria-label='" attr(aria-label) "'"; ${OK}
-}
-[role][aria-labelledby]:not([role="navigation"],[role="main"],[role="banner"],[role="contentinfo"],[role="search"])::before {
-  content: "role='" attr(role) "' aria-labelledby='" attr(aria-labelledby) "'"; ${OK}
-}
-:not([role])[aria-label]::before   { content: "aria-label='" attr(aria-label) "'"; ${OK} }
-:not([role])[aria-expanded]::before { content: "aria-expanded='" attr(aria-expanded) "'"; ${INFO} }
-:not([role])[aria-pressed]::before  { content: "aria-pressed='" attr(aria-pressed) "'"; ${INFO} }
-:not([role])[aria-current]::before  { content: "aria-current='" attr(aria-current) "'"; ${INFO} }
-:not([role])[aria-invalid]::before  { content: "aria-invalid='" attr(aria-invalid) "'"; ${ERR} }
-:not([role])[aria-required]::before { content: "aria-required='" attr(aria-required) "'"; ${WARN} }
-`,
+      const EXCLUDED = new Set(['navigation','main','banner','contentinfo','search','heading','img','alert','log','status','progressbar','list','listitem'])
+      const ARIA_ATTRS = ['aria-label','aria-labelledby','aria-describedby','aria-expanded','aria-pressed','aria-checked','aria-selected','aria-disabled','aria-required','aria-invalid','aria-live','aria-controls','aria-owns','aria-haspopup','aria-current']
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      const excludedSel = [...EXCLUDED].map(r => `[role="${r}"]`).join(',')
+      style.textContent = css +
+        `[role]:not(${excludedSel}){outline:2px solid #ef4444!important}` +
+        `${ARIA_ATTRS.map(a => `[${a}]`).join(',')}{outline:2px solid #22c55e!important}`
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const seen = new WeakSet()
+
+      const badge = (el, text, v) => {
+        if (seen.has(el)) return
+        seen.add(el)
+        el.insertAdjacentElement('beforebegin', mk(text, v))
+      }
+
+      document.querySelectorAll('[role]').forEach(el => {
+        const role = el.getAttribute('role')
+        if (EXCLUDED.has(role)) return
+        const ariaLabel = el.getAttribute('aria-label')
+        const ariaLabelledby = el.getAttribute('aria-labelledby')
+        if (ariaLabel) {
+          badge(el, `role='${role}' aria-label='${ariaLabel}'`, 'ok')
+        } else if (ariaLabelledby) {
+          badge(el, `role='${role}' aria-labelledby='${ariaLabelledby}'`, 'ok')
+        } else {
+          badge(el, `role='${role}'`, 'err')
+        }
+      })
+
+      document.querySelectorAll('[aria-expanded]').forEach(el => {
+        badge(el, `aria-expanded='${el.getAttribute('aria-expanded')}'`, 'info')
+      })
+
+      document.querySelectorAll('[aria-pressed]').forEach(el => {
+        badge(el, `aria-pressed='${el.getAttribute('aria-pressed')}'`, 'info')
+      })
+
+      document.querySelectorAll('[aria-current]').forEach(el => {
+        badge(el, `aria-current='${el.getAttribute('aria-current')}'`, 'info')
+      })
+
+      document.querySelectorAll('[aria-invalid]').forEach(el => {
+        badge(el, `aria-invalid='${el.getAttribute('aria-invalid')}'`, 'err')
+      })
+
+      document.querySelectorAll('[aria-required]').forEach(el => {
+        badge(el, `aria-required='${el.getAttribute('aria-required')}'`, 'warn')
+      })
+    },
+    remove: () => {
+      const ID = 'aria'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -309,44 +639,89 @@ a[tabindex]::after,button[tabindex]::after,input[tabindex]::after,select[tabinde
     label: 'Forms & buttons',
     description: 'Audit labels, fieldsets, button accessible names',
     criteria: ['11.01', '11.05', '11.09'],
-    type: 'css',
-    css: `
-/* CheckFox: forms & buttons */
-/* Labels */
-label               { outline: 2px solid ${C.ok} !important; }
-label:not([for])    { outline: 2px solid ${C.warn} !important; }
-input:not([aria-label]):not([title]):not([id])  { outline: 2px solid ${C.err} !important; }
-input[aria-label],input[title],input[id]        { outline: 2px solid ${C.ok} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'forms'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-/* Fieldsets */
-fieldset            { outline: 2px solid ${C.ok} !important; }
-fieldset:not(:has(legend)) { outline: 2px solid ${C.err} !important; }
-fieldset > :first-child:not(legend) { outline: 3px solid ${C.err} !important; }
-legend              { outline: 2px solid ${C.ok} !important; }
-[role="group"]:not([aria-label]):not([aria-labelledby]) { outline: 2px solid ${C.err} !important; }
-[role="group"][aria-label],[role="group"][aria-labelledby] { outline: 2px solid ${C.ok} !important; }
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'label{outline:2px solid #22c55e!important}' +
+        'label:not([for]){outline:2px solid #f97316!important}' +
+        'input:not([aria-label]):not([title]):not([id]){outline:2px solid #ef4444!important}' +
+        'input[aria-label],input[title],input[id]{outline:2px solid #22c55e!important}' +
+        'fieldset{outline:2px solid #22c55e!important}' +
+        'fieldset:not(:has(legend)){outline:2px solid #ef4444!important}' +
+        'legend{outline:2px solid #22c55e!important}' +
+        '[role="group"]:not([aria-label]):not([aria-labelledby]){outline:2px solid #ef4444!important}' +
+        '[role="group"][aria-label],[role="group"][aria-labelledby]{outline:2px solid #22c55e!important}' +
+        'button{outline:2px solid #22c55e!important}' +
+        'button[role]:not([role="button"]){outline:2px solid #ef4444!important}' +
+        '[role="button"]{outline:2px dashed #f97316!important}'
+      document.head.appendChild(style)
 
-label::before           { content: "<label for='" attr(for) "'>"; ${OK} }
-label:not([for])::before{ content: "<label — no [for]>"; ${WARN} }
-fieldset::after         { content: "<fieldset>"; ${OK} }
-legend::before          { content: "<legend>"; ${OK} }
-[role="group"]::after                         { content: "role='group' — NO LABEL"; ${ERR} }
-[role="group"][aria-label]::after             { content: "role='group' aria-label='" attr(aria-label) "'"; ${OK} }
-[role="group"][aria-labelledby]::after        { content: "role='group' aria-labelledby='" attr(aria-labelledby) "'"; ${OK} }
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
 
-/* Buttons */
-button { outline: 2px solid ${C.ok} !important; }
-button[role]:not([role="button"]) { outline: 2px solid ${C.err} !important; }
-[role="button"] { outline: 2px dashed ${C.warn} !important; }
-button[tabindex="-1"],[role="button"][tabindex="-1"] { outline: 2px solid ${C.warn} !important; }
+      document.querySelectorAll('label').forEach(el => {
+        const forAttr = el.getAttribute('for')
+        if (forAttr) {
+          el.insertAdjacentElement('beforebegin', mk(`<label for='${forAttr}'>`, 'ok'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<label — no [for]>`, 'warn'))
+        }
+      })
 
-button::before                        { content: "<button>"; ${OK} }
-button[aria-label]::before            { content: "<button aria-label='" attr(aria-label) "'>"; ${OK} }
-button[aria-labelledby]::before       { content: "<button aria-labelledby='" attr(aria-labelledby) "'>"; ${OK} }
-button[role]:not([role="button"])::before { content: "<button role='" attr(role) "'>"; ${ERR} }
-[role="button"]::before               { content: "role='button'"; ${WARN} }
-[role="button"][aria-label]::before   { content: "role='button' aria-label='" attr(aria-label) "'"; ${OK} }
-`,
+      document.querySelectorAll('fieldset').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`<fieldset>`, 'ok'))
+      })
+
+      document.querySelectorAll('legend').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`<legend>`, 'ok'))
+      })
+
+      document.querySelectorAll('[role="group"]').forEach(el => {
+        const ariaLabel = el.getAttribute('aria-label')
+        const ariaLabelledby = el.getAttribute('aria-labelledby')
+        if (ariaLabel) {
+          el.insertAdjacentElement('beforebegin', mk(`role='group' aria-label='${ariaLabel}'`, 'ok'))
+        } else if (ariaLabelledby) {
+          el.insertAdjacentElement('beforebegin', mk(`role='group' aria-labelledby='${ariaLabelledby}'`, 'ok'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`role='group' — NO LABEL`, 'err'))
+        }
+      })
+
+      document.querySelectorAll('button').forEach(el => {
+        const role = el.getAttribute('role')
+        const ariaLabel = el.getAttribute('aria-label')
+        if (role && role !== 'button') {
+          el.insertAdjacentElement('afterend', mk(`<button role='${role}'>`, 'err'))
+        } else if (ariaLabel) {
+          el.insertAdjacentElement('afterend', mk(`<button aria-label='${ariaLabel}'>`, 'ok'))
+        } else {
+          el.insertAdjacentElement('afterend', mk(`<button>`, 'ok'))
+        }
+      })
+
+      document.querySelectorAll('[role="button"]').forEach(el => {
+        if (/^button$/i.test(el.tagName)) return
+        el.insertAdjacentElement('afterend', mk(`role='button'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'forms'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   {
@@ -355,21 +730,52 @@ button[role]:not([role="button"])::before { content: "<button role='" attr(role)
     label: 'Status messages',
     description: 'Show live regions and ARIA status roles',
     criteria: ['07.05'],
-    type: 'css',
-    css: `
-/* CheckFox: status messages */
-[role="alert"]       { outline: 2px solid ${C.err} !important; }
-[role="status"]      { outline: 2px solid ${C.ok} !important; }
-[role="log"]         { outline: 2px solid ${C.info} !important; }
-[role="progressbar"] { outline: 2px solid ${C.purple} !important; }
-[aria-live]          { outline: 2px solid ${C.caution} !important; }
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css) => {
+      const ID = 'status'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
-[role="alert"]::before       { content: "role='alert'"; ${ERR} }
-[role="status"]::before      { content: "role='status'"; ${OK} }
-[role="log"]::before         { content: "role='log'"; ${INFO} }
-[role="progressbar"]::before { content: "role='progressbar'"; ${B} background:#3b0764!important;color:#e9d5ff!important;border:1px solid #7e22ce!important; }
-[aria-live]::before          { content: "aria-live='" attr(aria-live) "'"; ${WARN} }
-`,
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[role="alert"]{outline:2px solid #ef4444!important}' +
+        '[role="status"]{outline:2px solid #22c55e!important}' +
+        '[role="log"]{outline:2px solid #6366f1!important}' +
+        '[role="progressbar"]{outline:2px solid #a855f7!important}' +
+        '[aria-live]{outline:2px solid #eab308!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      document.querySelectorAll('[role="alert"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='alert'`, 'err'))
+      })
+      document.querySelectorAll('[role="status"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='status'`, 'ok'))
+      })
+      document.querySelectorAll('[role="log"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='log'`, 'info'))
+      })
+      document.querySelectorAll('[role="progressbar"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`role='progressbar'`, 'purple'))
+      })
+      document.querySelectorAll('[aria-live]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk(`aria-live='${el.getAttribute('aria-live')}'`, 'warn'))
+      })
+    },
+    remove: () => {
+      const ID = 'status'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
   },
 
   // ── PRESENTATION ─────────────────────────────────────────────────────────────
@@ -399,7 +805,6 @@ p { margin-bottom: 2em !important; }
     description: 'Toggle all page stylesheets off to inspect unstyled structure',
     criteria: [],
     type: 'js',
-    // inject / remove are called with (tabId, active) by the popup
     inject: () => {
       Array.from(document.styleSheets).forEach(sheet => {
         if (sheet.ownerNode?.id?.startsWith('__checkfox')) return

@@ -1,6 +1,7 @@
 import { decodeWcagTag } from './wcag-sc-list.js'
 import { WCAG_TO_RGAA } from './wcag-to-rgaa.js'
 import { WCAG_TO_RAWEB } from './wcag-to-raweb.js'
+import { RULE_CRITERIA } from './rule-overrides.js'
 
 /**
  * Decode axe wcag* tags into WCAG SC strings, deduplicated and sorted.
@@ -59,12 +60,13 @@ export function scsToRaweb(scs) {
  */
 export function enrichViolation(violation) {
   const wcag = tagsToWcagScs(violation.wcagTags)
+  const override = RULE_CRITERIA[violation.ruleId]
   return {
     ...violation,
     criteria: {
       wcag,
-      rgaa: scsToRgaa(wcag),
-      raweb: scsToRaweb(wcag),
+      rgaa:   override ? sortCriteriaIds([...override.rgaa])   : scsToRgaa(wcag),
+      raweb:  override ? sortCriteriaIds([...override.raweb])  : scsToRaweb(wcag),
     },
   }
 }

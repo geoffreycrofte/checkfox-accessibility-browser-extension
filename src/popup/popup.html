@@ -10,7 +10,7 @@
     <header class="header">
       <span class="header__logo" aria-hidden="true">🦊</span>
       <h1 class="header__title">CheckFox</h1>
-      <span class="header__subtitle">Accessibility Scanner</span>
+      <span class="header__subtitle" id="header-subtitle">Accessibility Scanner</span>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Panel">
@@ -31,6 +31,10 @@
     <section id="panel-tools" class="main" role="tabpanel" aria-labelledby="tab-tools" hidden>
       <div id="tools-list" class="tools-list"></div>
     </section>
+
+    <footer class="popup-footer">
+      Made for the accessibility toolset <a href="https://checkfox.eu" target="_blank" rel="noopener noreferrer">CheckFox.eu</a>
+    </footer>
 
     <script type="module" src="./popup.js"></script>
   </body>

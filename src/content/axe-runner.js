@@ -1,4 +1,5 @@
-import axe from 'axe-core'
+// axe-core is loaded as a separate content script declared before this one in manifest.json
+const axe = window.axe
 
 // Guard: register the message listener only once per page load.
 // The browser won't re-inject a declared content script, but this is
