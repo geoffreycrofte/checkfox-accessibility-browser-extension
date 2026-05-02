@@ -1,3 +1,5 @@
+import { runCustomChecks } from './custom-checks.js'
+
 // axe-core is loaded as a separate content script declared before this one in manifest.json
 const axe = window.axe
 
@@ -48,12 +50,14 @@ async function runScan() {
     })),
   })
 
+  const custom = runCustomChecks()
+
   return {
     success: true,
     url: window.location.href,
     timestamp: new Date().toISOString(),
-    violations: results.violations.map(mapRule),
-    incomplete: results.incomplete.map(mapRule),
+    violations: [...results.violations.map(mapRule), ...custom.violations],
+    incomplete: [...results.incomplete.map(mapRule), ...custom.incomplete],
     passes: results.passes.map(v => ({ ruleId: v.id, description: v.description })),
   }
 }

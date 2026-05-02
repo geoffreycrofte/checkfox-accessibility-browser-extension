@@ -38,6 +38,11 @@ export const RULE_CRITERIA = {
   'scrollable-region-focusable': both(['4.11', '4.12']),
   'server-side-image-map':   both(['4.11', '4.12']),
 
+  // ── Custom CheckFox rules (media not covered by axe-core) ─────────────────
+  'checkfox-video-autoplay':    both(['13.8', '4.11']),
+  'checkfox-media-no-controls': both(['4.11']),
+  'checkfox-video-description': both(['4.1']),
+
   // ── Topic 5 — Tables ─────────────────────────────────────────────────────────
   'td-headers-attr':         both(['5.6', '5.7']),
   'th-has-data-cells':       both(['5.4', '5.5']),
