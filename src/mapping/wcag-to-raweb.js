@@ -1,32 +1,11 @@
 // WCAG 2.x SC → RAWeb 1.1 criteria mapping.
-// Derived from https://github.com/accessibility-luxembourg/ReferentielAccessibiliteWeb/blob/main/en/json/criteres.json
-// RAWeb covers 7 topics (Images, Frames, Colours, Multimedia, Tables, Links, Scripts).
-// It is a strict subset of RGAA's 13 topics, with identical criterion numbering within shared topics.
+// RAWeb 1.1 (Luxembourg) covers 17 topics: topics 1–13 are identical to RGAA 4.2,
+// plus topics 14–17 (Documentation, Editing tools, Support services, Real-time
+// communication) which have no WCAG SC anchors and are not reachable by axe-core.
+// The WCAG SC → criterion mapping for topics 1–13 is verified identical to RGAA.
+// Source: docs/raweb-1.1.json + docs/rgaa-4.2.json (compared programmatically).
 
-/** @type {Record<string, string[]>} */
-export const WCAG_TO_RAWEB = {
-  '1.1.1': ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.9', '4.7', '4.8', '4.9', '6.1', '6.2', '7.2'],
-  '1.2.1': ['4.1', '4.2'],
-  '1.2.2': ['4.3', '4.4'],
-  '1.2.3': ['4.1', '4.2'],
-  '1.2.5': ['4.5', '4.6'],
-  '1.3.1': ['3.1', '5.1', '5.2', '5.4', '5.5', '5.6', '5.7', '5.8', '7.3'],
-  '1.3.2': ['5.3'],
-  '1.4.1': ['3.1'],
-  '1.4.2': ['4.10'],
-  '1.4.3': ['3.2'],
-  '1.4.5': ['1.8'],
-  '1.4.11': ['3.3'],
-  '2.1.1': ['4.11', '4.12', '7.3'],
-  '2.1.2': ['4.11', '4.12'],
-  '2.4.4': ['6.1', '6.2'],
-  '2.4.7': ['7.3'],
-  '2.5.3': ['6.1', '7.1'],
-  '3.2.1': ['7.4'],
-  '3.2.2': ['7.4'],
-  '4.1.2': ['1.2', '1.3', '1.9', '2.1', '2.2', '4.13', '5.3', '6.1', '6.2', '7.1', '7.2', '7.5'],
-  '4.1.3': ['7.5'],
-}
+export { WCAG_TO_RGAA as WCAG_TO_RAWEB } from './wcag-to-rgaa.js'
 
 // RAWeb criteria with no WCAG SC anchor — EN 301 549-only (media player requirements).
 // These cannot be flagged by axe-core and require manual review.

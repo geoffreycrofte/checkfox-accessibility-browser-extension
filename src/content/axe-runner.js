@@ -35,23 +35,25 @@ async function runScan() {
     iframes: false,
   })
 
+  const mapRule = v => ({
+    ruleId: v.id,
+    impact: v.impact,
+    description: v.description,
+    helpUrl: v.helpUrl,
+    wcagTags: v.tags.filter(t => /^wcag\d/.test(t) || t === 'best-practice'),
+    nodes: v.nodes.map(n => ({
+      selector: n.target.join(', '),
+      htmlSnippet: n.html,
+      failureSummary: n.failureSummary,
+    })),
+  })
+
   return {
     success: true,
     url: window.location.href,
     timestamp: new Date().toISOString(),
-    passesCount: results.passes.length,
-    incompleteCount: results.incomplete.length,
-    violations: results.violations.map(v => ({
-      ruleId: v.id,
-      impact: v.impact,
-      description: v.description,
-      helpUrl: v.helpUrl,
-      wcagTags: v.tags.filter(t => /^wcag\d/.test(t) || t === 'best-practice'),
-      nodes: v.nodes.map(n => ({
-        selector: n.target.join(', '),
-        htmlSnippet: n.html,
-        failureSummary: n.failureSummary,
-      })),
-    })),
+    violations: results.violations.map(mapRule),
+    incomplete: results.incomplete.map(mapRule),
+    passes: results.passes.map(v => ({ ruleId: v.id, description: v.description })),
   }
 }

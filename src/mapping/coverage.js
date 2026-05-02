@@ -81,15 +81,15 @@ assert(`WCAG_TO_RAWEB: all ${rawebKeys.length} keys are valid WCAG SCs`, unknown
 const badRgaaIds = Object.entries(WCAG_TO_RGAA).flatMap(([sc, ids]) => ids.filter(id => !/^\d+\.\d+$/.test(id)).map(id => `${sc}→${id}`))
 assert(`WCAG_TO_RGAA: all criterion IDs have correct format`, badRgaaIds.length === 0, badRgaaIds.join(', '))
 
-// RAWeb must be a subset of RGAA for shared SCs
-const rawebNotInRgaa = []
-for (const [sc, rawebIds] of Object.entries(WCAG_TO_RAWEB)) {
-  const rgaaIds = WCAG_TO_RGAA[sc] ?? []
-  for (const id of rawebIds) {
-    if (!rgaaIds.includes(id)) rawebNotInRgaa.push(`SC ${sc}: RAWeb ${id} not in RGAA`)
-  }
+// RAWeb and RGAA must be identical (verified from source JSON docs/)
+const rawebRgaaDiffs = []
+const allScs = new Set([...Object.keys(WCAG_TO_RGAA), ...Object.keys(WCAG_TO_RAWEB)])
+for (const sc of allScs) {
+  const r = JSON.stringify(WCAG_TO_RGAA[sc] ?? [])
+  const w = JSON.stringify(WCAG_TO_RAWEB[sc] ?? [])
+  if (r !== w) rawebRgaaDiffs.push(`SC ${sc}: RGAA=${r} RAWeb=${w}`)
 }
-assert('RAWeb criteria are a subset of RGAA for all shared SCs', rawebNotInRgaa.length === 0, rawebNotInRgaa.slice(0, 3).join('; '))
+assert('RAWeb and RGAA mappings are identical (source-verified)', rawebRgaaDiffs.length === 0, rawebRgaaDiffs.slice(0, 3).join('; '))
 
 // RAWEB_NORM_ONLY must not overlap with WCAG_TO_RAWEB criterion IDs
 const rawebWcagIds = new Set(Object.values(WCAG_TO_RAWEB).flat())
@@ -159,12 +159,12 @@ import { enrichViolation } from './index.js'
 
 const listViolation = enrichViolation({ ruleId: 'list', impact: 'moderate', wcagTags: ['wcag131', 'wcag2a'], nodes: [] })
 assert('list → rgaa is exactly [9.3]', JSON.stringify(listViolation.criteria.rgaa) === '["9.3"]')
-assert('list → raweb is empty (RAWeb has no list topic)', listViolation.criteria.raweb.length === 0)
+assert('list → raweb is [9.3] (RAWeb topic 9 covers structure)', JSON.stringify(listViolation.criteria.raweb) === '["9.3"]')
 assert('list → wcag includes 1.3.1', listViolation.criteria.wcag.includes('1.3.1'))
 
 const labelViolation = enrichViolation({ ruleId: 'label', impact: 'critical', wcagTags: ['wcag412', 'wcag2a'], nodes: [] })
 assert('label → rgaa is [11.1, 11.2]', JSON.stringify(labelViolation.criteria.rgaa) === '["11.1","11.2"]')
-assert('label → raweb is empty (RAWeb has no forms topic)', labelViolation.criteria.raweb.length === 0)
+assert('label → raweb is [11.1, 11.2] (RAWeb topic 11 covers forms)', JSON.stringify(labelViolation.criteria.raweb) === '["11.1","11.2"]')
 
 const colorViolation = enrichViolation({ ruleId: 'color-contrast', impact: 'serious', wcagTags: ['wcag143', 'wcag2aa'], nodes: [] })
 assert('color-contrast → rgaa is [3.2]', JSON.stringify(colorViolation.criteria.rgaa) === '["3.2"]')

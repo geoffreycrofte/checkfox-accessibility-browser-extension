@@ -1,142 +1,145 @@
-// Per-rule RGAA 4.1.2 / RAWeb 1.1 criterion overrides.
+// Per-rule RGAA 4.2 / RAWeb 1.1 criterion overrides.
 // Used instead of the generic WCAG-SC → criteria chain, which is too broad
-// for SCs like 1.3.1 or 4.1.2 that each cover dozens of RGAA criteria.
+// for SCs like 1.3.1 or 4.1.2 that each cover many RGAA/RAWeb criteria.
 //
-// RAWeb and RGAA share the same criterion numbering for their 7 overlapping
-// topics (Images → 1.x, Frames → 2.x, Colours → 3.x, Multimedia → 4.x,
-// Tables → 5.x, Links → 6.x, Scripts → 7.x). Topics 8-13 are RGAA-only.
-// When a rule only concerns RGAA-only topics, raweb is [].
+// RAWeb 1.1 and RGAA 4.2 share identical criterion numbering and WCAG SC
+// mappings for topics 1–13 (verified programmatically from the source JSON
+// files in docs/). both() is used for all entries since the two referentials
+// are currently identical. If they diverge in a future version, replace the
+// relevant both() calls with explicit { rgaa: [...], raweb: [...] } objects.
+
+const both = ids => ({ rgaa: ids, raweb: ids })
 
 /** @type {Record<string, { rgaa: string[], raweb: string[] }>} */
 export const RULE_CRITERIA = {
 
   // ── Topic 1 — Images ─────────────────────────────────────────────────────────
-  'image-alt':               { rgaa: ['1.1', '1.2'],            raweb: ['1.1', '1.2'] },
-  'input-image-alt':         { rgaa: ['1.1', '1.2'],            raweb: ['1.1', '1.2'] },
-  'object-alt':              { rgaa: ['1.1', '1.2'],            raweb: ['1.1', '1.2'] },
-  'role-img-alt':            { rgaa: ['1.1', '1.2'],            raweb: ['1.1', '1.2'] },
-  'svg-img-alt':             { rgaa: ['1.1', '1.2'],            raweb: ['1.1', '1.2'] },
-  'image-redundant-alt':     { rgaa: ['1.2'],                   raweb: ['1.2'] },
-  'area-alt':                { rgaa: ['1.1', '6.1', '6.2'],     raweb: ['1.1', '6.1', '6.2'] },
+  'image-alt':               both(['1.1', '1.2']),
+  'input-image-alt':         both(['1.1', '1.2']),
+  'object-alt':              both(['1.1', '1.2']),
+  'role-img-alt':            both(['1.1', '1.2']),
+  'svg-img-alt':             both(['1.1', '1.2']),
+  'image-redundant-alt':     both(['1.2']),
+  'area-alt':                both(['1.1', '6.1', '6.2']),
 
   // ── Topic 2 — Frames ─────────────────────────────────────────────────────────
-  'frame-title':             { rgaa: ['2.1', '2.2'],            raweb: ['2.1', '2.2'] },
-  'frame-title-unique':      { rgaa: ['2.1'],                   raweb: ['2.1'] },
+  'frame-title':             both(['2.1', '2.2']),
+  'frame-title-unique':      both(['2.1']),
 
   // ── Topic 3 — Colours ────────────────────────────────────────────────────────
-  'color-contrast':          { rgaa: ['3.2'],                   raweb: ['3.2'] },
-  'color-contrast-enhanced': { rgaa: ['3.2'],                   raweb: ['3.2'] },
-  'link-in-text-block':      { rgaa: ['3.1'],                   raweb: ['3.1'] },
+  'color-contrast':          both(['3.2']),
+  'color-contrast-enhanced': both(['3.2']),
+  'link-in-text-block':      both(['3.1']),
 
   // ── Topic 4 — Multimedia ─────────────────────────────────────────────────────
-  'no-autoplay-audio':       { rgaa: ['4.10'],                  raweb: ['4.10'] },
-  'video-caption':           { rgaa: ['4.3', '4.4'],            raweb: ['4.3', '4.4'] },
-  'frame-focusable-content': { rgaa: ['4.11', '4.12'],          raweb: ['4.11', '4.12'] },
-  'scrollable-region-focusable': { rgaa: ['4.11', '4.12'],      raweb: ['4.11', '4.12'] },
-  'server-side-image-map':   { rgaa: ['4.11', '4.12'],          raweb: ['4.11', '4.12'] },
+  'no-autoplay-audio':       both(['4.10']),
+  'video-caption':           both(['4.3', '4.4']),
+  'frame-focusable-content': both(['4.11', '4.12']),
+  'scrollable-region-focusable': both(['4.11', '4.12']),
+  'server-side-image-map':   both(['4.11', '4.12']),
 
   // ── Topic 5 — Tables ─────────────────────────────────────────────────────────
-  'td-headers-attr':         { rgaa: ['5.6', '5.7'],            raweb: ['5.6', '5.7'] },
-  'th-has-data-cells':       { rgaa: ['5.4', '5.5'],            raweb: ['5.4', '5.5'] },
-  'table-fake-caption':      { rgaa: ['5.1', '5.2'],            raweb: ['5.1', '5.2'] },
-  'td-has-header':           { rgaa: ['5.6', '5.7'],            raweb: ['5.6', '5.7'] },
-  'scope-attr-valid':        { rgaa: ['5.6', '5.7'],            raweb: ['5.6', '5.7'] },
-  'table-duplicate-name':    { rgaa: ['5.1', '5.2'],            raweb: ['5.1', '5.2'] },
-  'empty-table-header':      { rgaa: ['5.4', '5.5'],            raweb: ['5.4', '5.5'] },
+  'td-headers-attr':         both(['5.6', '5.7']),
+  'th-has-data-cells':       both(['5.4', '5.5']),
+  'table-fake-caption':      both(['5.1', '5.2']),
+  'td-has-header':           both(['5.6', '5.7']),
+  'scope-attr-valid':        both(['5.6', '5.7']),
+  'table-duplicate-name':    both(['5.1', '5.2']),
+  'empty-table-header':      both(['5.4', '5.5']),
 
   // ── Topic 6 — Links ──────────────────────────────────────────────────────────
-  'link-name':               { rgaa: ['6.1', '6.2'],            raweb: ['6.1', '6.2'] },
-  'identical-links-same-purpose': { rgaa: ['6.1', '6.2'],       raweb: ['6.1', '6.2'] },
+  'link-name':               both(['6.1', '6.2']),
+  'identical-links-same-purpose': both(['6.1', '6.2']),
 
   // ── Topic 7 — Scripts ────────────────────────────────────────────────────────
-  'aria-allowed-attr':       { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-allowed-role':       { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-braille-equivalent': { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-command-name':       { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-conditional-attr':   { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-deprecated-role':    { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-dialog-name':        { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-hidden-body':        { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-hidden-focus':       { rgaa: ['7.1', '7.3'],            raweb: ['7.1', '7.3'] },
-  'aria-meter-name':         { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-progressbar-name':   { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-prohibited-attr':    { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-required-attr':      { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-required-children':  { rgaa: ['7.1', '7.3'],            raweb: ['7.1', '7.3'] },
-  'aria-required-parent':    { rgaa: ['7.1', '7.3'],            raweb: ['7.1', '7.3'] },
-  'aria-roledescription':    { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-roles':              { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-tab-name':           { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-text':               { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-tooltip-name':       { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-treeitem-name':      { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-valid-attr':         { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'aria-valid-attr-value':   { rgaa: ['7.1'],                   raweb: ['7.1'] },
-  'focus-order-semantics':   { rgaa: ['7.3'],                   raweb: ['7.3'] },
-  'presentation-role-conflict': { rgaa: ['7.1'],                raweb: ['7.1'] },
-  'blink':                   { rgaa: ['13.1'],                  raweb: [] },
-  'marquee':                 { rgaa: ['13.1'],                  raweb: [] },
+  'aria-allowed-attr':       both(['7.1']),
+  'aria-allowed-role':       both(['7.1']),
+  'aria-braille-equivalent': both(['7.1']),
+  'aria-command-name':       both(['7.1']),
+  'aria-conditional-attr':   both(['7.1']),
+  'aria-deprecated-role':    both(['7.1']),
+  'aria-dialog-name':        both(['7.1']),
+  'aria-hidden-body':        both(['7.1']),
+  'aria-hidden-focus':       both(['7.1', '7.3']),
+  'aria-meter-name':         both(['7.1']),
+  'aria-progressbar-name':   both(['7.1']),
+  'aria-prohibited-attr':    both(['7.1']),
+  'aria-required-attr':      both(['7.1']),
+  'aria-required-children':  both(['7.1', '7.3']),
+  'aria-required-parent':    both(['7.1', '7.3']),
+  'aria-roledescription':    both(['7.1']),
+  'aria-roles':              both(['7.1']),
+  'aria-tab-name':           both(['7.1']),
+  'aria-text':               both(['7.1']),
+  'aria-tooltip-name':       both(['7.1']),
+  'aria-treeitem-name':      both(['7.1']),
+  'aria-valid-attr':         both(['7.1']),
+  'aria-valid-attr-value':   both(['7.1']),
+  'focus-order-semantics':   both(['7.3']),
+  'presentation-role-conflict': both(['7.1']),
+  'blink':                   both(['13.1']),
+  'marquee':                 both(['13.1']),
 
-  // ── Topic 8 — Mandatory elements (RGAA only) ─────────────────────────────────
-  'document-title':          { rgaa: ['8.5', '8.6'],            raweb: [] },
-  'duplicate-id-aria':       { rgaa: ['8.2'],                   raweb: [] },
-  'duplicate-id-active':     { rgaa: ['8.1', '8.2'],            raweb: [] },
-  'duplicate-id':            { rgaa: ['8.1', '8.2'],            raweb: [] },
-  'html-has-lang':           { rgaa: ['8.3', '8.4'],            raweb: [] },
-  'html-lang-valid':         { rgaa: ['8.3', '8.4'],            raweb: [] },
-  'html-xml-lang-mismatch':  { rgaa: ['8.3', '8.4'],            raweb: [] },
-  'valid-lang':              { rgaa: ['8.7', '8.8'],            raweb: [] },
+  // ── Topic 8 — Mandatory elements ─────────────────────────────────────────────
+  'document-title':          both(['8.5', '8.6']),
+  'duplicate-id-aria':       both(['8.2']),
+  'duplicate-id-active':     both(['8.1', '8.2']),
+  'duplicate-id':            both(['8.1', '8.2']),
+  'html-has-lang':           both(['8.3', '8.4']),
+  'html-lang-valid':         both(['8.3', '8.4']),
+  'html-xml-lang-mismatch':  both(['8.3', '8.4']),
+  'valid-lang':              both(['8.7', '8.8']),
 
-  // ── Topic 9 — Structure (RGAA only) ──────────────────────────────────────────
-  'bypass':                  { rgaa: ['9.1', '12.6', '12.7'],   raweb: [] },
-  'definition-list':         { rgaa: ['9.3'],                   raweb: [] },
-  'dlitem':                  { rgaa: ['9.3'],                   raweb: [] },
-  'empty-heading':           { rgaa: ['9.1'],                   raweb: [] },
-  'heading-order':           { rgaa: ['9.1'],                   raweb: [] },
-  'list':                    { rgaa: ['9.3'],                   raweb: [] },
-  'listitem':                { rgaa: ['9.3'],                   raweb: [] },
-  'p-as-heading':            { rgaa: ['9.1'],                   raweb: [] },
-  'page-has-heading-one':    { rgaa: ['9.1'],                   raweb: [] },
+  // ── Topic 9 — Information structure ──────────────────────────────────────────
+  'bypass':                  both(['9.1', '12.6', '12.7']),
+  'definition-list':         both(['9.3']),
+  'dlitem':                  both(['9.3']),
+  'empty-heading':           both(['9.1']),
+  'heading-order':           both(['9.1']),
+  'list':                    both(['9.3']),
+  'listitem':                both(['9.3']),
+  'p-as-heading':            both(['9.1']),
+  'page-has-heading-one':    both(['9.1']),
 
-  // ── Topic 10 — Presentation (RGAA only) ──────────────────────────────────────
-  'avoid-inline-spacing':    { rgaa: ['10.12'],                 raweb: [] },
-  'meta-viewport':           { rgaa: ['10.4'],                  raweb: [] },
-  'meta-viewport-large':     { rgaa: ['10.4'],                  raweb: [] },
+  // ── Topic 10 — Presentation ──────────────────────────────────────────────────
+  'avoid-inline-spacing':    both(['10.12']),
+  'meta-viewport':           both(['10.4']),
+  'meta-viewport-large':     both(['10.4']),
 
-  // ── Topic 11 — Forms (RGAA only) ─────────────────────────────────────────────
-  'autocomplete-valid':      { rgaa: ['11.13'],                 raweb: [] },
-  'button-name':             { rgaa: ['11.9'],                  raweb: [] },
-  'form-field-multiple-labels': { rgaa: ['11.2'],               raweb: [] },
-  'input-button-name':       { rgaa: ['11.9'],                  raweb: [] },
-  'label':                   { rgaa: ['11.1', '11.2'],          raweb: [] },
-  'label-content-name-mismatch': { rgaa: ['11.2', '11.9'],      raweb: [] },
-  'label-title-only':        { rgaa: ['11.1', '11.2'],          raweb: [] },
-  'select-name':             { rgaa: ['11.1'],                  raweb: [] },
-  'summary-name':            { rgaa: ['11.9'],                  raweb: [] },
-  'aria-input-field-name':   { rgaa: ['11.1'],                  raweb: [] },
-  'aria-toggle-field-name':  { rgaa: ['11.1'],                  raweb: [] },
+  // ── Topic 11 — Forms ─────────────────────────────────────────────────────────
+  'autocomplete-valid':      both(['11.13']),
+  'button-name':             both(['11.9']),
+  'form-field-multiple-labels': both(['11.2']),
+  'input-button-name':       both(['11.9']),
+  'label':                   both(['11.1', '11.2']),
+  'label-content-name-mismatch': both(['11.2', '11.9']),
+  'label-title-only':        both(['11.1', '11.2']),
+  'select-name':             both(['11.1']),
+  'summary-name':            both(['11.9']),
+  'aria-input-field-name':   both(['11.1']),
+  'aria-toggle-field-name':  both(['11.1']),
 
-  // ── Topic 12 — Navigation (RGAA only) ────────────────────────────────────────
-  'accesskeys':              { rgaa: ['12.10'],                 raweb: [] },
-  'landmark-banner-is-top-level':     { rgaa: ['12.6'],         raweb: [] },
-  'landmark-complementary-is-top-level': { rgaa: ['12.6'],      raweb: [] },
-  'landmark-contentinfo-is-top-level':{ rgaa: ['12.6'],         raweb: [] },
-  'landmark-main-is-top-level':       { rgaa: ['12.6'],         raweb: [] },
-  'landmark-no-duplicate-banner':     { rgaa: ['12.6'],         raweb: [] },
-  'landmark-no-duplicate-contentinfo':{ rgaa: ['12.6'],         raweb: [] },
-  'landmark-no-duplicate-main':       { rgaa: ['12.6'],         raweb: [] },
-  'landmark-one-main':       { rgaa: ['12.6'],                  raweb: [] },
-  'landmark-unique':         { rgaa: ['12.6'],                  raweb: [] },
-  'nested-interactive':      { rgaa: ['12.9'],                  raweb: [] },
-  'region':                  { rgaa: ['12.6'],                  raweb: [] },
-  'skip-link':               { rgaa: ['12.7'],                  raweb: [] },
-  'tabindex':                { rgaa: ['12.8'],                  raweb: [] },
+  // ── Topic 12 — Navigation ────────────────────────────────────────────────────
+  'accesskeys':              both(['12.10']),
+  'landmark-banner-is-top-level':      both(['12.6']),
+  'landmark-complementary-is-top-level': both(['12.6']),
+  'landmark-contentinfo-is-top-level': both(['12.6']),
+  'landmark-main-is-top-level':        both(['12.6']),
+  'landmark-no-duplicate-banner':      both(['12.6']),
+  'landmark-no-duplicate-contentinfo': both(['12.6']),
+  'landmark-no-duplicate-main':        both(['12.6']),
+  'landmark-one-main':       both(['12.6']),
+  'landmark-unique':         both(['12.6']),
+  'nested-interactive':      both(['12.9']),
+  'region':                  both(['12.6']),
+  'skip-link':               both(['12.7']),
+  'tabindex':                both(['12.8']),
 
-  // ── Topic 13 — Consultation (RGAA only) ──────────────────────────────────────
-  'css-orientation-lock':    { rgaa: ['13.9'],                  raweb: [] },
-  'meta-refresh':            { rgaa: ['13.1', '13.8'],          raweb: [] },
-  'meta-refresh-no-exceptions': { rgaa: ['13.1', '13.8'],       raweb: [] },
+  // ── Topic 13 — Consultation ──────────────────────────────────────────────────
+  'css-orientation-lock':    both(['13.9']),
+  'meta-refresh':            both(['13.1', '13.8']),
+  'meta-refresh-no-exceptions': both(['13.1', '13.8']),
 
   // ── No RGAA/RAWeb criterion yet (WCAG 2.2 additions) ─────────────────────────
-  'target-size':             { rgaa: [],                        raweb: [] },
+  'target-size':             both([]),
 }

@@ -55,6 +55,7 @@ function initScanPanel(tabId) {
 
       if (response?.success) {
         response.violations = enrichViolations(response.violations)
+        response.incomplete = enrichViolations(response.incomplete)
         renderResults(resultsEl, response)
         resultsEl.hidden = false
       } else if (response === null) {
@@ -297,14 +298,46 @@ function showStatus(el, type, message) {
 }
 
 function renderResults(container, data) {
-  const { violations, passesCount, incompleteCount, url } = data
+  const { violations, incomplete, passes, url } = data
   container.replaceChildren()
 
-  const summary = el('div', { class: 'summary', role: 'region', 'aria-label': 'Scan summary' })
+  const activeFilters = new Set(['violations', 'incomplete'])
+
+  const list = el('ul', { class: 'results-list', 'aria-label': 'Scan results' })
+
+  const syncFilter = () => {
+    list.classList.toggle('hide-violations', !activeFilters.has('violations'))
+    list.classList.toggle('hide-incomplete', !activeFilters.has('incomplete'))
+    list.classList.toggle('hide-passes', !activeFilters.has('passes'))
+  }
+
+  const makeFilter = (cls, key, text) => {
+    const isActive = activeFilters.has(key)
+    const btn = el('button', {
+      class: `badge badge--filter ${cls}${isActive ? '' : ' badge--off'}`,
+      'aria-pressed': String(isActive),
+    })
+    btn.textContent = text
+    btn.addEventListener('click', () => {
+      if (activeFilters.has(key)) {
+        activeFilters.delete(key)
+        btn.classList.add('badge--off')
+        btn.setAttribute('aria-pressed', 'false')
+      } else {
+        activeFilters.add(key)
+        btn.classList.remove('badge--off')
+        btn.setAttribute('aria-pressed', 'true')
+      }
+      syncFilter()
+    })
+    return btn
+  }
+
+  const summary = el('div', { class: 'summary', role: 'group', 'aria-label': 'Filter scan results' })
   summary.append(
-    badge('badge--error', `${violations.length} violation${violations.length !== 1 ? 's' : ''}`),
-    badge('badge--warn', `${incompleteCount} incomplete`),
-    badge('badge--ok', `${passesCount} passes`),
+    makeFilter('badge--error', 'violations', `${violations.length} violation${violations.length !== 1 ? 's' : ''}`),
+    makeFilter('badge--warn', 'incomplete', `${incomplete.length} incomplete`),
+    makeFilter('badge--ok', 'passes', `${passes.length} pass${passes.length !== 1 ? 'es' : ''}`),
   )
   container.append(summary)
 
@@ -312,32 +345,33 @@ function renderResults(container, data) {
   urlEl.textContent = truncate(url, 60)
   container.append(urlEl)
 
-  if (violations.length === 0) {
-    const msg = el('p', { class: 'no-violations' })
-    msg.textContent = 'No axe-core violations detected.'
-    container.append(msg)
-    return
-  }
-
   const impactOrder = { critical: 0, serious: 1, moderate: 2, minor: 3 }
-  const sorted = [...violations].sort(
-    (a, b) => (impactOrder[a.impact] ?? 99) - (impactOrder[b.impact] ?? 99),
-  )
+  const byImpact = arr => [...arr].sort((a, b) => (impactOrder[a.impact] ?? 99) - (impactOrder[b.impact] ?? 99))
 
-  const list = el('ul', { class: 'violations', 'aria-label': 'Violations list' })
-  for (const v of sorted) list.append(violationItem(v))
+  for (const v of byImpact(violations)) list.append(violationItem(v, 'violation'))
+  for (const v of byImpact(incomplete)) list.append(violationItem(v, 'incomplete'))
+  for (const p of passes) list.append(passItem(p))
+
+  syncFilter()
   container.append(list)
 }
 
-function violationItem(v) {
-  const item = el('li', { class: `violation violation--${v.impact}` })
+function violationItem(v, status = 'violation') {
+  const item = el('li', { class: `violation violation--${v.impact ?? 'unknown'} violation--${status}`, 'data-status': status })
 
   const header = el('div', { class: 'violation__header' })
   const ruleEl = el('strong', { class: 'violation__rule' })
   ruleEl.textContent = v.ruleId
-  const impactEl = el('span', { class: `violation__impact violation__impact--${v.impact}` })
-  impactEl.textContent = v.impact
-  header.append(ruleEl, impactEl)
+  const impactEl = el('span', { class: `violation__impact violation__impact--${v.impact ?? 'unknown'}` })
+  impactEl.textContent = v.impact ?? '—'
+
+  if (status === 'incomplete') {
+    const reviewEl = el('span', { class: 'violation__review-label' })
+    reviewEl.textContent = 'needs review'
+    header.append(ruleEl, reviewEl, impactEl)
+  } else {
+    header.append(ruleEl, impactEl)
+  }
 
   const desc = el('p', { class: 'violation__description' })
   desc.textContent = v.description
@@ -346,9 +380,17 @@ function violationItem(v) {
 
   if (v.criteria) {
     const criteriaEl = el('div', { class: 'violation__criteria' })
-    if (v.criteria.wcag.length > 0)  criteriaEl.append(criteriaGroup('WCAG', v.criteria.wcag))
-    if (v.criteria.rgaa.length > 0)  criteriaEl.append(criteriaGroup('RGAA', v.criteria.rgaa))
-    if (v.criteria.raweb.length > 0) criteriaEl.append(criteriaGroup('RAWeb', v.criteria.raweb))
+    if (v.criteria.wcag.length > 0) criteriaEl.append(criteriaGroup('WCAG', v.criteria.wcag))
+
+    const { rgaa, raweb } = v.criteria
+    const identical = rgaa.length > 0 && rgaa.length === raweb.length && rgaa.every((id, i) => id === raweb[i])
+    if (identical) {
+      criteriaEl.append(criteriaGroup('RGAA / RAWeb', rgaa, 'rgaa-raweb'))
+    } else {
+      if (rgaa.length > 0)  criteriaEl.append(criteriaGroup('RGAA', rgaa))
+      if (raweb.length > 0) criteriaEl.append(criteriaGroup('RAWeb', raweb))
+    }
+
     item.append(criteriaEl)
   }
 
@@ -376,13 +418,28 @@ function violationItem(v) {
   return item
 }
 
-function criteriaGroup(label, ids) {
+function passItem(p) {
+  const item = el('li', { class: 'violation violation--pass', 'data-status': 'pass' })
+  const header = el('div', { class: 'violation__header' })
+  const ruleEl = el('strong', { class: 'violation__rule' })
+  ruleEl.textContent = p.ruleId
+  const statusEl = el('span', { class: 'violation__impact violation__impact--pass' })
+  statusEl.textContent = 'pass'
+  header.append(ruleEl, statusEl)
+  const desc = el('p', { class: 'violation__description' })
+  desc.textContent = p.description
+  item.append(header, desc)
+  return item
+}
+
+function criteriaGroup(label, ids, cssKey) {
   const group = el('div', { class: 'criteria-group' })
   const labelEl = el('span', { class: 'criteria-group__label' })
   labelEl.textContent = label + ':'
   group.append(labelEl)
+  const cls = cssKey ?? label.toLowerCase()
   for (const id of ids) {
-    const code = el('code', { class: `tag tag--${label.toLowerCase()}` })
+    const code = el('code', { class: `tag tag--${cls}` })
     code.textContent = id
     group.append(code)
   }
@@ -397,11 +454,6 @@ function el(tag, attrs = {}) {
   return node
 }
 
-function badge(cls, text) {
-  const span = el('span', { class: `badge ${cls}` })
-  span.textContent = text
-  return span
-}
 
 function truncate(str, max) {
   return str.length > max ? str.slice(0, max) + '…' : str
