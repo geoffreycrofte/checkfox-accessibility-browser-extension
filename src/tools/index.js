@@ -40,7 +40,7 @@ export const TOOLS = [
     ],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'images'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -71,9 +71,9 @@ export const TOOLS = [
         const alt = img.getAttribute('alt')
         let badge
         if (alt === null) {
-          badge = mk('ALT MISSING', 'err')
+          badge = mk(s.altMissing, 'err')
         } else if (alt === '') {
-          badge = mk('alt="" (decorative)', 'mute')
+          badge = mk(s.decorative, 'mute')
         } else {
           badge = mk(`alt="${alt}"`, 'ok')
         }
@@ -97,7 +97,7 @@ export const TOOLS = [
     criteria: ['02.01', '02.02'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'frames'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -122,9 +122,9 @@ export const TOOLS = [
         const tag = el.tagName.toLowerCase()
         const title = el.getAttribute('title')
         if (!title) {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag}> — NO TITLE`, 'err'))
+          el.insertAdjacentElement('beforebegin', mk(`<${tag}> — ${s.noTitle}`, 'err'))
         } else if (title.trim() === '') {
-          el.insertAdjacentElement('beforebegin', mk(`<${tag} title=""> — empty title`, 'warn'))
+          el.insertAdjacentElement('beforebegin', mk(`<${tag} title=""> — ${s.emptyTitle}`, 'warn'))
         } else {
           el.insertAdjacentElement('beforebegin', mk(`<${tag} title="${title}">`, 'ok'))
         }
@@ -212,7 +212,7 @@ export const TOOLS = [
     criteria: ['06.01', '06.02'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'links'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -248,14 +248,14 @@ export const TOOLS = [
         } else if (role && role !== 'link') {
           el.insertAdjacentElement('afterend', mk(`role='${role}'`, 'warn'))
         } else if (el.tagName.toLowerCase() === 'a' && (href === null || href === '' || href === '#' || (href && href.startsWith('javascript')))) {
-          el.insertAdjacentElement('afterend', mk(`bad href: ${href ?? 'missing'}`, 'err'))
+          el.insertAdjacentElement('afterend', mk(`${s.badHref}: ${href ?? s.missingHref}`, 'err'))
         } else if (tabindex === '-1') {
           el.insertAdjacentElement('afterend', mk(`tabindex='-1'`, 'warn'))
         }
       })
 
       document.querySelectorAll('a *[aria-hidden="true"],[role="link"] *[aria-hidden="true"]').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`aria-hidden inside link`, 'err'))
+        el.insertAdjacentElement('beforebegin', mk(s.ariaHiddenInLink, 'err'))
       })
     },
     remove: () => {
@@ -457,7 +457,7 @@ export const TOOLS = [
     criteria: ['08.09'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'tag-misuse'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -486,17 +486,17 @@ export const TOOLS = [
 
       document.querySelectorAll('b,i,u').forEach(el => {
         const tag = el.tagName.toLowerCase()
-        el.insertAdjacentElement('beforebegin', mk(`<${tag}> — use <strong>/<em> instead?`, 'warn'))
+        el.insertAdjacentElement('beforebegin', mk(`<${tag}> — ${s.useSemantic}`, 'warn'))
       })
 
       document.querySelectorAll('center,font,marquee,blink').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`<${el.tagName.toLowerCase()}> — deprecated`, 'err'))
+        el.insertAdjacentElement('beforebegin', mk(`<${el.tagName.toLowerCase()}> — ${s.deprecated}`, 'err'))
       })
 
       document.querySelectorAll('[role="none"],[role="presentation"]').forEach(el => {
         const tag = el.tagName.toLowerCase()
         const role = el.getAttribute('role')
-        el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'> — semantic removed`, 'warn'))
+        el.insertAdjacentElement('beforebegin', mk(`<${tag} role='${role}'> — ${s.semanticRemoved}`, 'warn'))
       })
     },
     remove: () => {
@@ -572,7 +572,7 @@ export const TOOLS = [
     criteria: ['09.02'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'document-structure'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -602,9 +602,9 @@ export const TOOLS = [
         let variant = 'ok'
         let note = ''
 
-        if (tag === 'main' && mainEls.length > 1) { variant = 'err'; note = ' — MULTIPLE MAIN' }
-        else if (tag === 'header' && headerEls.length > 1 && headerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ' — duplicate' }
-        else if (tag === 'footer' && footerEls.length > 1 && footerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ' — duplicate' }
+        if (tag === 'main' && mainEls.length > 1) { variant = 'err'; note = ` — ${s.multipleMain}` }
+        else if (tag === 'header' && headerEls.length > 1 && headerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ` — ${s.duplicate}` }
+        else if (tag === 'footer' && footerEls.length > 1 && footerEls[0] !== el && !el.closest('article,section,aside')) { variant = 'warn'; note = ` — ${s.duplicate}` }
 
         el.insertAdjacentElement('beforebegin', mk(`<${tag}${label}>${note}`, variant))
       })
@@ -923,33 +923,114 @@ p { margin-bottom: 2em !important; }
   // ── 11. FORMS ────────────────────────────────────────────────────────────────
 
   {
-    id: 'forms',
+    id: 'form-labels',
     group: 'Forms',
-    label: 'Forms & buttons',
-    description: 'Audit labels, fieldsets, button accessible names',
-    criteria: ['11.01', '11.05', '11.09'],
+    label: 'Form labels (11.1)',
+    description: 'Check each form field has an accessible label',
+    criteria: ['11.01'],
+    legend: [
+      { border: `2px solid ${C.ok}`,     label: 'label[for] or wrapped in label' },
+      { border: `2px solid ${C.purple}`, label: 'aria-label / aria-labelledby' },
+      { border: `2px solid ${C.caution}`, label: 'title attribute only' },
+      { border: `3px solid ${C.err}`,    label: 'no label found' },
+    ],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
-      const ID = 'forms'
+    inject: (css, s) => {
+      const ID = 'form-labels'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
       const style = document.createElement('style')
       style.id = `__checkfox_${ID}`
       style.textContent = css +
-        'label{outline:2px solid #22c55e!important}' +
-        'label:not([for]){outline:2px solid #f97316!important}' +
-        'input:not([aria-label]):not([title]):not([id]){outline:2px solid #ef4444!important}' +
-        'input[aria-label],input[title],input[id]{outline:2px solid #22c55e!important}' +
+        '[data-cflabeled="ok"]{outline:2px solid #22c55e!important}' +
+        '[data-cflabeled="aria"]{outline:2px solid #a855f7!important}' +
+        '[data-cflabeled="title"]{outline:2px solid #eab308!important}' +
+        '[data-cflabeled="none"]{outline:3px solid #ef4444!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+      const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s ?? '')
+
+      const FIELDS = [
+        'input:not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"])',
+        'select', 'textarea',
+        '[role="textbox"],[role="combobox"],[role="listbox"],[role="spinbutton"],[role="slider"],[role="searchbox"]',
+      ].join(',')
+
+      document.querySelectorAll(FIELDS).forEach(el => {
+        const id = el.id
+        const labelledby = el.getAttribute('aria-labelledby')
+        const ariaLabel = el.getAttribute('aria-label')
+        const title = el.getAttribute('title')
+
+        let labelType, text, variant
+
+        if (labelledby) {
+          const refs = labelledby.trim().split(/\s+/)
+          const refText = refs.map(r => document.getElementById(r)?.textContent?.trim() ?? r).join(' ')
+          labelType = 'aria'; text = `aria-labelledby → "${trunc(refText, 28)}"`; variant = 'purple'
+        } else if (ariaLabel) {
+          labelType = 'aria'; text = `aria-label="${trunc(ariaLabel, 28)}"`; variant = 'purple'
+        } else if (id) {
+          const lbl = document.querySelector(`label[for="${CSS.escape(id)}"]`)
+          if (lbl) { labelType = 'ok'; text = `label[for="${id}"] "${trunc(lbl.textContent.trim(), 22)}"`; variant = 'ok' }
+        }
+
+        if (!labelType && el.closest('label')) {
+          labelType = 'ok'; text = s.wrappedInLabel; variant = 'ok'
+        }
+        if (!labelType && title) {
+          labelType = 'title'; text = `title="${trunc(title, 28)}"`; variant = 'warn'
+        }
+        if (!labelType) {
+          labelType = 'none'; text = s.noLabel; variant = 'err'
+        }
+
+        el.setAttribute('data-cflabeled', labelType)
+        el.insertAdjacentElement('beforebegin', mk(text, variant))
+      })
+    },
+    remove: () => {
+      const ID = 'form-labels'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cflabeled]').forEach(e => e.removeAttribute('data-cflabeled'))
+    },
+  },
+
+  {
+    id: 'form-groups',
+    group: 'Forms',
+    label: 'Form groupings (11.5)',
+    description: 'Check related controls are grouped with fieldset or ARIA group role',
+    criteria: ['11.05'],
+    legend: [
+      { border: `2px solid ${C.ok}`,     label: 'fieldset element' },
+      { border: `2px solid ${C.purple}`, label: 'role="group" / role="radiogroup"' },
+      { border: `3px solid ${C.err}`,    label: 'ungrouped radio/checkbox cluster' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css, s) => {
+      const ID = 'form-groups'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
         'fieldset{outline:2px solid #22c55e!important}' +
-        'fieldset:not(:has(legend)){outline:2px solid #ef4444!important}' +
-        'legend{outline:2px solid #22c55e!important}' +
-        '[role="group"]:not([aria-label]):not([aria-labelledby]){outline:2px solid #ef4444!important}' +
-        '[role="group"][aria-label],[role="group"][aria-labelledby]{outline:2px solid #22c55e!important}' +
-        'button{outline:2px solid #22c55e!important}' +
-        'button[role]:not([role="button"]){outline:2px solid #ef4444!important}' +
-        '[role="button"]{outline:2px dashed #f97316!important}'
+        '[role="group"]{outline:2px solid #a855f7!important}' +
+        '[role="radiogroup"]{outline:2px solid #a855f7!important}' +
+        '[data-cfungrouped]{outline:3px solid #ef4444!important}'
       document.head.appendChild(style)
 
       const mk = (text, v) => {
@@ -960,56 +1041,272 @@ p { margin-bottom: 2em !important; }
         return b
       }
 
-      document.querySelectorAll('label').forEach(el => {
-        const forAttr = el.getAttribute('for')
-        if (forAttr) {
-          el.insertAdjacentElement('beforebegin', mk(`<label for='${forAttr}'>`, 'ok'))
-        } else {
-          el.insertAdjacentElement('beforebegin', mk(`<label — no [for]>`, 'warn'))
-        }
-      })
-
       document.querySelectorAll('fieldset').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`<fieldset>`, 'ok'))
-      })
-
-      document.querySelectorAll('legend').forEach(el => {
-        el.insertAdjacentElement('beforebegin', mk(`<legend>`, 'ok'))
+        el.insertAdjacentElement('beforebegin', mk('<fieldset>', 'ok'))
       })
 
       document.querySelectorAll('[role="group"]').forEach(el => {
-        const ariaLabel = el.getAttribute('aria-label')
-        const ariaLabelledby = el.getAttribute('aria-labelledby')
-        if (ariaLabel) {
-          el.insertAdjacentElement('beforebegin', mk(`role='group' aria-label='${ariaLabel}'`, 'ok'))
-        } else if (ariaLabelledby) {
-          el.insertAdjacentElement('beforebegin', mk(`role='group' aria-labelledby='${ariaLabelledby}'`, 'ok'))
-        } else {
-          el.insertAdjacentElement('beforebegin', mk(`role='group' — NO LABEL`, 'err'))
-        }
+        if (/^fieldset$/i.test(el.tagName)) return
+        el.insertAdjacentElement('beforebegin', mk('role="group"', 'purple'))
       })
 
-      document.querySelectorAll('button').forEach(el => {
-        const role = el.getAttribute('role')
-        const ariaLabel = el.getAttribute('aria-label')
-        if (role && role !== 'button') {
-          el.insertAdjacentElement('afterend', mk(`<button role='${role}'>`, 'err'))
-        } else if (ariaLabel) {
-          el.insertAdjacentElement('afterend', mk(`<button aria-label='${ariaLabel}'>`, 'ok'))
-        } else {
-          el.insertAdjacentElement('afterend', mk(`<button>`, 'ok'))
-        }
+      document.querySelectorAll('[role="radiogroup"]').forEach(el => {
+        el.insertAdjacentElement('beforebegin', mk('role="radiogroup"', 'purple'))
       })
 
-      document.querySelectorAll('[role="button"]').forEach(el => {
-        if (/^button$/i.test(el.tagName)) return
-        el.insertAdjacentElement('afterend', mk(`role='button'`, 'warn'))
+      // Detect ungrouped radio/checkbox clusters (same name, not inside a grouping element)
+      const GROUP_CTX = 'fieldset,[role="group"],[role="radiogroup"]'
+      ;['radio', 'checkbox'].forEach(type => {
+        const clusters = {}
+        document.querySelectorAll(`input[type="${type}"][name]`).forEach(r => {
+          const n = r.getAttribute('name')
+          if (!clusters[n]) clusters[n] = []
+          clusters[n].push(r)
+        })
+        for (const [name, inputs] of Object.entries(clusters)) {
+          if (inputs.length < 2) continue
+          inputs.forEach(r => {
+            if (!r.closest(GROUP_CTX)) {
+              r.setAttribute('data-cfungrouped', '')
+              r.insertAdjacentElement('beforebegin', mk(`${type} name="${name}" — ${s.notGrouped}`, 'err'))
+            }
+          })
+        }
       })
     },
     remove: () => {
-      const ID = 'forms'
+      const ID = 'form-groups'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cfungrouped]').forEach(e => e.removeAttribute('data-cfungrouped'))
+    },
+  },
+
+  {
+    id: 'form-group-names',
+    group: 'Forms',
+    label: 'Group names (11.6)',
+    description: 'Check each form group has a legend or accessible name',
+    criteria: ['11.06'],
+    legend: [
+      { border: `2px solid ${C.ok}`,     label: 'group has legend / aria-label' },
+      { border: `2px solid ${C.purple}`, label: 'individual field with grouping context' },
+      { border: `3px solid ${C.err}`,    label: 'group has no accessible name' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css, s) => {
+      const ID = 'form-group-names'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'fieldset{outline:2px solid #22c55e!important}' +
+        'fieldset:not(:has(legend)){outline:3px solid #ef4444!important}' +
+        '[role="group"],[role="radiogroup"]{outline:2px solid #22c55e!important}' +
+        '[role="group"]:not([aria-label]):not([aria-labelledby]),' +
+        '[role="radiogroup"]:not([aria-label]):not([aria-labelledby]){outline:3px solid #ef4444!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+      const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s ?? '')
+
+      document.querySelectorAll('fieldset').forEach(el => {
+        const legend = el.querySelector(':scope > legend')
+        if (legend) {
+          el.insertAdjacentElement('beforebegin', mk(`<fieldset> legend: "${trunc(legend.textContent.trim(), 30)}"`, 'ok'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`<fieldset> — ${s.noLegend}`, 'err'))
+        }
+      })
+
+      document.querySelectorAll('[role="group"],[role="radiogroup"]').forEach(el => {
+        if (/^fieldset$/i.test(el.tagName)) return
+        const role = el.getAttribute('role')
+        const ariaLabel = el.getAttribute('aria-label')
+        const labelledby = el.getAttribute('aria-labelledby')
+        if (ariaLabel) {
+          el.insertAdjacentElement('beforebegin', mk(`role="${role}" aria-label="${trunc(ariaLabel, 25)}"`, 'ok'))
+        } else if (labelledby) {
+          const refText = labelledby.trim().split(/\s+/).map(r => document.getElementById(r)?.textContent?.trim() ?? r).join(' ')
+          el.insertAdjacentElement('beforebegin', mk(`role="${role}" → "${trunc(refText, 25)}"`, 'ok'))
+        } else {
+          el.insertAdjacentElement('beforebegin', mk(`role="${role}" — ${s.noLabel}`, 'err'))
+        }
+      })
+
+      // Individual fields outside groups: show any grouping-context attributes
+      const GROUP_CTX = 'fieldset,[role="group"],[role="radiogroup"]'
+      const FIELD_SEL = [
+        'input:not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"])',
+        'select', 'textarea',
+      ].join(',')
+      document.querySelectorAll(FIELD_SEL).forEach(el => {
+        if (el.closest(GROUP_CTX)) return
+        const title = el.getAttribute('title')
+        const ariaLabel = el.getAttribute('aria-label')
+        const labelledby = el.getAttribute('aria-labelledby')
+        const describedby = el.getAttribute('aria-describedby')
+        const parts = [
+          title && `title="${trunc(title, 20)}"`,
+          ariaLabel && `aria-label="${trunc(ariaLabel, 20)}"`,
+          labelledby && `aria-labelledby="${labelledby}"`,
+          describedby && `aria-describedby="${describedby}"`,
+        ].filter(Boolean)
+        if (parts.length) el.insertAdjacentElement('beforebegin', mk(parts.join(' '), 'purple'))
+      })
+    },
+    remove: () => {
+      const ID = 'form-group-names'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+    },
+  },
+
+  {
+    id: 'form-buttons',
+    group: 'Forms',
+    label: 'Button labels (11.9)',
+    description: 'Show the accessible name source for each button',
+    criteria: ['11.09'],
+    legend: [
+      { border: `2px solid ${C.ok}`,     label: 'aria-label / aria-labelledby' },
+      { border: `2px solid ${C.purple}`, label: 'visible text / value attribute' },
+      { border: `2px solid ${C.caution}`, label: 'title attribute only' },
+      { border: `3px solid ${C.err}`,    label: 'no accessible name' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css, s) => {
+      const ID = 'form-buttons'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        'button,input[type="submit"],input[type="reset"],input[type="button"],input[type="image"],[role="button"]{outline:2px solid #22c55e!important}' +
+        '[data-cfbtn="none"]{outline:3px solid #ef4444!important}' +
+        '[data-cfbtn="title"]{outline:2px solid #eab308!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+      const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s ?? '')
+
+      const BTN_SEL = 'button,input[type="submit"],input[type="reset"],input[type="button"],input[type="image"],[role="button"]:not(button)'
+
+      document.querySelectorAll(BTN_SEL).forEach(el => {
+        const tag = el.tagName.toLowerCase()
+        const ariaLabel = el.getAttribute('aria-label')
+        const labelledby = el.getAttribute('aria-labelledby')
+        const title = el.getAttribute('title')
+        const value = el.getAttribute('value')
+        const alt = el.getAttribute('alt')
+        const textContent = el.textContent?.trim()
+
+        let btnType, text, variant
+
+        if (ariaLabel) {
+          btnType = 'aria'; text = `aria-label="${trunc(ariaLabel, 30)}"`; variant = 'ok'
+        } else if (labelledby) {
+          const refText = labelledby.trim().split(/\s+/).map(r => document.getElementById(r)?.textContent?.trim() ?? r).join(' ')
+          btnType = 'aria'; text = `aria-labelledby → "${trunc(refText, 28)}"`; variant = 'ok'
+        } else if (tag === 'input' && el.type === 'image' && alt !== null) {
+          btnType = 'alt'; text = `alt="${trunc(alt, 30)}"`; variant = 'purple'
+        } else if (tag !== 'input' && textContent) {
+          btnType = 'text'; text = `"${trunc(textContent, 32)}"`; variant = 'purple'
+        } else if (value) {
+          btnType = 'value'; text = `value="${trunc(value, 30)}"`; variant = 'purple'
+        } else if (title) {
+          btnType = 'title'; text = `title="${trunc(title, 30)}"`; variant = 'warn'
+        } else {
+          btnType = 'none'; text = s.noAccessibleName; variant = 'err'
+        }
+
+        el.setAttribute('data-cfbtn', btnType)
+        el.insertAdjacentElement('afterend', mk(text, variant))
+      })
+    },
+    remove: () => {
+      const ID = 'form-buttons'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cfbtn]').forEach(e => e.removeAttribute('data-cfbtn'))
+    },
+  },
+
+  {
+    id: 'form-autocomplete',
+    group: 'Forms',
+    label: 'Autocomplete (11.13)',
+    description: 'Show autocomplete attribute values on form fields',
+    criteria: ['11.13'],
+    legend: [
+      { border: `2px solid ${C.purple}`, label: 'autocomplete value present' },
+      { border: `2px solid ${C.caution}`, label: 'autocomplete="off"' },
+      { border: `2px dotted ${C.info}`,  label: 'no autocomplete attribute' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css, s) => {
+      const ID = 'form-autocomplete'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      style.textContent = css +
+        '[data-cfauto="value"]{outline:2px solid #a855f7!important}' +
+        '[data-cfauto="off"]{outline:2px solid #eab308!important}' +
+        '[data-cfauto="none"]{outline:2px dotted #6366f1!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+
+      const FIELDS = [
+        'input:not([type="hidden"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not([type="range"]):not([type="color"]):not([type="file"])',
+        'select', 'textarea',
+      ].join(',')
+
+      document.querySelectorAll(FIELDS).forEach(el => {
+        const ac = el.getAttribute('autocomplete')
+        if (ac === null) {
+          el.setAttribute('data-cfauto', 'none')
+          el.insertAdjacentElement('beforebegin', mk(s.noAutocomplete, 'mute'))
+        } else if (ac === 'off' || ac === '') {
+          el.setAttribute('data-cfauto', 'off')
+          el.insertAdjacentElement('beforebegin', mk(`autocomplete="${ac || 'off'}"`, 'warn'))
+        } else {
+          el.setAttribute('data-cfauto', 'value')
+          el.insertAdjacentElement('beforebegin', mk(`autocomplete="${ac}"`, 'purple'))
+        }
+      })
+    },
+    remove: () => {
+      const ID = 'form-autocomplete'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cfauto]').forEach(e => e.removeAttribute('data-cfauto'))
     },
   },
 
@@ -1023,7 +1320,7 @@ p { margin-bottom: 2em !important; }
     criteria: ['12.06'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'landmarks'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -1057,7 +1354,7 @@ p { margin-bottom: 2em !important; }
       document.querySelectorAll('main,[role="main"]').forEach(el => {
         const hasRole = el.getAttribute('role') === 'main'
         if (el.tagName.toLowerCase() === 'main' && !hasRole) {
-          badge(el, `<main — no role='main'>`, 'err')
+          badge(el, `<main — ${s.noRoleMain}>`, 'err')
         } else {
           badge(el, `role='main'`, 'info')
         }
@@ -1066,7 +1363,7 @@ p { margin-bottom: 2em !important; }
       document.querySelectorAll('header,[role="banner"]').forEach(el => {
         const hasRole = el.getAttribute('role') === 'banner'
         if (el.tagName.toLowerCase() === 'header' && !hasRole) {
-          badge(el, `<header — no role='banner'>`, 'err')
+          badge(el, `<header — ${s.noRoleBanner}>`, 'err')
         } else {
           badge(el, `role='banner'`, 'purple')
         }
@@ -1075,7 +1372,7 @@ p { margin-bottom: 2em !important; }
       document.querySelectorAll('nav,[role="navigation"]').forEach(el => {
         const hasRole = el.getAttribute('role') === 'navigation'
         if (el.tagName.toLowerCase() === 'nav' && !hasRole) {
-          badge(el, `<nav — no role='navigation'>`, 'err')
+          badge(el, `<nav — ${s.noRoleNav}>`, 'err')
         } else {
           badge(el, `role='navigation'`, 'ok')
         }
@@ -1088,7 +1385,7 @@ p { margin-bottom: 2em !important; }
       document.querySelectorAll('footer,[role="contentinfo"]').forEach(el => {
         const hasRole = el.getAttribute('role') === 'contentinfo'
         if (el.tagName.toLowerCase() === 'footer' && !hasRole) {
-          badge(el, `<footer — no role='contentinfo'>`, 'err')
+          badge(el, `<footer — ${s.noRoleFooter}>`, 'err')
         } else {
           badge(el, `role='contentinfo'`, 'yellow')
         }
@@ -1111,7 +1408,7 @@ p { margin-bottom: 2em !important; }
     criteria: ['13.03', '13.04'],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'office-docs'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
@@ -1137,7 +1434,7 @@ p { margin-bottom: 2em !important; }
         const m = href.match(EXT_RE)
         if (!m) return
         el.setAttribute('data-cfext', m[1].toLowerCase())
-        el.insertAdjacentElement('afterend', mk(`.${m[1].toLowerCase()} — check accessible version`, 'warn'))
+        el.insertAdjacentElement('afterend', mk(`.${m[1].toLowerCase()} — ${s.checkAccessibleVersion}`, 'warn'))
       })
     },
     remove: () => {

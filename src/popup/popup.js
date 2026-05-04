@@ -4,6 +4,7 @@ import {
   loadConfig, saveConfig, pingConnection,
   isConfigured, api, ApiError, ConfigError,
 } from '../api/index.js'
+import { t, getLang, loadLang, saveLang } from '../i18n/index.js'
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
@@ -11,6 +12,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Apply sidebar body class before any rendering to avoid layout shift.
   const { cfx_sidebar } = await chrome.storage.local.get('cfx_sidebar')
   if (cfx_sidebar) document.body.classList.add('side-panel')
+
+  await loadLang()
+  translatePage()
 
   initTabs()
 
@@ -28,16 +32,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   initScanPanel(tabId, toolState, apiCtx)
 })
 
+// ─── i18n ─────────────────────────────────────────────────────────────────────
+
+function translatePage() {
+  document.querySelectorAll('[data-i18n]').forEach(node => {
+    node.textContent = t(node.dataset.i18n)
+  })
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(node => {
+    node.placeholder = t(node.dataset.i18nPlaceholder)
+  })
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(node => {
+    node.setAttribute('aria-label', t(node.dataset.i18nAriaLabel))
+  })
+  document.documentElement.lang = getLang()
+
+  // Sync lang switcher button states
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    const active = btn.dataset.lang === getLang()
+    btn.classList.toggle('lang-btn--active', active)
+    btn.setAttribute('aria-pressed', String(active))
+  })
+}
+
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 function initTabs() {
   const tabs = document.querySelectorAll('[role="tab"]')
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
-      tabs.forEach(t => {
-        t.classList.remove('tab--active')
-        t.setAttribute('aria-selected', 'false')
-        document.getElementById(t.getAttribute('aria-controls')).hidden = true
+      tabs.forEach(tabEl => {
+        tabEl.classList.remove('tab--active')
+        tabEl.setAttribute('aria-selected', 'false')
+        document.getElementById(tabEl.getAttribute('aria-controls')).hidden = true
       })
       tab.classList.add('tab--active')
       tab.setAttribute('aria-selected', 'true')
@@ -55,7 +81,7 @@ function initScanPanel(tabId, toolState, apiCtx) {
 
   scanBtn.addEventListener('click', async () => {
     scanBtn.disabled = true
-    scanBtn.textContent = 'Scanning…'
+    scanBtn.textContent = t('scan.btn.scanning')
     statusEl.hidden = true
     resultsEl.hidden = true
     document.getElementById('findings-area').hidden = true
@@ -63,7 +89,7 @@ function initScanPanel(tabId, toolState, apiCtx) {
     const activeToolIds = toolState ? [...toolState.activeIds] : []
 
     try {
-      if (!tabId) { showStatus(statusEl, 'error', 'No active tab found.'); return }
+      if (!tabId) { showStatus(statusEl, 'error', t('scan.noTab')); return }
 
       for (const id of activeToolIds) {
         const tool = TOOL_MAP[id]
@@ -89,23 +115,23 @@ function initScanPanel(tabId, toolState, apiCtx) {
         apiCtx.violations = response.violations
         apiCtx.refreshPush?.()
       } else if (response === null) {
-        showStatus(statusEl, 'error', 'Could not reach the page. Check that the URL is not a browser-internal page.')
+        showStatus(statusEl, 'error', t('scan.noPage'))
       } else {
-        showStatus(statusEl, 'error', response?.error ?? 'Scan failed with an unknown error.')
+        showStatus(statusEl, 'error', response?.error ?? t('scan.failed'))
       }
 
     } catch (err) {
-      showStatus(statusEl, 'error', 'Could not reach the page. Check that the URL is not a browser-internal page.')
+      showStatus(statusEl, 'error', t('scan.noPage'))
       console.error('[CheckFox]', err)
     } finally {
       for (const id of activeToolIds) {
         const tool = TOOL_MAP[id]
         if (!tool) continue
-        if (tool.type === 'css') await injectCSS(tabId, tool.css)
-        else if (tool.type === 'js') await executeFunc(tabId, tool.inject, tool.args ?? [])
+        if (tool.type === 'css')    await injectCSS(tabId, tool.css)
+        else if (tool.type === 'js') await executeFunc(tabId, tool.inject, [...(tool.args ?? []), getBadgeStrings()])
       }
       scanBtn.disabled = false
-      scanBtn.textContent = 'Run accessibility scan'
+      scanBtn.textContent = t('scan.btn')
     }
   })
 }
@@ -151,8 +177,8 @@ async function initContextArea(tabUrl, apiCtx) {
       renderCtxNotConfigured(area)
     } else {
       const msg = err instanceof ApiError && (err.status === 401 || err.status === 403)
-        ? 'Invalid API key. Check Settings.'
-        : 'Could not reach CheckFox. Check Settings.'
+        ? t('ctx.invalidKey')
+        : t('ctx.cantReach')
       renderCtxError(area, msg, () => initContextArea(tabUrl, apiCtx))
     }
   }
@@ -172,9 +198,9 @@ function renderCtxNotConfigured(area) {
   area.replaceChildren()
   const card = el('div', { class: 'ctx-card' })
   const msg = el('p', { class: 'ctx-notice' })
-  msg.textContent = 'Connect CheckFox in Settings to sync scan results with your audits.'
+  msg.textContent = t('ctx.notConfigured')
   const btn = el('button', { class: 'btn btn--sm btn--ghost', type: 'button' })
-  btn.textContent = 'Go to Settings'
+  btn.textContent = t('ctx.goToSettings')
   btn.addEventListener('click', () => document.getElementById('tab-settings').click())
   card.append(msg, btn)
   area.append(card)
@@ -183,7 +209,7 @@ function renderCtxNotConfigured(area) {
 function renderCtxLoading(area) {
   area.replaceChildren()
   const p = el('p', { class: 'ctx-loading' })
-  p.textContent = 'Matching audit…'
+  p.textContent = t('ctx.loading')
   area.append(p)
 }
 
@@ -193,7 +219,7 @@ function renderCtxError(area, message, onRetry) {
   const msg = el('p', { class: 'ctx-notice ctx-notice--error' })
   msg.textContent = message
   const retryBtn = el('button', { class: 'btn btn--sm btn--ghost', type: 'button' })
-  retryBtn.textContent = 'Retry'
+  retryBtn.textContent = t('ctx.btn.retry')
   retryBtn.addEventListener('click', onRetry)
   card.append(msg, retryBtn)
   area.append(card)
@@ -208,12 +234,12 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
   auditName.textContent = audit.name
   auditName.title = audit.name
   const badge = el('span', { class: 'ctx-badge ctx-badge--match' })
-  badge.textContent = 'Match'
+  badge.textContent = t('ctx.badge.match')
   const changeBtn = el('button', { class: 'btn btn--xs btn--ghost', type: 'button' })
-  changeBtn.textContent = 'Change'
+  changeBtn.textContent = t('ctx.btn.change')
   changeBtn.addEventListener('click', () => {
     apiCtx.context = null
-    renderCtxSelector(area, audits, allSamples, apiCtx, 'Change audit / sample:')
+    renderCtxSelector(area, audits, allSamples, apiCtx, t('ctx.changeAudit'))
   })
   meta.append(auditName, badge, changeBtn)
 
@@ -226,9 +252,9 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
 
   const actions = el('div', { class: 'ctx-card__actions' })
   const pullBtn = el('button', { class: 'btn btn--sm btn--secondary', type: 'button' })
-  pullBtn.textContent = 'Pull findings'
+  pullBtn.textContent = t('ctx.btn.pull')
   const pushBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button' })
-  pushBtn.textContent = 'Push scan ↑'
+  pushBtn.textContent = t('ctx.btn.push')
   pushBtn.disabled = true
   actions.append(pullBtn, pushBtn)
 
@@ -243,47 +269,47 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
 
   pullBtn.addEventListener('click', async () => {
     pullBtn.disabled = true
-    pullBtn.textContent = 'Loading…'
+    pullBtn.textContent = t('ctx.btn.pulling')
     try {
       const result = await api.findings(audit.id, sample.id)
       renderFindings(result.findings ?? [])
     } catch (err) {
-      showCtxFeedback(feedback, 'error', 'Could not fetch findings.')
+      showCtxFeedback(feedback, 'error', t('ctx.error.pull'))
       console.error('[CheckFox] pull:', err)
     } finally {
       pullBtn.disabled = false
-      pullBtn.textContent = 'Pull findings'
+      pullBtn.textContent = t('ctx.btn.pull')
     }
   })
 
   pushBtn.addEventListener('click', async () => {
     if (!apiCtx.violations?.length) return
     pushBtn.disabled = true
-    pushBtn.textContent = 'Pushing…'
+    pushBtn.textContent = t('ctx.btn.pushing')
     try {
       const result = await api.prefill(audit.id, sample.id, apiCtx.violations.map(toApiShape))
       const msg = formatPushResult(result)
       showCtxFeedback(feedback, 'ok', msg)
     } catch (err) {
-      showCtxFeedback(feedback, 'error', err.message ?? 'Push failed.')
+      showCtxFeedback(feedback, 'error', err.message ?? t('ctx.error.push'))
       console.error('[CheckFox] push:', err)
     } finally {
       pushBtn.disabled = !apiCtx.violations?.length
-      pushBtn.textContent = 'Push scan ↑'
+      pushBtn.textContent = t('ctx.btn.push')
     }
   })
 }
 
-function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText = 'No sample matches this URL. Select manually:') {
+function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
   area.replaceChildren()
   const card = el('div', { class: 'ctx-card' })
 
   const notice = el('p', { class: 'ctx-notice' })
-  notice.textContent = noticeText
+  notice.textContent = noticeText ?? t('ctx.noMatch')
 
   const auditField = el('div', { class: 'ctx-field' })
   const auditLabelEl = el('label', { class: 'ctx-label', id: 'ctx-audit-label' })
-  auditLabelEl.textContent = 'Audit'
+  auditLabelEl.textContent = t('ctx.label.audit')
 
   const auditCombo = buildAuditCombobox(audits, 'ctx-audit-label', (audit) => {
     apiCtx.context = null
@@ -301,15 +327,15 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText = 'No sa
 
   const sampleField = el('div', { class: 'ctx-field', hidden: '' })
   const sampleLabelEl = el('label', { class: 'ctx-label', id: 'ctx-sample-label' })
-  sampleLabelEl.textContent = 'Sample'
+  sampleLabelEl.textContent = t('ctx.label.sample')
   const sampleComboWrap = el('div')
   sampleField.append(sampleLabelEl, sampleComboWrap)
 
   const actions = el('div', { class: 'ctx-card__actions', hidden: '' })
   const pullBtn = el('button', { class: 'btn btn--sm btn--secondary', type: 'button' })
-  pullBtn.textContent = 'Pull findings'
+  pullBtn.textContent = t('ctx.btn.pull')
   const pushBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button' })
-  pushBtn.textContent = 'Push scan ↑'
+  pushBtn.textContent = t('ctx.btn.push')
   pushBtn.disabled = true
   actions.append(pullBtn, pushBtn)
 
@@ -326,16 +352,16 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText = 'No sa
     if (!apiCtx.context) return
     const { audit, sample } = apiCtx.context
     pullBtn.disabled = true
-    pullBtn.textContent = 'Loading…'
+    pullBtn.textContent = t('ctx.btn.pulling')
     try {
       const result = await api.findings(audit.id, sample.id)
       renderFindings(result.findings ?? [])
     } catch (err) {
-      showCtxFeedback(feedback, 'error', 'Could not fetch findings.')
+      showCtxFeedback(feedback, 'error', t('ctx.error.pull'))
       console.error('[CheckFox] pull:', err)
     } finally {
       pullBtn.disabled = false
-      pullBtn.textContent = 'Pull findings'
+      pullBtn.textContent = t('ctx.btn.pull')
     }
   })
 
@@ -343,16 +369,16 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText = 'No sa
     if (!apiCtx.violations?.length || !apiCtx.context) return
     const { audit, sample } = apiCtx.context
     pushBtn.disabled = true
-    pushBtn.textContent = 'Pushing…'
+    pushBtn.textContent = t('ctx.btn.pushing')
     try {
       const result = await api.prefill(audit.id, sample.id, apiCtx.violations.map(toApiShape))
       showCtxFeedback(feedback, 'ok', formatPushResult(result))
     } catch (err) {
-      showCtxFeedback(feedback, 'error', err.message ?? 'Push failed.')
+      showCtxFeedback(feedback, 'error', err.message ?? t('ctx.error.push'))
       console.error('[CheckFox] push:', err)
     } finally {
       pushBtn.disabled = !(apiCtx.violations?.length && apiCtx.context)
-      pushBtn.textContent = 'Push scan ↑'
+      pushBtn.textContent = t('ctx.btn.push')
     }
   })
 }
@@ -506,7 +532,7 @@ function buildAuditCombobox(audits, labelId, onSelect) {
   return buildComboboxCore({
     uid: 'audit',
     labelId,
-    placeholder: 'Select an audit…',
+    placeholder: t('ctx.placeholder.audit'),
     items,
     renderTriggerSelected: (item) => {
       const wrap = el('span', { class: 'cfx-select__value-inner' })
@@ -531,8 +557,8 @@ function buildAuditCombobox(audits, labelId, onSelect) {
         if (website) meta.append(document.createTextNode(website))
         if (dueDate) {
           const overdue = dueDate < new Date()
-          const label = (website ? ' · ' : '') + (overdue ? 'overdue ' : 'due ') +
-            dueDate.toLocaleDateString('en', { day: 'numeric', month: 'short' })
+          const label = (website ? ' · ' : '') + (overdue ? t('date.overdue') + ' ' : t('date.due') + ' ') +
+            dueDate.toLocaleDateString(getLang(), { day: 'numeric', month: 'short' })
           const dueSpan = el('span', { class: overdue ? 'cfx-opt__overdue' : '' })
           dueSpan.textContent = label
           meta.append(dueSpan)
@@ -550,7 +576,7 @@ function buildSampleCombobox(samples, labelId, onSelect) {
   return buildComboboxCore({
     uid: 'sample',
     labelId,
-    placeholder: 'Select a sample…',
+    placeholder: t('ctx.placeholder.sample'),
     items,
     renderTriggerSelected: (item) => {
       const span = el('span', { class: 'cfx-select__value-text' })
@@ -588,8 +614,8 @@ function renderFindings(findings) {
 
   const header = el('div', { class: 'findings-header' })
   const title = el('h3', { class: 'findings-title' })
-  title.textContent = 'Existing findings'
-  const closeBtn = el('button', { class: 'findings-close', type: 'button', 'aria-label': 'Close findings' })
+  title.textContent = t('findings.title')
+  const closeBtn = el('button', { class: 'findings-close', type: 'button', 'aria-label': t('findings.close') })
   closeBtn.textContent = '✕'
   closeBtn.addEventListener('click', () => { area.hidden = true })
   header.append(title, closeBtn)
@@ -598,7 +624,7 @@ function renderFindings(findings) {
   const relevant = findings.filter(f => f.status && f.status !== 'not_tested')
   if (relevant.length === 0) {
     const none = el('p', { class: 'findings-empty' })
-    none.textContent = 'No findings recorded yet.'
+    none.textContent = t('findings.empty')
     area.append(none)
     return
   }
@@ -606,7 +632,7 @@ function renderFindings(findings) {
   const order = { non_compliant: 0, compliant: 1, not_applicable: 2 }
   const sorted = [...relevant].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
 
-  const list = el('ul', { class: 'findings-list', 'aria-label': 'Existing findings' })
+  const list = el('ul', { class: 'findings-list', 'aria-label': t('findings.label') })
   for (const f of sorted) {
     const cssStatus = f.status.replace(/_/g, '-')
     const item = el('li', { class: `finding finding--${cssStatus}` })
@@ -655,36 +681,95 @@ async function initSettingsPanel() {
   tokenToggle.addEventListener('click', () => {
     const show = tokenInput.type === 'password'
     tokenInput.type = show ? 'text' : 'password'
-    tokenToggle.textContent = show ? 'Hide' : 'Show'
-    tokenToggle.setAttribute('aria-label', show ? 'Hide API key' : 'Show API key')
+    tokenToggle.textContent = show ? t('settings.apikey.hide') : t('settings.apikey.show')
+    tokenToggle.setAttribute('aria-label', show ? t('settings.apikey.ariaHide') : t('settings.apikey.ariaShow'))
   })
 
   saveBtn.addEventListener('click', async () => {
     const token = tokenInput.value.trim()
 
     if (!token) {
-      showSettingsFeedback(feedback, 'error', 'API key is required.')
+      showSettingsFeedback(feedback, 'error', t('settings.apikey.required'))
       return
     }
 
     saveBtn.disabled = true
-    saveBtn.textContent = 'Connecting…'
+    saveBtn.textContent = t('settings.save.connecting')
     feedback.hidden = true
 
     try {
       await pingConnection(token)
       await saveConfig(token)
-      showSettingsFeedback(feedback, 'ok', 'Connected! Reopen the popup to sync with your audits.')
+      showSettingsFeedback(feedback, 'ok', t('settings.save.connected'))
     } catch (err) {
       const msg = err instanceof ApiError
-        ? `Connection failed (${err.status}). Check your API key.`
-        : 'Connection failed. Check your network.'
+        ? t('settings.save.error.status', err.status)
+        : t('settings.save.error.network')
       showSettingsFeedback(feedback, 'error', msg)
     } finally {
       saveBtn.disabled = false
-      saveBtn.textContent = 'Save & Connect'
+      saveBtn.textContent = t('settings.save')
     }
   })
+
+  // Language switcher
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const lang = btn.dataset.lang
+      await saveLang(lang)
+      translatePage()
+      // Re-translate the tools panel group labels and tool content
+      retranslateDynamicContent()
+    })
+  })
+}
+
+// Re-applies translations to dynamically built content after a language switch.
+function retranslateDynamicContent() {
+  // Tools panel group labels
+  document.querySelectorAll('.tools-group-label[data-group]').forEach(node => {
+    node.textContent = t(`group.${node.dataset.group}`)
+  })
+  // Tool labels, descriptions, and toggle aria-labels
+  document.querySelectorAll('.tool-label[data-tool-id]').forEach(node => {
+    node.textContent = t(`tool.${node.dataset.toolId}.label`)
+  })
+  document.querySelectorAll('.tool-desc[data-tool-id]').forEach(node => {
+    node.textContent = t(`tool.${node.dataset.toolId}.description`)
+  })
+  document.querySelectorAll('.tool-toggle[data-tool-id]').forEach(node => {
+    const label = t(`tool.${node.dataset.toolId}.label`)
+    node.setAttribute('aria-label', t('tool.toggle.ariaLabel', label))
+  })
+  // Tool legend labels
+  document.querySelectorAll('[data-legend-tool]').forEach(legendEl => {
+    const toolId = legendEl.dataset.legendTool
+    legendEl.querySelectorAll('[data-legend-index]').forEach(span => {
+      const i = span.dataset.legendIndex
+      const key = `tool.${toolId}.legend.${i}`
+      const translated = t(key)
+      if (translated !== key) span.textContent = translated
+    })
+  })
+  // Custom CSS apply button and textarea aria-label
+  document.querySelectorAll('.tool-custom-area .btn').forEach(node => {
+    node.textContent = t('tool.custom.apply')
+  })
+  document.querySelectorAll('.tool-custom-area textarea').forEach(node => {
+    node.setAttribute('aria-label', t('tool.custom.ariaLabel'))
+  })
+  // Header subtitle (if showing "tools selected" state)
+  const subtitleEl = document.getElementById('header-subtitle')
+  if (subtitleEl.dataset.toolCount) {
+    const count = parseInt(subtitleEl.dataset.toolCount, 10)
+    const countSpan = subtitleEl.querySelector('span:first-child')
+    const deselectBtn = subtitleEl.querySelector('.header__deselect-btn')
+    if (countSpan) countSpan.textContent = t('tools.selected', count)
+    if (deselectBtn) deselectBtn.textContent = t('tools.deselectAll')
+  }
+  // Scan button (if not currently scanning)
+  const scanBtn = document.getElementById('scan-btn')
+  if (!scanBtn.disabled) scanBtn.textContent = t('scan.btn')
 }
 
 // ─── Tools panel ──────────────────────────────────────────────────────────────
@@ -700,18 +785,18 @@ async function initToolsPanel(tabId) {
     for (const id of activeIds) {
       const tool = TOOL_MAP[id]
       if (tool?.type === 'css') await injectCSS(tabId, tool.css)
-      else if (tool?.type === 'js') await executeFunc(tabId, tool.inject, tool.args ?? [])
+      else if (tool?.type === 'js') await executeFunc(tabId, tool.inject, [...(tool.args ?? []), getBadgeStrings()])
     }
   }
 
   const refreshSubtitle = () => updateHeaderSubtitle(activeIds, tabId, stateKey)
 
   for (const group of TOOL_GROUPS) {
-    const groupLabel = el('h3', { class: 'tools-group-label' })
-    groupLabel.textContent = group
+    const groupLabel = el('h3', { class: 'tools-group-label', 'data-group': group })
+    groupLabel.textContent = t(`group.${group}`)
     container.append(groupLabel)
 
-    for (const tool of TOOLS.filter(t => t.group === group)) {
+    for (const tool of TOOLS.filter(tool => tool.group === group)) {
       container.append(buildToolRow(tool, activeIds.has(tool.id), tabId, activeIds, stateKey, refreshSubtitle))
     }
   }
@@ -723,15 +808,17 @@ async function initToolsPanel(tabId) {
 function updateHeaderSubtitle(activeIds, tabId, stateKey) {
   const subtitleEl = document.getElementById('header-subtitle')
   if (activeIds.size === 0) {
-    subtitleEl.textContent = 'Accessibility Scanner'
+    subtitleEl.textContent = t('header.subtitle')
+    delete subtitleEl.dataset.toolCount
     return
   }
   const count = activeIds.size
+  subtitleEl.dataset.toolCount = count
   subtitleEl.replaceChildren()
   const countSpan = document.createElement('span')
-  countSpan.textContent = `${count} tool${count !== 1 ? 's' : ''} selected`
+  countSpan.textContent = t('tools.selected', count)
   const deselectBtn = document.createElement('button')
-  deselectBtn.textContent = 'Deselect all'
+  deselectBtn.textContent = t('tools.deselectAll')
   deselectBtn.className = 'header__deselect-btn'
   deselectBtn.addEventListener('click', async () => {
     await deactivateAll(tabId, activeIds, stateKey)
@@ -750,9 +837,9 @@ async function deactivateAll(tabId, activeIds, stateKey) {
   }
   activeIds.clear()
   await chrome.storage.session.set({ [stateKey]: [] })
-  document.querySelectorAll('.tool-toggle--on').forEach(t => {
-    t.classList.remove('tool-toggle--on')
-    t.setAttribute('aria-pressed', 'false')
+  document.querySelectorAll('.tool-toggle--on').forEach(toggleEl => {
+    toggleEl.classList.remove('tool-toggle--on')
+    toggleEl.setAttribute('aria-pressed', 'false')
   })
   document.querySelectorAll('.tool-row--active').forEach(r => r.classList.remove('tool-row--active'))
 }
@@ -760,17 +847,19 @@ async function deactivateAll(tabId, activeIds, stateKey) {
 function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitle) {
   const row = el('div', { class: `tool-row${isActive ? ' tool-row--active' : ''}` })
 
+  const translatedLabel = t(`tool.${tool.id}.label`)
   const toggle = el('button', {
     class: `tool-toggle${isActive ? ' tool-toggle--on' : ''}`,
     'aria-pressed': String(isActive),
-    'aria-label': `Toggle ${tool.label}`,
+    'aria-label': t('tool.toggle.ariaLabel', translatedLabel),
+    'data-tool-id': tool.id,
   })
 
   const info = el('div', { class: 'tool-info' })
-  const labelEl = el('span', { class: 'tool-label' })
-  labelEl.textContent = tool.label
-  const descEl = el('span', { class: 'tool-desc' })
-  descEl.textContent = tool.description
+  const labelEl = el('span', { class: 'tool-label', 'data-tool-id': tool.id })
+  labelEl.textContent = translatedLabel
+  const descEl = el('span', { class: 'tool-desc', 'data-tool-id': tool.id })
+  descEl.textContent = t(`tool.${tool.id}.description`)
   info.append(labelEl, descEl)
 
   if (tool.criteria.length > 0) {
@@ -784,15 +873,15 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
   }
 
   if (tool.legend?.length > 0) {
-    const legendEl = el('div', { class: 'tool-legend' })
-    for (const item of tool.legend) {
+    const legendEl = el('div', { class: 'tool-legend', 'data-legend-tool': tool.id })
+    tool.legend.forEach((item, i) => {
       const legendItem = el('div', { class: 'tool-legend-item' })
       const swatch = el('span', { class: 'tool-legend-swatch', style: `border: ${item.border}` })
-      const swatchLabel = el('span')
-      swatchLabel.textContent = item.label
+      const swatchLabel = el('span', { 'data-legend-index': String(i) })
+      swatchLabel.textContent = t(`tool.${tool.id}.legend.${i}`) || item.label
       legendItem.append(swatch, swatchLabel)
       legendEl.append(legendItem)
-    }
+    })
     info.append(legendEl)
   }
 
@@ -800,9 +889,9 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
 
   if (tool.type === 'custom') {
     const customArea = el('div', { class: 'tool-custom-area' })
-    const textarea = el('textarea', { placeholder: '/* your CSS here */', spellcheck: 'false', 'aria-label': 'Custom CSS' })
+    const textarea = el('textarea', { placeholder: '/* your CSS here */', spellcheck: 'false', 'aria-label': t('tool.custom.ariaLabel') })
     const applyBtn = el('button', { class: 'btn btn--primary', type: 'button' })
-    applyBtn.textContent = 'Apply'
+    applyBtn.textContent = t('tool.custom.apply')
     customArea.append(textarea, applyBtn)
     info.append(customArea)
 
@@ -824,7 +913,7 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
 
       if (tabId) {
         if (tool.type === 'css')    await injectCSS(tabId, tool.css)
-        else if (tool.type === 'js') await executeFunc(tabId, tool.inject, tool.args ?? [])
+        else if (tool.type === 'js') await executeFunc(tabId, tool.inject, [...(tool.args ?? []), getBadgeStrings()])
       }
     } else {
       activeIds.delete(tool.id)
@@ -890,6 +979,34 @@ async function executeFunc(tabId, func, args = []) {
   }
 }
 
+function getBadgeStrings() {
+  return {
+    altMissing:             t('badge.altMissing'),
+    decorative:             t('badge.decorative'),
+    noTitle:                t('badge.noTitle'),
+    emptyTitle:             t('badge.emptyTitle'),
+    useSemantic:            t('badge.useSemantic'),
+    deprecated:             t('badge.deprecated'),
+    semanticRemoved:        t('badge.semanticRemoved'),
+    multipleMain:           t('badge.multipleMain'),
+    duplicate:              t('badge.duplicate'),
+    wrappedInLabel:         t('badge.wrappedInLabel'),
+    noLabel:                t('badge.noLabel'),
+    noLegend:               t('badge.noLegend'),
+    notGrouped:             t('badge.notGrouped'),
+    noAccessibleName:       t('badge.noAccessibleName'),
+    noAutocomplete:         t('badge.noAutocomplete'),
+    noRoleMain:             t('badge.noRoleMain'),
+    noRoleBanner:           t('badge.noRoleBanner'),
+    noRoleNav:              t('badge.noRoleNav'),
+    noRoleFooter:           t('badge.noRoleFooter'),
+    checkAccessibleVersion: t('badge.checkAccessibleVersion'),
+    badHref:                t('badge.badHref'),
+    missingHref:            t('badge.missingHref'),
+    ariaHiddenInLink:       t('badge.ariaHiddenInLink'),
+  }
+}
+
 // ─── Scan results rendering ───────────────────────────────────────────────────
 
 function showStatus(el, type, message) {
@@ -904,7 +1021,7 @@ function renderResults(container, data) {
 
   const activeFilters = new Set(['violations', 'incomplete'])
 
-  const list = el('ul', { class: 'results-list', 'aria-label': 'Scan results' })
+  const list = el('ul', { class: 'results-list', 'aria-label': t('results.label') })
 
   const syncFilter = () => {
     list.classList.toggle('hide-violations', !activeFilters.has('violations'))
@@ -934,11 +1051,11 @@ function renderResults(container, data) {
     return btn
   }
 
-  const summary = el('div', { class: 'summary', role: 'group', 'aria-label': 'Filter scan results' })
+  const summary = el('div', { class: 'summary', role: 'group', 'aria-label': t('results.filter.label') })
   summary.append(
-    makeFilter('badge--error', 'violations', `${violations.length} violation${violations.length !== 1 ? 's' : ''}`),
-    makeFilter('badge--warn', 'incomplete', `${incomplete.length} incomplete`),
-    makeFilter('badge--ok', 'passes', `${passes.length} pass${passes.length !== 1 ? 'es' : ''}`),
+    makeFilter('badge--error', 'violations', t('results.violations', violations.length)),
+    makeFilter('badge--warn', 'incomplete', t('results.incomplete', incomplete.length)),
+    makeFilter('badge--ok', 'passes', t('results.passes', passes.length)),
   )
   container.append(summary)
 
@@ -968,7 +1085,7 @@ function violationItem(v, status = 'violation') {
 
   if (status === 'incomplete') {
     const reviewEl = el('span', { class: 'violation__review-label' })
-    reviewEl.textContent = 'needs review'
+    reviewEl.textContent = t('results.needsReview')
     header.append(ruleEl, reviewEl, impactEl)
   } else {
     header.append(ruleEl, impactEl)
@@ -995,7 +1112,7 @@ function violationItem(v, status = 'violation') {
     item.append(criteriaEl)
   }
 
-  const nodes = el('ul', { class: 'nodes', 'aria-label': 'Affected elements' })
+  const nodes = el('ul', { class: 'nodes', 'aria-label': t('results.affected') })
   for (const n of v.nodes) {
     const nodeItem = el('li', { class: 'node' })
     const selector = el('code', { class: 'node__selector', title: n.selector })
@@ -1008,11 +1125,11 @@ function violationItem(v, status = 'violation') {
   item.append(nodes)
 
   const link = el('a', { href: v.helpUrl, target: '_blank', rel: 'noopener noreferrer', class: 'violation__help' })
-  link.textContent = 'Learn more'
+  link.textContent = t('results.learnMore')
   const arrow = el('span', { 'aria-hidden': 'true' })
   arrow.textContent = ' ↗'
   const srText = el('span', { class: 'sr-only' })
-  srText.textContent = ' (opens in new tab)'
+  srText.textContent = t('results.opensNewTab')
   link.append(arrow, srText)
   item.append(link)
 
@@ -1100,9 +1217,7 @@ function toApiShape(v) {
 function formatPushResult(result) {
   const applied = result.applied ?? 0
   const skipped = result.skipped_count ?? 0
-  return skipped > 0
-    ? `${applied} criteria pre-filled, ${skipped} skipped (already assessed).`
-    : `${applied} criteria pre-filled.`
+  return t('push.result', applied, skipped)
 }
 
 function showCtxFeedback(feedbackEl, type, message) {

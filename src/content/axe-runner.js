@@ -6,6 +6,10 @@ const axe = window.axe
 // Guard: register the message listener only once per page load.
 // The browser won't re-inject a declared content script, but this is
 // defensive against future programmatic injection paths.
+if (location.hostname === 'checkfox.eu' || location.hostname === 'www.checkfox.eu') {
+  document.documentElement.setAttribute('data-cfx-installed', '')
+}
+
 if (!window.__checkfoxAxeRunner) {
   window.__checkfoxAxeRunner = true
 

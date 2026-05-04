@@ -10,20 +10,20 @@
     <header class="header">
       <span class="header__logo" aria-hidden="true">🦊</span>
       <h1 class="header__title">CheckFox</h1>
-      <span class="header__subtitle" id="header-subtitle">Accessibility Scanner</span>
+      <span class="header__subtitle" id="header-subtitle" data-i18n="header.subtitle">Accessibility Scanner</span>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="Panel">
-      <button class="tab tab--active" role="tab" aria-selected="true"  aria-controls="panel-scan"     id="tab-scan">Scan</button>
-      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-tools"    id="tab-tools">Tools</button>
-      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-settings" id="tab-settings">Settings</button>
-      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-about"    id="tab-about">About</button>
+    <nav class="tabs" role="tablist" data-i18n-aria-label="nav.label" aria-label="Panel">
+      <button class="tab tab--active" role="tab" aria-selected="true"  aria-controls="panel-scan"     id="tab-scan"     data-i18n="tab.scan">Scan</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-tools"    id="tab-tools"    data-i18n="tab.tools">Tools</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-settings" id="tab-settings" data-i18n="tab.settings">Settings</button>
+      <button class="tab"             role="tab" aria-selected="false" aria-controls="panel-about"    id="tab-about"    data-i18n="tab.about">About</button>
     </nav>
 
     <main id="panel-scan" class="main" role="tabpanel" aria-labelledby="tab-scan">
       <div id="context-area"></div>
 
-      <button id="scan-btn" type="button" class="btn btn--primary">
+      <button id="scan-btn" type="button" class="btn btn--primary" data-i18n="scan.btn">
         Run accessibility scan
       </button>
 
@@ -40,72 +40,87 @@
 
     <section id="panel-settings" class="main settings-panel" role="tabpanel" aria-labelledby="tab-settings" hidden>
       <div class="settings-section">
-        <h2 class="settings-heading">CheckFox Connection</h2>
+        <h2 class="settings-heading" data-i18n="settings.connection.heading">CheckFox Connection</h2>
 
         <div class="settings-field">
-          <label class="settings-label" for="settings-token">API Key</label>
+          <label class="settings-label" for="settings-token" data-i18n="settings.apikey.label">API Key</label>
           <div class="settings-input-row">
             <input type="password" id="settings-token" class="settings-input"
                    placeholder="cfx_live_…"
+                   data-i18n-placeholder="settings.apikey.placeholder"
                    autocomplete="off" spellcheck="false" />
-            <button type="button" id="settings-token-toggle" class="settings-toggle-btn" aria-label="Show API key">Show</button>
+            <button type="button" id="settings-token-toggle" class="settings-toggle-btn"
+                    data-i18n="settings.apikey.show"
+                    data-i18n-aria-label="settings.apikey.ariaShow"
+                    aria-label="Show API key">Show</button>
           </div>
         </div>
 
-        <button type="button" id="settings-save-btn" class="btn btn--primary">Save &amp; Connect</button>
+        <button type="button" id="settings-save-btn" class="btn btn--primary" data-i18n="settings.save">Save &amp; Connect</button>
         <div id="settings-feedback" hidden class="settings-feedback"></div>
       </div>
 
       <div class="settings-section">
-        <h2 class="settings-heading">Display</h2>
+        <h2 class="settings-heading" data-i18n="settings.display.heading">Display</h2>
         <div class="settings-toggle-row">
           <div class="settings-toggle-info">
-            <span class="settings-label">Open as sidebar</span>
-            <p class="settings-hint">When on, the extension icon opens a persistent side panel instead of a popup.</p>
+            <span class="settings-label" data-i18n="settings.sidebar.label">Open as sidebar</span>
+            <p class="settings-hint" data-i18n="settings.sidebar.hint">When on, the extension icon opens a persistent side panel instead of a popup.</p>
           </div>
           <button type="button" id="settings-sidebar-toggle" class="tool-toggle" aria-pressed="false" aria-label="Toggle sidebar mode"></button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h2 class="settings-heading" data-i18n="settings.language.heading">Language</h2>
+        <div class="settings-field">
+          <span class="settings-label" data-i18n="settings.language.label">Interface language</span>
+          <div class="lang-switcher" role="group" aria-labelledby="lang-switcher-label">
+            <button type="button" class="lang-btn lang-btn--active" data-lang="en" aria-pressed="true">English</button>
+            <button type="button" class="lang-btn" data-lang="fr" aria-pressed="false">Français</button>
+          </div>
         </div>
       </div>
     </section>
 
     <section id="panel-about" class="main about-panel" role="tabpanel" aria-labelledby="tab-about" hidden>
       <div class="about-section">
-        <h2 class="about-heading">What is CheckFox?</h2>
-        <p class="about-text">CheckFox is a browser extension for auditing web accessibility. It combines automated scanning with visual debugging tools to help identify and fix barriers for users with disabilities.</p>
+        <h2 class="about-heading" data-i18n="about.whatIs.heading">What is CheckFox?</h2>
+        <p class="about-text" data-i18n="about.whatIs.text">CheckFox is a browser extension for auditing web accessibility. It combines automated scanning with visual debugging tools to help identify and fix barriers for users with disabilities.</p>
       </div>
 
       <div class="about-section">
-        <h2 class="about-heading">Scan engine</h2>
+        <h2 class="about-heading" data-i18n="about.engine.heading">Scan engine</h2>
         <div class="about-engine-row">
           <span class="about-engine-name">axe-core</span>
-          <span class="about-engine-desc">Industry-standard WCAG rule engine by Deque. Powers the Scan tab — runs automated checks against WCAG 2.x success criteria.</span>
+          <span class="about-engine-desc" data-i18n="about.engine.axe.desc">Industry-standard WCAG rule engine by Deque. Powers the Scan tab — runs automated checks against WCAG 2.x success criteria.</span>
         </div>
         <div class="about-engine-row">
-          <span class="about-engine-name">Custom scanners</span>
-          <span class="about-engine-desc">CheckFox-specific rules that extend axe-core results with RGAA and RAWeb criteria mappings.</span>
+          <span class="about-engine-name" data-i18n="about.engine.custom.name">Custom scanners</span>
+          <span class="about-engine-desc" data-i18n="about.engine.custom.desc">CheckFox-specific rules that extend axe-core results with RGAA and RAWeb criteria mappings.</span>
         </div>
       </div>
 
       <div class="about-section">
-        <h2 class="about-heading">Visual tools inspiration</h2>
-        <p class="about-text">The Tools tab uses CSS- and JS-based highlighting techniques inspired by these open-source projects:</p>
+        <h2 class="about-heading" data-i18n="about.inspiration.heading">Visual tools inspiration</h2>
+        <p class="about-text" data-i18n="about.inspiration.text">The Tools tab uses CSS- and JS-based highlighting techniques inspired by these open-source projects:</p>
         <ul class="about-sources">
           <li class="about-source">
             <a href="https://github.com/lorenzodelijser/lint-html-with-css" target="_blank" rel="noopener noreferrer" class="about-source__link">lint-html-with-css</a>
-            <span class="about-source__author">by lorenzodelijser</span>
-            <span class="about-source__desc">Uses pure CSS selectors to surface structural HTML issues directly on the page.</span>
+            <span class="about-source__author"><span data-i18n="about.source.by">by</span> lorenzodelijser</span>
+            <span class="about-source__desc" data-i18n="about.source.lint.desc">Uses pure CSS selectors to surface structural HTML issues directly on the page.</span>
           </li>
           <li class="about-source">
             <a href="https://github.com/ffoodd/a11y.css" target="_blank" rel="noopener noreferrer" class="about-source__link">a11y.css</a>
-            <span class="about-source__author">by ffoodd</span>
-            <span class="about-source__desc">A diagnostic stylesheet that highlights accessibility errors, warnings, and best-practice deviations via CSS.</span>
+            <span class="about-source__author"><span data-i18n="about.source.by">by</span> ffoodd</span>
+            <span class="about-source__desc" data-i18n="about.source.a11ycss.desc">A diagnostic stylesheet that highlights accessibility errors, warnings, and best-practice deviations via CSS.</span>
           </li>
         </ul>
       </div>
     </section>
 
     <footer class="popup-footer">
-      Made for the accessibility toolset <a href="https://checkfox.eu" target="_blank" rel="noopener noreferrer">CheckFox.eu</a>
+      <span data-i18n="footer.text">Made for the accessibility toolset</span> <a href="https://checkfox.eu" target="_blank" rel="noopener noreferrer">CheckFox.eu</a>
     </footer>
 
     <script type="module" src="./popup.js"></script>
