@@ -54,4 +54,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ violations }),
     }),
+
+  // Mark a whole topic's criteria as not_applicable on a sample.
+  // payload is either { topic: 'Images' } (canonical topic name, matched
+  // case-insensitively against the audit's criteria) or { criterionIds: [...] }
+  // (the criterion_id UUIDs from the findings endpoint — most robust, avoids
+  // localized topic-name mismatches). If both are sent, topic wins.
+  // Response: { sample_id, topic, applied, skipped_count, applied_criteria, skipped }.
+  // Like prefill, criteria with a human verdict are skipped, never overwritten.
+  markTopicNA: (auditId, sampleId, payload) =>
+    request(`/api/v1/audits/${auditId}/samples/${sampleId}/mark-topic-na`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 }

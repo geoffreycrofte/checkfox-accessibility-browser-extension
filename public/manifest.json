@@ -3,6 +3,13 @@
   "name": "CheckFox Accessibility Auditor",
   "version": "0.1.0",
   "description": "Automated accessibility scanning and audit helper for CheckFox auditors.",
+  "minimum_chrome_version": "114",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extension@checkfox.eu",
+      "strict_min_version": "128.0"
+    }
+  },
   "permissions": [
     "activeTab",
     "scripting",
@@ -24,7 +31,9 @@
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
+      "64": "icons/icon64.png",
       "128": "icons/icon128.png"
     }
   },
@@ -37,7 +46,9 @@
   ],
   "icons": {
     "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
+    "64": "icons/icon64.png",
     "128": "icons/icon128.png"
   }
 }

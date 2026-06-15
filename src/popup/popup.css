@@ -790,6 +790,67 @@ body.side-panel {
 
 .ctx-notice--error { color: #fca5a5; }
 
+/* ── Topic N/A inventory ─────────────────────────────────────────────────── */
+.inv-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inv-heading {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.inv-intro {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.inv-found {
+  margin: 0;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.inv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.inv-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--color-text);
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  background: var(--color-bg-raised);
+  cursor: pointer;
+}
+
+.inv-item:hover { background: var(--color-bg-hover); }
+
+.inv-item input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.inv-feedback {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: var(--radius);
+}
+
 .ctx-field {
   display: flex;
   flex-direction: column;

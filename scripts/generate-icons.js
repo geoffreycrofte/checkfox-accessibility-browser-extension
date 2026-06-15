@@ -47,7 +47,7 @@ const GLYPHS = {
   ],
 }
 
-const SIZES = [16, 48, 128]
+const SIZES = [16, 32, 48, 64, 128]
 // CheckFox orange: #f97316
 const BG = [249, 115, 22]
 const FG = [255, 255, 255]

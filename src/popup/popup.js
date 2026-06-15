@@ -4,6 +4,9 @@ import {
   loadConfig, saveConfig, pingConnection,
   isConfigured, api, ApiError, ConfigError,
 } from '../api/index.js'
+import {
+  INVENTORY_TOPICS, isInventoryGuideline, criteriaForGuideline, countTopics,
+} from '../inventory/index.js'
 import { t, getLang, loadLang, saveLang } from '../i18n/index.js'
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
@@ -24,7 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const toolState = await initToolsPanel(tabId)
 
   // Shared mutable state threaded between context area and scan panel.
-  const apiCtx = { context: null, violations: null, refreshPush: null }
+  const apiCtx = { context: null, violations: null, refreshPush: null, tabId }
 
   // Context area fetches the API — run async without blocking the scan button.
   initContextArea(tab?.url, apiCtx).catch(console.error)
@@ -261,6 +264,7 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
   const feedback = el('div', { class: 'ctx-card__feedback', hidden: '' })
 
   card.append(meta, sampleName, identEl, actions, feedback)
+  if (isInventoryGuideline(audit.guideline)) card.append(buildInventorySection(apiCtx))
   area.append(card)
 
   apiCtx.refreshPush = () => {
@@ -341,7 +345,7 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
 
   const feedback = el('div', { class: 'ctx-card__feedback', hidden: '' })
 
-  card.append(notice, auditField, sampleField, actions, feedback)
+  card.append(notice, auditField, sampleField, actions, feedback, buildInventorySection(apiCtx))
   area.append(card)
 
   apiCtx.refreshPush = () => {
@@ -381,6 +385,151 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
       pushBtn.textContent = t('ctx.btn.push')
     }
   })
+}
+
+// ─── Topic N/A inventory ────────────────────────────────────────────────────
+// Replaces the Stylus "0.Thématiques NA" counter. Detects RGAA/RAWeb topics
+// with zero relevant elements on the page and lets the auditor confirm which to
+// mark Not Applicable on the matched sample (never auto-pushed).
+
+function buildInventorySection(apiCtx) {
+  const section = el('section', { class: 'inv-section' })
+
+  const heading = el('h3', { class: 'inv-heading' })
+  heading.textContent = t('inv.heading')
+
+  const intro = el('p', { class: 'inv-intro' })
+  intro.textContent = t('inv.intro')
+
+  const detectBtn = el('button', { class: 'btn btn--sm btn--secondary', type: 'button' })
+  detectBtn.textContent = t('inv.btn.detect')
+
+  const list = el('div', { class: 'inv-list', hidden: '' })
+
+  const markBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button', hidden: '' })
+  markBtn.textContent = t('inv.btn.mark')
+  markBtn.disabled = true
+
+  const feedback = el('div', { class: 'inv-feedback', hidden: '' })
+
+  section.append(heading, intro, detectBtn, list, markBtn, feedback)
+
+  const guidelineOf = () => apiCtx.context?.audit?.guideline
+  const refreshMarkState = () => {
+    const anyChecked = [...list.querySelectorAll('input[type="checkbox"]')].some(c => c.checked)
+    markBtn.disabled = !anyChecked
+  }
+
+  detectBtn.addEventListener('click', async () => {
+    feedback.hidden = true
+    if (!apiCtx.context) { showCtxFeedback(feedback, 'error', t('inv.selectFirst')); return }
+    if (!isInventoryGuideline(guidelineOf())) {
+      showCtxFeedback(feedback, 'error', t('inv.notApplicableGuideline')); return
+    }
+
+    detectBtn.disabled = true
+    detectBtn.textContent = t('inv.btn.detecting')
+    try {
+      const counts = await runTopicInventory(apiCtx.tabId)
+      if (!counts) { showCtxFeedback(feedback, 'error', t('inv.error')); return }
+
+      // count === 0 → candidate N/A; -1 means selector failed (never offer).
+      const empty = INVENTORY_TOPICS.filter(topicDef => counts[topicDef.key] === 0)
+
+      list.replaceChildren()
+      if (empty.length === 0) {
+        markBtn.hidden = true
+        list.hidden = true
+        showCtxFeedback(feedback, 'ok', t('inv.none'))
+        return
+      }
+
+      const guideline = guidelineOf()
+      const notice = el('p', { class: 'inv-found' })
+      notice.textContent = t('inv.found', empty.length)
+      list.append(notice)
+
+      for (const topicDef of empty) {
+        const crit = criteriaForGuideline(topicDef, guideline)
+        const itemId = `inv-${topicDef.key}`
+        const item = el('label', { class: 'inv-item', for: itemId })
+        const cb = el('input', { type: 'checkbox', id: itemId })
+        cb.checked = true
+        cb.dataset.topicKey = topicDef.key
+        cb.addEventListener('change', refreshMarkState)
+        const text = el('span', { class: 'inv-item__text' })
+        text.textContent = t('inv.topicLine', topicDef.topicNumber, t(`inv.topic.${topicDef.key}`), crit.length)
+        item.append(cb, text)
+        list.append(item)
+      }
+      list.hidden = false
+      markBtn.hidden = false
+      refreshMarkState()
+    } catch (err) {
+      showCtxFeedback(feedback, 'error', t('inv.error'))
+      console.error('[CheckFox] inventory detect:', err)
+    } finally {
+      detectBtn.disabled = false
+      detectBtn.textContent = t('inv.btn.detect')
+    }
+  })
+
+  markBtn.addEventListener('click', async () => {
+    if (!apiCtx.context) { showCtxFeedback(feedback, 'error', t('inv.selectFirst')); return }
+    const { audit, sample } = apiCtx.context
+
+    const selectedTopics = [...list.querySelectorAll('input[type="checkbox"]:checked')]
+      .map(cb => INVENTORY_TOPICS.find(td => td.key === cb.dataset.topicKey))
+      .filter(Boolean)
+
+    if (selectedTopics.length === 0) { showCtxFeedback(feedback, 'error', t('inv.noSelection')); return }
+
+    markBtn.disabled = true
+    markBtn.textContent = t('inv.btn.marking')
+    try {
+      // Robust path: resolve each topic's criteria to their criterion_id UUIDs
+      // from the sample findings (matched by topic-number prefix on criterion_num),
+      // avoiding fragile localized topic-name matching (e.g. RGAA "Formulaires").
+      const { findings = [] } = await api.findings(audit.id, sample.id)
+      const wantedTopicNumbers = new Set(selectedTopics.map(td => String(td.topicNumber)))
+      const criterionIds = findings
+        .filter(f => wantedTopicNumbers.has(String(f.criterion_num ?? '').split('.')[0]))
+        .map(f => f.criterion_id)
+        .filter(Boolean)
+
+      if (criterionIds.length === 0) {
+        showCtxFeedback(feedback, 'error', t('inv.noCriteria'))
+        return
+      }
+
+      const result = await api.markTopicNA(audit.id, sample.id, { criterionIds })
+      showCtxFeedback(feedback, 'ok', t('inv.result', result.applied ?? 0, result.skipped_count ?? 0))
+    } catch (err) {
+      showCtxFeedback(feedback, 'error', err.message ?? t('inv.error'))
+      console.error('[CheckFox] inventory mark:', err)
+    } finally {
+      markBtn.textContent = t('inv.btn.mark')
+      refreshMarkState()
+    }
+  })
+
+  return section
+}
+
+async function runTopicInventory(tabId) {
+  if (!tabId) return null
+  const selectors = INVENTORY_TOPICS.map(({ key, selector }) => ({ key, selector }))
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: countTopics,
+      args: [selectors],
+    })
+    return res?.result ?? null
+  } catch (err) {
+    console.warn('[CheckFox] runTopicInventory failed:', err)
+    return null
+  }
 }
 
 // ─── Accessible combobox ──────────────────────────────────────────────────────
@@ -1004,6 +1153,7 @@ function getBadgeStrings() {
     badHref:                t('badge.badHref'),
     missingHref:            t('badge.missingHref'),
     ariaHiddenInLink:       t('badge.ariaHiddenInLink'),
+    notFocusable:           t('badge.notFocusable'),
   }
 }
 

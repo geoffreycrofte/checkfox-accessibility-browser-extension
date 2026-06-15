@@ -1,0 +1,5 @@
+0000000000000000000000000000000000000000 9be32d4dedb6e72aeb1418919f4d01300832734d CRG <crg@foyer.lu> 1777643833 +0200	commit (initial): Initial commit: add .gitignore
+9be32d4dedb6e72aeb1418919f4d01300832734d d2aa9471792651d6467a78f21d8da2b7adb0d175 CRG <crg@foyer.lu> 1777643936 +0200	commit: Session 1: scaffold MV3 extension with axe-core scan pipeline
+d2aa9471792651d6467a78f21d8da2b7adb0d175 e04685435d8e0fce0eb14cda722f5b925fdec590 CRG <crg@foyer.lu> 1777660830 +0200	commit: First commit
+e04685435d8e0fce0eb14cda722f5b925fdec590 0000000000000000000000000000000000000000 CRG <crg@foyer.lu> 1777670514 +0200	Branch: renamed refs/heads/master to refs/heads/main
+0000000000000000000000000000000000000000 e04685435d8e0fce0eb14cda722f5b925fdec590 CRG <crg@foyer.lu> 1777670514 +0200	Branch: renamed refs/heads/master to refs/heads/main

@@ -52,6 +52,32 @@ const TRANSLATIONS = {
       ? `${applied} criteria pre-filled, ${skipped} skipped (already assessed).`
       : `${applied} criteria pre-filled.`,
 
+    // Topic N/A inventory
+    'inv.heading': 'Topic N/A inventory',
+    'inv.intro': 'Detect topics with no relevant elements on this page and mark them Not Applicable.',
+    'inv.btn.detect': 'Detect empty topics',
+    'inv.btn.detecting': 'Detecting…',
+    'inv.btn.mark': 'Mark selected as N/A ↑',
+    'inv.btn.marking': 'Marking…',
+    'inv.found': (n) => `${n} topic${n > 1 ? 's' : ''} with no elements — review and confirm:`,
+    'inv.none': 'All detectable topics have elements on this page — nothing to mark N/A.',
+    'inv.notApplicableGuideline': 'Topic N/A inventory is only available for RGAA and RAWeb audits.',
+    'inv.selectFirst': 'Select an audit and sample first.',
+    'inv.noSelection': 'Select at least one topic.',
+    'inv.noCriteria': 'No matching criteria found for the selected topics in this audit.',
+    'inv.error': 'Could not run the inventory.',
+    'inv.reason': 'No relevant elements found on the sample page (auto-detected by CheckFox).',
+    'inv.result': (applied, skipped) => skipped > 0
+      ? `${applied} criteria marked N/A, ${skipped} skipped (already assessed).`
+      : `${applied} criteria marked N/A.`,
+    'inv.topicLine': (num, name, crit) => `Topic ${num} · ${name} — 0 elements (${crit} criteria)`,
+    'inv.topic.images': 'Images',
+    'inv.topic.frames': 'Frames',
+    'inv.topic.multimedia': 'Multimedia',
+    'inv.topic.tables': 'Tables',
+    'inv.topic.links': 'Links',
+    'inv.topic.forms': 'Forms',
+
     // Settings — Connection
     'settings.connection.heading': 'CheckFox Connection',
     'settings.apikey.label': 'API Key',
@@ -128,6 +154,12 @@ const TRANSLATIONS = {
     'tool.aria.description': 'Show ARIA roles and state/property attributes',
     'tool.status.label': 'Status messages',
     'tool.status.description': 'Show live regions and ARIA status roles',
+    'tool.dp-button.label': 'Design-pattern buttons (7.1)',
+    'tool.dp-button.description': 'Highlight scripted role="button" controls and check focusability and accessible name',
+    'tool.dp-button.legend.0': 'focusable + named — verify key handling',
+    'tool.dp-button.legend.1': 'not keyboard-focusable',
+    'tool.dp-button.legend.2': 'no accessible name',
+    'tool.dp-button.legend.3': 'aria-disabled',
     'tool.lang.label': 'Language',
     'tool.lang.description': 'Show lang and dir attribute values on all elements',
     'tool.tag-misuse.label': 'Tag misuse',
@@ -231,6 +263,7 @@ const TRANSLATIONS = {
     'badge.badHref':                'bad href',
     'badge.missingHref':            'missing',
     'badge.ariaHiddenInLink':       'aria-hidden inside link',
+    'badge.notFocusable':           'NOT FOCUSABLE',
   },
 
   fr: {
@@ -283,6 +316,32 @@ const TRANSLATIONS = {
     'push.result': (applied, skipped) => skipped > 0
       ? `${applied} critères pré-remplis, ${skipped} ignorés (déjà évalués).`
       : `${applied} critères pré-remplis.`,
+
+    // Inventaire thématiques N/A
+    'inv.heading': 'Inventaire thématiques N/A',
+    'inv.intro': 'Détecte les thématiques sans élément pertinent sur la page et les marque Non Applicable.',
+    'inv.btn.detect': 'Détecter les thématiques vides',
+    'inv.btn.detecting': 'Détection…',
+    'inv.btn.mark': 'Marquer la sélection N/A ↑',
+    'inv.btn.marking': 'Envoi…',
+    'inv.found': (n) => `${n} thématique${n > 1 ? 's' : ''} sans élément — vérifiez et confirmez :`,
+    'inv.none': 'Toutes les thématiques détectables ont des éléments sur cette page — rien à marquer N/A.',
+    'inv.notApplicableGuideline': 'L\'inventaire thématiques N/A n\'est disponible que pour les audits RGAA et RAWeb.',
+    'inv.selectFirst': 'Sélectionnez d\'abord un audit et un échantillon.',
+    'inv.noSelection': 'Sélectionnez au moins une thématique.',
+    'inv.noCriteria': 'Aucun critère correspondant aux thématiques sélectionnées dans cet audit.',
+    'inv.error': 'Impossible d\'exécuter l\'inventaire.',
+    'inv.reason': 'Aucun élément pertinent trouvé sur la page de l\'échantillon (détecté automatiquement par CheckFox).',
+    'inv.result': (applied, skipped) => skipped > 0
+      ? `${applied} critères marqués N/A, ${skipped} ignorés (déjà évalués).`
+      : `${applied} critères marqués N/A.`,
+    'inv.topicLine': (num, name, crit) => `Thématique ${num} · ${name} — 0 élément (${crit} critères)`,
+    'inv.topic.images': 'Images',
+    'inv.topic.frames': 'Cadres',
+    'inv.topic.multimedia': 'Multimédia',
+    'inv.topic.tables': 'Tableaux',
+    'inv.topic.links': 'Liens',
+    'inv.topic.forms': 'Formulaires',
 
     // Settings — Connection
     'settings.connection.heading': 'Connexion CheckFox',
@@ -360,6 +419,12 @@ const TRANSLATIONS = {
     'tool.aria.description': 'Affiche les rôles ARIA et les attributs d\'état/propriété',
     'tool.status.label': 'Messages de statut',
     'tool.status.description': 'Affiche les régions live et les rôles de statut ARIA',
+    'tool.dp-button.label': 'Boutons (design pattern) (7.1)',
+    'tool.dp-button.description': 'Met en évidence les contrôles role="button" scriptés et vérifie le focus clavier et le nom accessible',
+    'tool.dp-button.legend.0': 'focusable + nommé — vérifier la gestion clavier',
+    'tool.dp-button.legend.1': 'non focusable au clavier',
+    'tool.dp-button.legend.2': 'aucun nom accessible',
+    'tool.dp-button.legend.3': 'aria-disabled',
     'tool.lang.label': 'Langue',
     'tool.lang.description': 'Affiche les valeurs des attributs lang et dir sur tous les éléments',
     'tool.tag-misuse.label': 'Mauvaise utilisation des balises',
@@ -463,6 +528,7 @@ const TRANSLATIONS = {
     'badge.badHref':                'href incorrect',
     'badge.missingHref':            'manquant',
     'badge.ariaHiddenInLink':       'aria-hidden dans un lien',
+    'badge.notFocusable':           'NON FOCUSABLE',
   },
 }
 

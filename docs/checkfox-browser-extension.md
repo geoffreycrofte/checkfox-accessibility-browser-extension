@@ -145,6 +145,19 @@ Extension tasks:
 
 ---
 
+### Session 5 — Stylus parity: DP buttons + topic N/A inventory
+
+> Closes the two gaps found when diffing the auditor's Stylus library against the extension's tools.
+
+- **DP Button tool** (`dp-button`, Scripts group, criterion 07.01) — interprets the Stylus `07.01. DP Button` style. Highlights scripted `role="button"` controls (`[role="button"]:not(button):not(input)` — native buttons excluded) and flags: no accessible name (dashed red), not keyboard-focusable (solid red), `aria-disabled` (blue), or OK (green) with the name source + tabindex. A lead badge shows the real tag so role hijacking is visible.
+- **Topic N/A inventory** (`src/inventory/index.js` + context-area section) — replaces the Stylus `0.Thématiques NA` counter. For RGAA/RAWeb audits only, counts elements per DOM-detectable topic; topics with **zero** elements become N/A candidates. Auditor-confirmed (pre-checked checklist → "Mark selected as N/A"), never auto-pushed. Covered topics: Images(1), Frames(2), Multimedia(4), Tables(5), Links(6), Forms(11). Other topics are never auto-flagged (not inferable from a single page).
+  - Detection runs in-page via `chrome.scripting.executeScript` (`countTopics`, returns `-1` on a bad selector so it's never offered as N/A).
+  - Multimedia criteria differ by referential: RGAA 4.1–4.13, RAWeb 4.1–4.18.
+- **API**: `api.markTopicNA(auditId, sampleId, payload)` → `POST /api/v1/audits/:id/samples/:sid/mark-topic-na`. Body is `{ topic: 'Images' }` (canonical topic name, case-insensitive) **or** `{ criterionIds: [...] }` (criterion UUIDs from the findings endpoint). Response: `{ sample_id, topic, applied, skipped_count, applied_criteria, skipped }`. Like `prefill`, criteria with a human verdict (Success/Failure/Derogation) are skipped, never overwritten; already-N/A criteria count as skipped no-ops.
+  - **The extension uses the `criterionIds` path** for robustness: on "Mark N/A" it GETs `findings`, collects `criterion_id` UUIDs whose `criterion_num` topic-segment matches a selected topic number, and posts them in one call. This sidesteps localized topic-name mismatches (e.g. RGAA "Formulaires" vs "Forms"). Result surfaced with `inv.result` mirroring `formatPushResult` (applied vs skipped_count).
+
+---
+
 ## Reference Links
 
 - axe-core: https://github.com/dequelabs/axe-core

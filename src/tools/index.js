@@ -402,6 +402,94 @@ export const TOOLS = [
     },
   },
 
+  {
+    id: 'dp-button',
+    group: 'Scripts',
+    label: 'Design-pattern buttons (7.1)',
+    description: 'Highlight scripted role="button" controls and check focusability and accessible name',
+    criteria: ['07.01'],
+    legend: [
+      { border: `2px solid ${C.ok}`,     label: 'focusable + named — verify key handling' },
+      { border: `3px solid ${C.err}`,    label: 'not keyboard-focusable' },
+      { border: `3px dashed ${C.err}`,   label: 'no accessible name' },
+      { border: `2px solid ${C.info}`,   label: 'aria-disabled' },
+    ],
+    type: 'js',
+    args: [SHARED_CSS],
+    inject: (css, s) => {
+      const ID = 'dp-button'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+
+      const style = document.createElement('style')
+      style.id = `__checkfox_${ID}`
+      // Only scripted "design pattern" buttons — exclude native <button>/<input>.
+      style.textContent = css +
+        '[data-cfdp="ok"]{outline:2px solid #22c55e!important}' +
+        '[data-cfdp="nofocus"]{outline:3px solid #ef4444!important}' +
+        '[data-cfdp="noname"]{outline:3px dashed #ef4444!important}' +
+        '[data-cfdp="disabled"]{outline:2px solid #6366f1!important}'
+      document.head.appendChild(style)
+
+      const mk = (text, v) => {
+        const b = document.createElement('span')
+        b.className = `__cfbadge __cfbadge--${v}`
+        b.dataset.cf = ID
+        b.textContent = text
+        return b
+      }
+      const trunc = (str, n) => str && str.length > n ? str.slice(0, n) + '…' : (str ?? '')
+
+      // role="button" on anything that is not a native button control.
+      const DP_SEL = '[role="button"]:not(button):not(input)'
+
+      document.querySelectorAll(DP_SEL).forEach(el => {
+        const tabindex = el.getAttribute('tabindex')
+        const nativelyFocusable = el.matches('a[href], select, textarea, [contenteditable=""], [contenteditable="true"]')
+        const focusable = nativelyFocusable || (tabindex !== null && Number(tabindex) >= 0)
+
+        const ariaLabel = el.getAttribute('aria-label')
+        const labelledby = el.getAttribute('aria-labelledby')
+        const title = el.getAttribute('title')
+        const text = el.textContent?.trim()
+        let name = ''
+        if (ariaLabel) name = `aria-label="${trunc(ariaLabel, 28)}"`
+        else if (labelledby) {
+          const refText = labelledby.trim().split(/\s+/).map(r => document.getElementById(r)?.textContent?.trim() ?? r).join(' ')
+          name = `aria-labelledby → "${trunc(refText, 26)}"`
+        } else if (text) name = `"${trunc(text, 30)}"`
+        else if (title) name = `title="${trunc(title, 28)}"`
+
+        // Lead badge shows what the element is, so role hijacking is visible.
+        const tag = el.tagName.toLowerCase()
+        el.insertAdjacentElement('beforebegin', mk(`<${tag}> role="button"`, 'mute'))
+
+        let state
+        if (!name) {
+          state = 'noname'
+          el.insertAdjacentElement('afterend', mk(s.noAccessibleName, 'err'))
+        } else if (!focusable) {
+          state = 'nofocus'
+          el.insertAdjacentElement('afterend', mk(s.notFocusable, 'err'))
+        } else if (el.getAttribute('aria-disabled') === 'true') {
+          state = 'disabled'
+          el.insertAdjacentElement('afterend', mk(`${name} · aria-disabled`, 'info'))
+        } else {
+          state = 'ok'
+          const tabInfo = tabindex !== null ? ` · tabindex="${tabindex}"` : ''
+          el.insertAdjacentElement('afterend', mk(`${name}${tabInfo}`, 'ok'))
+        }
+        el.setAttribute('data-cfdp', state)
+      })
+    },
+    remove: () => {
+      const ID = 'dp-button'
+      document.getElementById(`__checkfox_${ID}`)?.remove()
+      document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
+      document.querySelectorAll('[data-cfdp]').forEach(e => e.removeAttribute('data-cfdp'))
+    },
+  },
+
   // ── 8. MANDATORY ELEMENTS ────────────────────────────────────────────────────
 
   {
