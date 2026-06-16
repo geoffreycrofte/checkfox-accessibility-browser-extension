@@ -19,6 +19,9 @@ const copyAxeCore = {
 }
 
 export default defineConfig({
+  // The main build already copies public/ → dist/. Disable it here so this
+  // second pass doesn't re-copy public assets (and a stray .DS_Store) on top.
+  publicDir: false,
   build: {
     outDir: 'dist',
     emptyOutDir: false,

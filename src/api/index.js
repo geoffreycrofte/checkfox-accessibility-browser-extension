@@ -3,10 +3,28 @@ const BASE_URL = 'https://checkfox.eu'
 export class ConfigError extends Error {}
 
 export class ApiError extends Error {
-  constructor(status, message) {
+  constructor(status, message, body) {
     super(message)
     this.status = status
+    this.body = body
   }
+}
+
+// Read the server's error payload (JSON or text) so failures surface a real
+// message instead of a bare "HTTP 500". Returns a one-line string for display.
+async function readError(res) {
+  let detail = ''
+  try {
+    const text = await res.text()
+    try {
+      const json = JSON.parse(text)
+      detail = json.error || json.message || json.detail || text
+    } catch {
+      detail = text
+    }
+  } catch { /* body already consumed or empty */ }
+  detail = String(detail ?? '').trim().slice(0, 300)
+  return { message: detail ? `HTTP ${res.status}: ${detail}` : `HTTP ${res.status}`, detail }
 }
 
 export async function loadConfig() {
@@ -26,7 +44,10 @@ export async function pingConnection(token) {
   const res = await fetch(BASE_URL + '/api/v1/audits?status=active', {
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
   })
-  if (!res.ok) throw new ApiError(res.status, `HTTP ${res.status}`)
+  if (!res.ok) {
+    const { message, detail } = await readError(res)
+    throw new ApiError(res.status, message, detail)
+  }
   return res.json()
 }
 
@@ -41,7 +62,10 @@ async function request(path, init = {}) {
       ...(init.headers ?? {}),
     },
   })
-  if (!res.ok) throw new ApiError(res.status, `HTTP ${res.status}`)
+  if (!res.ok) {
+    const { message, detail } = await readError(res)
+    throw new ApiError(res.status, message, detail)
+  }
   return res.json()
 }
 

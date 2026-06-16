@@ -502,11 +502,16 @@ function buildInventorySection(apiCtx) {
         return
       }
 
+      console.debug('[CheckFox] mark-topic-na →', {
+        auditId: audit.id, sampleId: sample.id,
+        topics: selectedTopics.map(td => td.key),
+        criterionIds,
+      })
       const result = await api.markTopicNA(audit.id, sample.id, { criterionIds })
       showCtxFeedback(feedback, 'ok', t('inv.result', result.applied ?? 0, result.skipped_count ?? 0))
     } catch (err) {
       showCtxFeedback(feedback, 'error', err.message ?? t('inv.error'))
-      console.error('[CheckFox] inventory mark:', err)
+      console.error('[CheckFox] inventory mark:', err.message, err.body ?? '', err)
     } finally {
       markBtn.textContent = t('inv.btn.mark')
       refreshMarkState()
@@ -1154,6 +1159,16 @@ function getBadgeStrings() {
     missingHref:            t('badge.missingHref'),
     ariaHiddenInLink:       t('badge.ariaHiddenInLink'),
     notFocusable:           t('badge.notFocusable'),
+    noSummary:              t('badge.noSummary'),
+    noCaption:              t('badge.noCaption'),
+    noHeaders:              t('badge.noHeaders'),
+    layoutTable:            t('badge.layoutTable'),
+    dataInLayout:           t('badge.dataInLayout'),
+    pageLangMissing:        t('badge.pageLangMissing'),
+    invalidLangCode:        t('badge.invalidLangCode'),
+    invalidDir:             t('badge.invalidDir'),
+    breaksTabOrder:         t('badge.breaksTabOrder'),
+    notInTabOrder:          t('badge.notInTabOrder'),
   }
 }
 
