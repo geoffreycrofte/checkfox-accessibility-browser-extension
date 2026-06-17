@@ -4,16 +4,18 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build && vite build --config vite.config.content.js",
-    "dev": "concurrently \"vite build --watch\" \"vite build --config vite.config.content.js --watch\"",
+    "build": "vite build",
+    "dev": "vite build --watch",
     "generate-icons": "node scripts/generate-icons.js",
     "mapping:coverage": "node src/mapping/coverage.js"
   },
   "dependencies": {
-    "axe-core": "^4.10.0"
+    "@codemirror/lang-css": "^6.3.0",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "axe-core": "^4.10.0",
+    "codemirror": "^6.0.1"
   },
   "devDependencies": {
-    "concurrently": "^9.0.0",
     "vite": "^8.0.10"
   }
 }

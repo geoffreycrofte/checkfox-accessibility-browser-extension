@@ -81,6 +81,8 @@ const TRANSLATIONS = {
     // Settings — Connection
     'settings.connection.heading': 'CheckFox Connection',
     'settings.apikey.label': 'API Key',
+    'settings.apikey.hint': 'You can find your API key in ',
+    'settings.apikey.hintLink': 'User Settings, Integrations tab',
     'settings.apikey.placeholder': 'cfx_live_…',
     'settings.apikey.show': 'Show',
     'settings.apikey.hide': 'Hide',
@@ -92,6 +94,8 @@ const TRANSLATIONS = {
     'settings.save.error.status': (status) => `Connection failed (${status}). Check your API key.`,
     'settings.save.error.network': 'Connection failed. Check your network.',
     'settings.apikey.required': 'API key is required.',
+    'settings.disconnect': 'Disconnect',
+    'settings.disconnected': 'Disconnected. Your API key has been removed.',
 
     // Settings — Display
     'settings.display.heading': 'Display',
@@ -105,6 +109,10 @@ const TRANSLATIONS = {
     // About panel
     'about.whatIs.heading': 'What is CheckFox?',
     'about.whatIs.text': 'CheckFox is a browser extension for auditing web accessibility. It combines automated scanning with visual debugging tools to help identify and fix barriers for users with disabilities.',
+    'about.whatIs.app': 'CheckFox is also a full web app at checkfox.eu — it helps auditors and teams audit faster and smarter, without losing control. This extension works hand in hand with it.',
+    'about.whatIs.cta': 'Create a free account →',
+    'about.support.heading': 'Support & suggestions',
+    'about.support.text': 'Found a bug or have an idea to improve the extension? Get in touch:',
     'about.engine.heading': 'Scan engine',
     'about.engine.axe.desc': 'Industry-standard WCAG rule engine by Deque. Powers the Scan tab — runs automated checks against WCAG 2.x success criteria.',
     'about.engine.custom.name': 'Custom scanners',
@@ -125,6 +133,8 @@ const TRANSLATIONS = {
     // Tools panel — custom CSS
     'tool.custom.apply': 'Apply',
     'tool.custom.ariaLabel': 'Custom CSS',
+    'tool.custom.fullscreen': 'Full screen',
+    'tool.custom.exitFullscreen': 'Exit full screen',
     'tool.toggle.ariaLabel': (label) => `Toggle ${label}`,
 
     // Tool groups
@@ -388,6 +398,8 @@ const TRANSLATIONS = {
     // Settings — Connection
     'settings.connection.heading': 'Connexion CheckFox',
     'settings.apikey.label': 'Clé API',
+    'settings.apikey.hint': 'Vous trouverez votre clé API dans ',
+    'settings.apikey.hintLink': 'Paramètres utilisateur, onglet Intégrations',
     'settings.apikey.placeholder': 'cfx_live_…',
     'settings.apikey.show': 'Afficher',
     'settings.apikey.hide': 'Masquer',
@@ -399,6 +411,8 @@ const TRANSLATIONS = {
     'settings.save.error.status': (status) => `Échec de la connexion (${status}). Vérifiez votre clé API.`,
     'settings.save.error.network': 'Échec de la connexion. Vérifiez votre réseau.',
     'settings.apikey.required': 'La clé API est obligatoire.',
+    'settings.disconnect': 'Déconnecter',
+    'settings.disconnected': 'Déconnecté. Votre clé API a été supprimée.',
 
     // Settings — Display
     'settings.display.heading': 'Affichage',
@@ -412,6 +426,10 @@ const TRANSLATIONS = {
     // About panel
     'about.whatIs.heading': 'Qu\'est-ce que CheckFox ?',
     'about.whatIs.text': 'CheckFox est une extension de navigateur pour auditer l\'accessibilité web. Elle combine l\'analyse automatisée et des outils de débogage visuel pour aider à identifier et corriger les obstacles pour les utilisateurs en situation de handicap.',
+    'about.whatIs.app': 'CheckFox est aussi une application web complète sur checkfox.eu — elle aide les auditeurs et les équipes à auditer plus vite et plus intelligemment, sans perdre le contrôle. Cette extension fonctionne main dans la main avec elle.',
+    'about.whatIs.cta': 'Créez un compte gratuitement →',
+    'about.support.heading': 'Support & suggestions',
+    'about.support.text': 'Vous avez trouvé un bug ou une idée pour améliorer l\'extension ? Contactez-nous :',
     'about.engine.heading': 'Moteur d\'analyse',
     'about.engine.axe.desc': 'Moteur de règles WCAG standard du secteur par Deque. Alimente l\'onglet Analyse — exécute des vérifications automatisées selon les critères de succès WCAG 2.x.',
     'about.engine.custom.name': 'Analyseurs personnalisés',
@@ -432,6 +450,8 @@ const TRANSLATIONS = {
     // Tools panel — custom CSS
     'tool.custom.apply': 'Appliquer',
     'tool.custom.ariaLabel': 'CSS personnalisé',
+    'tool.custom.fullscreen': 'Plein écran',
+    'tool.custom.exitFullscreen': 'Quitter le plein écran',
     'tool.toggle.ariaLabel': (label) => `Activer/désactiver ${label}`,
 
     // Tool groups

@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite'
+import { defineConfig, build } from 'vite'
 import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { rmSync } from 'fs'
+import contentConfig from './vite.config.content.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -15,11 +16,24 @@ const stripDsStore = {
   },
 }
 
+// After the main (module) build, also build the IIFE content script into the
+// same dist — so EVERY build (one-shot or watch rebuild) produces a COMPLETE
+// extension and can never leave a half-built dist missing content/axe-core.js.
+// This runs on watch rebuilds too: the main build's emptyOutDir wipes content/,
+// so we must rebuild it each time. It targets dist/ (not src/), so it never
+// retriggers the watcher.
+const buildContentScript = {
+  name: 'build-content-script',
+  async closeBundle() {
+    await build({ ...contentConfig, configFile: false, logLevel: 'warn' })
+  },
+}
+
 // Builds the popup HTML (with inlined CSS/JS) and the background service worker.
-// The content script is built separately via vite.config.content.js because it
-// needs IIFE format to run as a non-module script in the page context.
+// The content script is built with a separate config (IIFE format, needed to run
+// as a non-module script in the page context) and chained in via the plugin above.
 export default defineConfig({
-  plugins: [stripDsStore],
+  plugins: [stripDsStore, buildContentScript],
   root: 'src',
   // Relative base so asset URLs work inside chrome-extension:// origins
   base: './',

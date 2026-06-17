@@ -36,6 +36,10 @@ export async function saveConfig(token) {
   await chrome.storage.local.set({ cfx_token: token })
 }
 
+export async function clearConfig() {
+  await chrome.storage.local.remove(['cfx_token', 'cfx_ctx_cache'])
+}
+
 export function isConfigured({ token }) {
   return Boolean(token)
 }

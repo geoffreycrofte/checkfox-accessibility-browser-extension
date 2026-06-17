@@ -1,7 +1,7 @@
 import { enrichViolations } from '../mapping/index.js'
 import { TOOLS, TOOL_MAP, TOOL_GROUPS } from '../tools/index.js'
 import {
-  loadConfig, saveConfig, pingConnection,
+  loadConfig, saveConfig, clearConfig, pingConnection,
   isConfigured, api, ApiError, ConfigError,
 } from '../api/index.js'
 import {
@@ -813,10 +813,12 @@ async function initSettingsPanel() {
   const tokenInput = document.getElementById('settings-token')
   const tokenToggle = document.getElementById('settings-token-toggle')
   const saveBtn = document.getElementById('settings-save-btn')
+  const disconnectBtn = document.getElementById('settings-disconnect-btn')
   const feedback = document.getElementById('settings-feedback')
 
   const config = await loadConfig()
   tokenInput.value = config.token
+  disconnectBtn.hidden = !isConfigured(config)
 
   // Sidebar toggle
   const sidebarToggle = document.getElementById('settings-sidebar-toggle')
@@ -849,11 +851,12 @@ async function initSettingsPanel() {
 
     saveBtn.disabled = true
     saveBtn.textContent = t('settings.save.connecting')
-    feedback.hidden = true
+    clearSettingsFeedback(feedback)
 
     try {
       await pingConnection(token)
       await saveConfig(token)
+      disconnectBtn.hidden = false
       showSettingsFeedback(feedback, 'ok', t('settings.save.connected'))
     } catch (err) {
       const msg = err instanceof ApiError
@@ -863,6 +866,24 @@ async function initSettingsPanel() {
     } finally {
       saveBtn.disabled = false
       saveBtn.textContent = t('settings.save')
+    }
+  })
+
+  disconnectBtn.addEventListener('click', async () => {
+    disconnectBtn.disabled = true
+    clearSettingsFeedback(feedback)
+    try {
+      await clearConfig()
+      tokenInput.value = ''
+      disconnectBtn.hidden = true
+      // Drop the cached audit context so the Scan tab reflects the disconnect.
+      renderCtxNotConfigured(document.getElementById('context-area'))
+      showSettingsFeedback(feedback, 'ok', t('settings.disconnected'))
+    } catch (err) {
+      showSettingsFeedback(feedback, 'error', t('settings.save.error.network'))
+      console.error('[CheckFox] disconnect:', err)
+    } finally {
+      disconnectBtn.disabled = false
     }
   })
 
@@ -905,11 +926,15 @@ function retranslateDynamicContent() {
       if (translated !== key) span.textContent = translated
     })
   })
-  // Custom CSS apply button and textarea aria-label
-  document.querySelectorAll('.tool-custom-area .btn').forEach(node => {
+  // Custom CSS editor buttons and editor aria-label
+  document.querySelectorAll('.tool-custom-apply').forEach(node => {
     node.textContent = t('tool.custom.apply')
   })
-  document.querySelectorAll('.tool-custom-area textarea').forEach(node => {
+  document.querySelectorAll('.tool-custom-fullscreen').forEach(node => {
+    const on = node.getAttribute('aria-pressed') === 'true'
+    node.textContent = on ? t('tool.custom.exitFullscreen') : t('tool.custom.fullscreen')
+  })
+  document.querySelectorAll('.tool-custom-area .cm-content').forEach(node => {
     node.setAttribute('aria-label', t('tool.custom.ariaLabel'))
   })
   // Header subtitle (if showing "tools selected" state)
@@ -1041,19 +1066,53 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
 
   row.append(toggle, info)
 
+  let customView = null
+  let mountCustomEditor = null
   if (tool.type === 'custom') {
     const customArea = el('div', { class: 'tool-custom-area' })
-    const textarea = el('textarea', { placeholder: '/* your CSS here */', spellcheck: 'false', 'aria-label': t('tool.custom.ariaLabel') })
-    const applyBtn = el('button', { class: 'btn btn--primary', type: 'button' })
+    const editorWrap = el('div', { class: 'cm-editor-wrap' })
+
+    const actions = el('div', { class: 'tool-custom-actions' })
+    const fsBtn = el('button', { class: 'btn btn--sm btn--ghost tool-custom-fullscreen', type: 'button', 'aria-pressed': 'false' })
+    fsBtn.textContent = t('tool.custom.fullscreen')
+    const applyBtn = el('button', { class: 'btn btn--primary btn--sm tool-custom-apply', type: 'button' })
     applyBtn.textContent = t('tool.custom.apply')
-    customArea.append(textarea, applyBtn)
+    actions.append(fsBtn, applyBtn)
+
+    customArea.append(editorWrap, actions)
     info.append(customArea)
 
-    applyBtn.addEventListener('click', async () => {
-      if (!tabId) return
-      const css = textarea.value.trim()
-      await injectCSS(tabId, css, '__checkfox_custom')
+    const apply = async () => {
+      if (!tabId || !customView) return
+      await injectCSS(tabId, customView.state.doc.toString().trim(), '__checkfox_custom')
+    }
+
+    // Lazy-load CodeMirror only when the tool is first opened, so it doesn't
+    // weigh down every popup load. Idempotent.
+    mountCustomEditor = async () => {
+      if (customView) return
+      const { createCssEditor } = await import('./editor.js')
+      customView = createCssEditor({
+        parent: editorWrap,
+        placeholder: '/* your CSS here — Cmd/Ctrl+Enter to apply */',
+        onApply: apply,
+      })
+      customView.contentDOM.setAttribute('aria-label', t('tool.custom.ariaLabel'))
+    }
+
+    applyBtn.addEventListener('click', apply)
+
+    fsBtn.addEventListener('click', () => {
+      const on = customArea.classList.toggle('tool-custom-area--fullscreen')
+      fsBtn.setAttribute('aria-pressed', String(on))
+      fsBtn.textContent = on ? t('tool.custom.exitFullscreen') : t('tool.custom.fullscreen')
+      document.body.classList.toggle('cfx-noscroll', on)
+      customView?.requestMeasure()
+      customView?.focus()
     })
+
+    // If the tool is already active on popup open, mount the editor immediately.
+    if (isActive) mountCustomEditor().then(() => customView?.requestMeasure())
   }
 
   toggle.addEventListener('click', async () => {
@@ -1069,6 +1128,12 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
         if (tool.type === 'css')    await injectCSS(tabId, tool.css)
         else if (tool.type === 'js') await executeFunc(tabId, tool.inject, [...(tool.args ?? []), getBadgeStrings()])
       }
+      // Lazily create the editor on first open, then re-measure now it's visible.
+      if (tool.type === 'custom') {
+        await mountCustomEditor()
+        customView.requestMeasure()
+        customView.focus()
+      }
     } else {
       activeIds.delete(tool.id)
       toggle.classList.remove('tool-toggle--on')
@@ -1079,6 +1144,11 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
         if (tool.type === 'css')    await removeCSS(tabId, tool.css)
         else if (tool.type === 'js') await executeFunc(tabId, tool.remove)
         else if (tool.type === 'custom') await removeCSS(tabId, null, '__checkfox_custom')
+      }
+      // Leaving fullscreen if the editor was maximised when toggled off.
+      if (tool.type === 'custom') {
+        row.querySelector('.tool-custom-area')?.classList.remove('tool-custom-area--fullscreen')
+        document.body.classList.remove('cfx-noscroll')
       }
     }
 
@@ -1392,9 +1462,18 @@ function showCtxFeedback(feedbackEl, type, message) {
 }
 
 function showSettingsFeedback(feedbackEl, type, message) {
+  // Clear first so re-showing the same message still triggers the role="alert"
+  // announcement (an unchanged live region is not re-read by screen readers).
+  feedbackEl.textContent = ''
   feedbackEl.className = `settings-feedback settings-feedback--${type}`
   feedbackEl.textContent = message
-  feedbackEl.hidden = false
+}
+
+// Empties the live region without removing it from the DOM, so the next
+// message is reliably announced. Resetting the class collapses the box visually.
+function clearSettingsFeedback(feedbackEl) {
+  feedbackEl.className = 'settings-feedback'
+  feedbackEl.textContent = ''
 }
 
 // ─── DOM helpers ─────────────────────────────────────────────────────────────

@@ -2,9 +2,10 @@
 
 A Manifest V3 browser extension that accelerates manual accessibility audits for
 professional auditors. It runs an automated [axe-core](https://github.com/dequelabs/axe-core)
-scan on the active tab, maps the results to **WCAG 2.2**, **RGAA 4.1.2** and
++ [checkfox](https://checkfox.eu) scan on the active tab, maps the results to **WCAG 2.2**, **RGAA 4.1.2** and
 **RAWeb 1.1** criteria, provides a library of in-page visual audit tools, and
-syncs bidirectionally with the [CheckFox](https://checkfox.eu) web app.
+syncs bidirectionally with the [CheckFox](https://checkfox.eu) web app to manage your
+audits smarter.
 
 > The extension is a **starting point, not an autopilot.** It pre-fills findings
 > and surfaces evidence; the auditor always validates or overrides.
@@ -15,21 +16,21 @@ syncs bidirectionally with the [CheckFox](https://checkfox.eu) web app.
 
 - **Automated scan** — injects axe-core into the active tab and returns a
   structured violation list (`ruleId`, `impact`, `selector`, `htmlSnippet`,
-  `helpUrl`, WCAG tags). Custom CheckFox checks extend axe for media elements.
+  `helpUrl`, WCAG tags). Custom CheckFox checks extend axe for multiple aspects.
 - **Criteria mapping** — every violation is mapped to WCAG 2.2, RGAA 4.1.2 and
   RAWeb 1.1 criterion IDs via a self-contained, auditable mapping layer.
 - **Visual audit tools** — 30+ toggleable in-page overlays that highlight
   images, links, headings, landmarks, ARIA, tables (summary / caption / headers /
   layout), language & reading direction, focus visibility, tab order, forms, and
   more. Each maps to the specific criteria it helps assess.
-- **CheckFox sync**
+- **CheckFox sync**: you'll need an API Key from the CheckFox [Accessibility Audit tool](https://checkfox.eu).
   - **Push** pre-filled findings into the matching Audit › Sample.
   - **Pull** existing findings as read-only context while auditing.
   - **Topic N/A inventory** — detects RGAA/RAWeb topics with no relevant
     elements on the page (e.g. no images → topic 1) and lets the auditor confirm
     and mark whole topics *Not Applicable*.
 - **Side panel or popup** — toggle in Settings.
-- **Bilingual UI** — English / French, switchable in Settings.
+- **Bilingual UI** — English / French, switchable in Settings. Other languages will come.
 
 ---
 
@@ -44,7 +45,7 @@ syncs bidirectionally with the [CheckFox](https://checkfox.eu) web app.
 - **No headless browser** — the auditor's own browser *is* the scan environment,
   which naturally handles auth, SPA timing and CSP.
 - **Auth** — a `cfx_live_…` Bearer token (from CheckFox › Settings › Integrations)
-  stored in `chrome.storage.local`.
+  stored in `chrome.storage.local`, for CheckFox Accessibility Audit App users.
 
 ### Project structure
 
@@ -75,17 +76,18 @@ Requires Node.js (ESM) and npm.
 ```bash
 npm install
 npm run generate-icons     # one-time: creates placeholder icons in public/icons
-npm run build              # two-step build → dist/
+npm run build              # builds the full extension → dist/
 ```
 
-> **Always use `npm run build`** — it runs *two* Vite passes (main bundle +
-> content script). A bare `vite build` wipes `dist/` and omits the content
-> script, which makes Chrome refuse to load the extension.
+> `npm run build` (a single `vite build`) produces a complete `dist/`: the main
+> pass builds the popup and service worker, then chains the IIFE content-script
+> build (axe-runner + a copy of axe-core) into the same folder. No second command
+> needed.
 
 For iterative work:
 
 ```bash
-npm run dev                # rebuilds both bundles on change
+npm run dev                # rebuilds the main bundle + content script on change
 ```
 
 ### Load the extension
@@ -98,7 +100,9 @@ npm run dev                # rebuilds both bundles on change
 ### Connect to CheckFox
 
 Open the extension → **Settings** → paste your `cfx_live_…` API key → **Save &
-Connect**. The base URL defaults to `https://checkfox.eu`.
+Connect**. The base URL defaults to `https://checkfox.eu`. Your key lives in
+*User Settings › Integrations* on checkfox.eu, and **Disconnect** removes it
+again at any time.
 
 ---
 

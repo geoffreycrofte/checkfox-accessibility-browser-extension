@@ -167,6 +167,22 @@ body.side-panel {
   cursor: not-allowed;
 }
 
+.btn--danger {
+  background: var(--color-bg-raised);
+  border: 1px solid #7f1d1d;
+  color: #fca5a5;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #3b1010;
+  border-color: #b91c1c;
+}
+
+.btn--danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .btn--ghost {
   background: transparent;
   border: 1px solid var(--color-border);
@@ -646,7 +662,7 @@ body.side-panel {
   margin-top: 4px;
 }
 
-/* Custom CSS tool textarea */
+/* Custom CSS tool — CodeMirror editor */
 .tool-custom-area {
   display: none;
   margin-top: 8px;
@@ -656,32 +672,47 @@ body.side-panel {
 
 .tool-row--active .tool-custom-area { display: flex; }
 
-.tool-custom-area textarea {
-  width: 100%;
-  min-height: 80px;
-  background: var(--color-bg);
+.cm-editor-wrap {
+  height: 50vh;
+  min-height: 160px;
+  overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.5;
-  padding: 6px 8px;
-  resize: vertical;
-  box-sizing: border-box;
 }
 
-.tool-custom-area textarea:focus {
+.cm-editor-wrap .cm-editor {
+  height: 100%;
+  border-radius: var(--radius);
+}
+
+.cm-editor-wrap .cm-editor.cm-focused {
   outline: 2px solid var(--color-accent);
   outline-offset: 0;
-  border-color: var(--color-accent);
 }
 
-.tool-custom-area .btn {
-  padding: 6px 12px;
-  font-size: 12px;
-  align-self: flex-end;
+.tool-custom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
+
+/* Full-screen editing */
+.tool-custom-area--fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  margin: 0;
+  padding: 12px;
+  gap: 8px;
+  background: var(--color-bg);
+}
+
+.tool-custom-area--fullscreen .cm-editor-wrap {
+  flex: 1;
+  height: auto;
+}
+
+body.cfx-noscroll { overflow: hidden; }
 
 /* ------------------------------------------------------------------ */
 /* Context area (Scan tab — CheckFox API match / selector)              */
@@ -1113,7 +1144,7 @@ body.side-panel {
 /* ------------------------------------------------------------------ */
 
 .settings-panel {
-  gap: 16px;
+  gap: 32px;
 }
 
 .settings-section {
@@ -1170,6 +1201,14 @@ body.side-panel {
 
 .settings-input-row .settings-input { flex: 1; min-width: 0; }
 
+.settings-btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons share the row evenly; overrides .btn--primary's width: 100%. */
+.settings-btn-row .btn { flex: 1; width: auto; }
+
 .settings-toggle-row {
   display: flex;
   align-items: flex-start;
@@ -1190,6 +1229,18 @@ body.side-panel {
   line-height: 1.4;
 }
 
+/* Hint shown above the connection form, before the API key field. */
+.settings-hint--block {
+  margin-top: -2px;
+}
+
+.settings-hint a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.settings-hint a:hover { color: var(--color-accent-hover); }
+
 .settings-toggle-btn {
   flex-shrink: 0;
   background: var(--color-bg-raised);
@@ -1206,11 +1257,18 @@ body.side-panel {
 .settings-toggle-btn:hover { color: var(--color-text); border-color: var(--color-text-muted); }
 .settings-toggle-btn:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
+/* Persistent role="alert" live region. The box styling lives on the --ok /
+   --error modifiers so the empty base element renders as nothing while
+   staying in the accessibility tree (reliable announcement on the next set). */
 .settings-feedback {
   font-size: 12px;
-  padding: 8px 10px;
   border-radius: var(--radius);
   line-height: 1.4;
+}
+
+.settings-feedback--ok,
+.settings-feedback--error {
+  padding: 8px 10px;
 }
 
 .settings-feedback--ok {
@@ -1269,7 +1327,7 @@ body.side-panel {
 /* ------------------------------------------------------------------ */
 
 .about-panel {
-  gap: 16px;
+  gap: 32px;
 }
 
 .about-section {
@@ -1294,6 +1352,22 @@ body.side-panel {
   font-size: 12px;
   color: var(--color-text-muted);
   line-height: 1.5;
+}
+
+.about-link {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.about-link:hover { text-decoration: underline; color: var(--color-accent-hover); }
+
+.about-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .about-engine-row {

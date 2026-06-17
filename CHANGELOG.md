@@ -7,12 +7,21 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 ## [0.2.0] - 2026-06-16
 
 ### Added
+- **Custom CSS code editor** — the Custom CSS tool now uses a CodeMirror 6
+  editor with CSS syntax highlighting, property/value autocompletion, line
+  numbers and bracket matching. It opens at half the screen height, has a
+  full-screen editing mode, and applies with the button or Cmd/Ctrl+Enter.
+  CodeMirror is lazy-loaded (separate chunk) so it doesn't weigh down popup load.
 - **Topic N/A inventory** — for RGAA/RAWeb audits, detects topics with no
   relevant elements on the page (Images, Frames, Multimedia, Tables, Links,
   Forms) and lets the auditor confirm and mark whole topics *Not Applicable* on
   the matched sample. Uses the robust `criterionIds` path (UUIDs resolved from
   the sample's findings) to avoid localized topic-name mismatches.
 - **`markTopicNA` API method** → `POST /api/v1/audits/:id/samples/:sid/mark-topic-na`.
+- **Disconnect button** in Settings, next to *Save & Connect* — removes your
+  stored API key and clears cached audits in one click.
+- A hint above the API key field links to where to find your key
+  (*User Settings › Integrations* on checkfox.eu).
 - **Design-pattern buttons tool** (criterion 7.1) — highlights scripted
   `role="button"` controls and flags missing accessible names, non-focusable
   controls, and `aria-disabled` states.
@@ -36,6 +45,11 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
   → Status messages**.
 
 ### Fixed
+- Connection status messages (connecting, connected, errors, disconnected) are
+  now announced to screen readers via an `alert` live region.
+- `npm run build` is now a single `vite build` that chains the content-script
+  build into the same `dist/`, so a build can no longer leave a half-built
+  extension missing `content/axe-core.js` (which made Chrome refuse to load it).
 - The content-script build no longer re-copies `public/` (and a stray
   `.DS_Store`) into `dist/` (`publicDir: false` in `vite.config.content.js`).
 - The main build strips `.DS_Store` from `dist/` so it never reaches a Web Store
