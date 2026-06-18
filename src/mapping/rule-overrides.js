@@ -42,6 +42,7 @@ export const RULE_CRITERIA = {
   'checkfox-video-autoplay':    both(['13.8', '4.11']),
   'checkfox-media-no-controls': both(['4.11']),
   'checkfox-video-description': both(['4.1']),
+  'checkfox-graphic-alt':       both(['1.1', '1.2']),
 
   // ── Topic 5 — Tables ─────────────────────────────────────────────────────────
   'td-headers-attr':         both(['5.6', '5.7']),
@@ -94,6 +95,7 @@ export const RULE_CRITERIA = {
   'html-lang-valid':         both(['8.3', '8.4']),
   'html-xml-lang-mismatch':  both(['8.3', '8.4']),
   'valid-lang':              both(['8.7', '8.8']),
+  'checkfox-deprecated-presentational': both(['8.9']),
 
   // ── Topic 9 — Information structure ──────────────────────────────────────────
   'bypass':                  both(['9.1', '12.6', '12.7']),
@@ -110,6 +112,7 @@ export const RULE_CRITERIA = {
   'avoid-inline-spacing':    both(['10.12']),
   'meta-viewport':           both(['10.4']),
   'meta-viewport-large':     both(['10.4']),
+  'checkfox-focus-not-visible': both(['10.7']),
 
   // ── Topic 11 — Forms ─────────────────────────────────────────────────────────
   'autocomplete-valid':      both(['11.13']),
@@ -144,6 +147,8 @@ export const RULE_CRITERIA = {
   'css-orientation-lock':    both(['13.9']),
   'meta-refresh':            both(['13.1', '13.8']),
   'meta-refresh-no-exceptions': both(['13.1', '13.8']),
+  'checkfox-new-window-link': both(['13.2']),
+  'checkfox-download-document': both(['13.3']),
 
   // ── No RGAA/RAWeb criterion yet (WCAG 2.2 additions) ─────────────────────────
   'target-size':             both([]),

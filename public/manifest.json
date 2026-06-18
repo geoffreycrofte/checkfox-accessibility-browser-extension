@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CheckFox Accessibility Auditor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Automated accessibility scanning and audit helper for CheckFox auditors.",
   "minimum_chrome_version": "114",
   "browser_specific_settings": {

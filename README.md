@@ -16,7 +16,11 @@ audits smarter.
 
 - **Automated scan** — injects axe-core into the active tab and returns a
   structured violation list (`ruleId`, `impact`, `selector`, `htmlSnippet`,
-  `helpUrl`, WCAG tags). Custom CheckFox checks extend axe for multiple aspects.
+  `helpUrl`, WCAG tags). Custom CheckFox checks extend axe-core into RAWeb/RGAA
+  criteria it doesn't cover — media (autoplay, controls, descriptions), links
+  opening new windows (13.2), obsolete presentational elements (8.9),
+  downloadable documents (13.3), canvas/embedded images (1.1.7–1.1.8) and focus
+  visibility (10.7).
 - **Criteria mapping** — every violation is mapped to WCAG 2.2, RGAA 4.1.2 and
   RAWeb 1.1 criterion IDs via a self-contained, auditable mapping layer.
 - **Visual audit tools** — 30+ toggleable in-page overlays that highlight

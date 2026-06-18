@@ -4,6 +4,27 @@ All notable changes to the CheckFox Accessibility Auditor extension are
 documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-06-18
+
+### Added
+- **Five new custom checks** that extend axe-core into RAWeb 1.1 / RGAA 4.1.2
+  criteria it doesn't cover. Each flows through the same enrichment pipeline and
+  is reported as *incomplete* (human-verify) unless noted:
+  - **Links opening a new window** (13.2) — flags `target="_blank"` links/areas
+    with no detectable new-window warning (bilingual EN/FR detection).
+  - **Obsolete presentational elements** (8.9) — reports `<center>`, `<font>`,
+    `<big>`, `<tt>`, `<strike>`, `<basefont>` as a *violation* (`blink`/`marquee`
+    are left to axe-core).
+  - **Downloadable documents** (13.3) — flags links to office-format files
+    (`pdf, doc(x), xls(x), ppt(x), odt, ods, odp, rtf`) for accessible-version
+    verification.
+  - **Canvas & embedded images** (1.1.7 / 1.1.8) — flags `<canvas>` and
+    `<embed type="image/*">` lacking an accessible name, the two graphic types
+    axe checks for `<object>`/`<svg>` but skips.
+  - **Focus visibility** (10.7) — scans author stylesheets for `:focus` rules
+    that suppress the outline with no in-rule replacement (border / box-shadow /
+    background); cross-origin sheets are skipped.
+
 ## [0.2.0] - 2026-06-16
 
 ### Added
@@ -79,5 +100,6 @@ Initial working extension.
 - **Side panel mode** and **EN/FR interface language**, both toggleable in
   Settings.
 
+[0.3.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/checkfox/checkfox-browser-extension/releases/tag/v0.1.0
