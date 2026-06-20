@@ -32,6 +32,14 @@ function manifestVariants() {
   delete firefox.minimum_chrome_version
   firefox.permissions = (firefox.permissions ?? []).filter(p => p !== 'sidePanel')
 
+  // Firefox (incl. 128 ESR) ships MV3 background.service_worker disabled by
+  // default and requires an event-page-style background.scripts entry instead.
+  // The bundled worker is an ES module, so keep type:module so its imports load.
+  firefox.background = {
+    scripts: [firefox.background.service_worker],
+    type: firefox.background.type ?? 'module',
+  }
+
   return { chrome, firefox }
 }
 

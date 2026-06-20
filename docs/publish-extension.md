@@ -1,4 +1,4 @@
-# Publishing CheckFox Accessibility Auditor
+# Publishing CheckFox • Accessibility Companion
 
 A single source of truth for shipping the extension to the **Chrome Web Store
 (CWS)** and **Firefox Add-ons (AMO)**. It lists every asset, the exact copy to
@@ -59,7 +59,7 @@ versioned but excluded from the package.
 
 ### Name (≤75 chars · must match `manifest.json`)
 ```
-CheckFox Accessibility Auditor
+CheckFox • Accessibility Companion
 ```
 
 ### Short description / AMO summary (CWS ≤132 · AMO ≤250)
@@ -77,7 +77,7 @@ Scans the active web page for accessibility issues and maps each result to WCAG,
 ### Detailed description (CWS ≤16,000 · AMO description)
 CWS strips markdown — this is plain text with line breaks on purpose.
 ```
-CheckFox Accessibility Auditor accelerates manual accessibility audits. It runs an automated axe-core scan on the page you're auditing, maps every result to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1 criteria, and gives you a library of in-page visual tools to verify what automation can't.
+CheckFox • Accessibility Companion accelerates manual accessibility audits. It runs an automated axe-core scan on the page you're auditing, maps every result to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1 criteria, and gives you a library of in-page visual tools to verify what automation can't.
 
 It's a starting point, not an autopilot: the extension pre-fills findings and surfaces evidence — you always validate or override.
 
@@ -169,7 +169,7 @@ public URL — e.g. `https://checkfox.eu/extension-privacy` or GitHub Pages. The
 text must match the §4 disclosure exactly. Starter content:
 
 ```
-Privacy Policy — CheckFox Accessibility Auditor
+Privacy Policy — CheckFox • Accessibility Companion
 Last updated: 2026-06-19
 
 WHAT DATA WE PROCESS
@@ -225,7 +225,10 @@ understand, so neither store shows an "unrecognized key" warning):
 - **Chrome** keeps `side_panel`, the `sidePanel` permission and
   `minimum_chrome_version`; drops `sidebar_action` and `browser_specific_settings`.
 - **Firefox** keeps `sidebar_action` and `browser_specific_settings`; drops
-  `side_panel`, the `sidePanel` permission and `minimum_chrome_version`.
+  `side_panel`, the `sidePanel` permission and `minimum_chrome_version`; and
+  rewrites `background.service_worker` → `background.scripts` (keeping
+  `type: "module"`), because Firefox 128 ships MV3 service workers disabled by
+  default and refuses to install otherwise.
 
 The `manifest.json` sits at each zip's root (not nested) — exactly what both
 stores expect. Zipping uses the system `zip` utility; if it's unavailable the
@@ -283,9 +286,12 @@ The manifest already carries `browser_specific_settings.gecko`
 >   an error. Note one UX difference: on Firefox the toolbar icon always opens
 >   the popup, while the sidebar is opened from the Settings toggle or Firefox's
 >   own sidebar UI (the two surfaces are independent in Firefox).
-> - **`background.service_worker`** support on Firefox is newer/partial; Firefox
->   has historically preferred `background.scripts`. Confirm the service worker
->   actually runs on Firefox 128, or provide a `scripts` fallback.
+> - **`background.service_worker`** is disabled by default on Firefox 128, which
+>   makes the install fail with *"background.service_worker is currently disabled.
+>   Add background.scripts."* This is now handled: the build rewrites the Firefox
+>   manifest's `background` to `{ scripts: [...], type: "module" }` (see §6.3).
+>   The bundled worker is an ES module, so `type: "module"` must stay. Still
+>   confirm the worker actually runs (alarms, storage, sync) on Firefox 128.
 > - Firefox also warns that the `sidePanel` permission is unsupported — benign;
 >   Chrome needs it, so leave it.
 > - Re-run a full scan + sync flow in Firefox before shipping; don't assume the

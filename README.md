@@ -1,4 +1,4 @@
-# CheckFox Accessibility Auditor
+# CheckFox • Accessibility Companion
 
 A Manifest V3 browser extension that accelerates manual accessibility audits for
 professional auditors. It runs an automated [axe-core](https://github.com/dequelabs/axe-core)
@@ -90,7 +90,9 @@ npm run build              # builds → dist/chrome/ and dist/firefox/ (each wit
 > browser-specific `manifest.json` and an upload-ready
 > `checkfox-<browser>-v<version>.zip`. `public/manifest.json` is the single
 > canonical manifest; the per-browser variants drop the keys the other browser
-> doesn't understand (so neither store shows an "unrecognized key" warning).
+> doesn't understand (so neither store shows an "unrecognized key" warning) and
+> rewrite the Firefox `background` to `scripts` (Firefox 128 ships MV3
+> `service_worker` disabled by default).
 > Zipping uses the system `zip` utility (standard on macOS/Linux); if it's
 > missing, the unpacked folders are still produced.
 

@@ -1,8 +1,23 @@
 # Changelog
 
-All notable changes to the CheckFox Accessibility Auditor extension are
+All notable changes to the CheckFox • Accessibility Companion extension are
 documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Fixed
+- **Firefox install failure** — the Firefox build now ships the background as
+  `background.scripts` (keeping `type: "module"`) instead of
+  `background.service_worker`, which Firefox 128 has disabled by default.
+  Loading the temporary add-on previously failed with *"background.service_worker
+  is currently disabled. Add background.scripts."* Chrome keeps
+  `service_worker` unchanged.
+- **Interface language not fully applied on switch** — switching EN ⇄ FR now also
+  re-translates the context area. The "Connect CheckFox in Settings…" prompt and
+  its *Go to Settings* button (plus the match/selector card labels and Pull/Push
+  actions) previously kept whatever language was active when they first rendered.
+  In-progress audit/sample selections are preserved across the switch.
 
 ## [0.3.0] - 2026-06-19
 
@@ -111,6 +126,7 @@ Initial working extension.
 - **Side panel mode** and **EN/FR interface language**, both toggleable in
   Settings.
 
+[Unreleased]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.3.0...HEAD
 [0.3.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/checkfox/checkfox-browser-extension/releases/tag/v0.1.0

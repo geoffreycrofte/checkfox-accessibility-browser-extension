@@ -925,6 +925,8 @@ async function initSettingsPanel() {
       translatePage()
       // Re-translate the tools panel group labels and tool content
       retranslateDynamicContent()
+      // Re-translate the context area (connect prompt, match/selector cards)
+      retranslateContextArea()
     })
   })
 }
@@ -979,6 +981,40 @@ function retranslateDynamicContent() {
   // Scan button (if not currently scanning)
   const scanBtn = document.getElementById('scan-btn')
   if (!scanBtn.disabled) scanBtn.textContent = t('scan.btn')
+}
+
+// Re-applies translations to the dynamically rendered context area after a
+// language switch. The connect/error prompts carry no user state and are
+// rebuilt in the new language; the match/selector cards keep their live DOM
+// (preserving any in-progress audit/sample selection) and only have their
+// static labels and buttons re-translated in place.
+function retranslateContextArea() {
+  const area = document.getElementById('context-area')
+  if (!area) return
+
+  // Not-connected prompt — stateless, safe to fully re-render.
+  if (area.querySelector('.ctx-connect')) {
+    renderCtxNotConfigured(area)
+    return
+  }
+
+  // Match card: "Match" badge and "Change" button.
+  area.querySelectorAll('.ctx-badge--match').forEach(n => { n.textContent = t('ctx.badge.match') })
+  area.querySelectorAll('.ctx-card__meta .btn--ghost').forEach(n => { n.textContent = t('ctx.btn.change') })
+
+  // Selector field labels.
+  const auditLabel = area.querySelector('#ctx-audit-label')
+  if (auditLabel) auditLabel.textContent = t('ctx.label.audit')
+  const sampleLabel = area.querySelector('#ctx-sample-label')
+  if (sampleLabel) sampleLabel.textContent = t('ctx.label.sample')
+
+  // Pull / Push action buttons (shared by match and selector). A mid-action
+  // button is re-labelled by its own finally handler, so set unconditionally.
+  area.querySelectorAll('.ctx-card__actions .btn--secondary').forEach(n => { n.textContent = t('ctx.btn.pull') })
+  area.querySelectorAll('.ctx-card__actions .btn--primary').forEach(n => { n.textContent = t('ctx.btn.push') })
+
+  // Error card retry button.
+  area.querySelectorAll('.ctx-card--error .btn').forEach(n => { n.textContent = t('ctx.btn.retry') })
 }
 
 // ─── Tools panel ──────────────────────────────────────────────────────────────
