@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "CheckFox • Compagnon d'accessibilité",
+    "description": "Nom de l'extension affiché dans le navigateur, l'infobulle de la barre d'outils et la fiche du magasin."
+  },
+  "extDescription": {
+    "message": "Analyse automatisée de l'accessibilité et aide à l'audit, pour les auditeurs CheckFox.",
+    "description": "Description / accroche de l'extension affichée dans le navigateur et la fiche du magasin."
+  }
+}

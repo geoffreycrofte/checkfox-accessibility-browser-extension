@@ -57,17 +57,22 @@ versioned but excluded from the package.
 
 ## 2. Listing copy — paste-ready
 
-### Name (≤75 chars · must match `manifest.json`)
+### Name (≤75 chars · canonical source is `_locales/<locale>/messages.json`)
+The manifest uses `"name": "__MSG_extName__"` with `default_locale: "en"`, so the
+displayed name comes from the `extName` message per locale (the store shows it in
+the user's browser language):
 ```
-CheckFox • Accessibility Companion
+en  CheckFox • Accessibility Companion
+fr  CheckFox • Compagnon d'accessibilité
 ```
 
 ### Short description / AMO summary (CWS ≤132 · AMO ≤250)
 ```
 Run axe-core scans and map each result to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1, then sync findings to your CheckFox audits.
 ```
-(121 chars — fits the CWS 132 limit and AMO. The current `manifest.json`
-description, 72 chars, is also fine as a fallback.)
+(121 chars — fits the CWS 132 limit and AMO. The packaged `extDescription`
+message in `_locales/en/messages.json`, 72 chars, is also fine as a fallback —
+and `_locales/fr` carries the French equivalent.)
 
 ### Single purpose (CWS dashboard field — reviewers read this closely)
 ```
@@ -229,6 +234,11 @@ understand, so neither store shows an "unrecognized key" warning):
   rewrites `background.service_worker` → `background.scripts` (keeping
   `type: "module"`), because Firefox 128 ships MV3 service workers disabled by
   default and refuses to install otherwise.
+
+Both packages also include the `_locales/` catalogs (`en`, `fr`) referenced by
+the manifest's `__MSG_extName__` / `__MSG_extDescription__` placeholders and
+`default_locale: "en"`, so the store shows the name/description in the user's
+browser language.
 
 The `manifest.json` sits at each zip's root (not nested) — exactly what both
 stores expect. Zipping uses the system `zip` utility; if it's unavailable the

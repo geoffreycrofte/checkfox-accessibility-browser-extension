@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "CheckFox • Accessibility Companion",
+    "description": "Extension name shown in the browser, the toolbar tooltip and the store listing."
+  },
+  "extDescription": {
+    "message": "Automated accessibility scanning and audit helper for CheckFox auditors.",
+    "description": "Extension description / tagline shown in the browser and the store listing."
+  }
+}

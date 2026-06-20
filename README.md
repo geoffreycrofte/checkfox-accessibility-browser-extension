@@ -55,7 +55,8 @@ audits smarter.
 
 ```
 public/
-  manifest.json        MV3 manifest
+  manifest.json        MV3 manifest (localized via __MSG_*__ placeholders)
+  _locales/            chrome.i18n catalogs for manifest name/description (en, fr)
   icons/               generated placeholder icons (replace before publishing)
 src/
   api/                 CheckFox REST client (audits, samples, findings, prefill, mark-topic-na)

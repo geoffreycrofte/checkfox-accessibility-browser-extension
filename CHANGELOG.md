@@ -6,6 +6,16 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **Localized manifest metadata** — the extension `name`, `description` and
+  Firefox sidebar title are now provided through `chrome.i18n` `_locales/`
+  message catalogs (`_locales/en`, `_locales/fr`) with `__MSG_*__` placeholders
+  and `default_locale: "en"`, per Chrome's
+  [i18n recommendation](https://developer.chrome.com/docs/extensions/reference/api/i18n#concepts_and_usage).
+  The store listing, browser management page and toolbar tooltip now follow the
+  browser UI language. (The in-popup UI keeps its own EN/FR runtime switcher,
+  which `chrome.i18n` cannot drive because it is fixed to the browser locale.)
+
 ### Fixed
 - **Firefox install failure** — the Firefox build now ships the background as
   `background.scripts` (keeping `type: "module"`) instead of
