@@ -15,9 +15,13 @@ chrome.runtime.onStartup.addListener(async () => {
 })
 
 async function applyDisplayMode() {
+  // Chrome-only: Firefox provides the sidebar via the sidebar_action manifest
+  // key and has no programmatic display-mode toggle to apply here.
+  if (!chrome.sidePanel) return
   try {
     const { cfx_sidebar } = await chrome.storage.local.get('cfx_sidebar')
-    const sidebar = !!cfx_sidebar
+    // Default to side-panel mode when the user hasn't chosen yet.
+    const sidebar = cfx_sidebar ?? true
     await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: sidebar })
     await chrome.action.setPopup({ popup: sidebar ? '' : 'popup/popup.html' })
   } catch (err) {

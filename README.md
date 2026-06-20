@@ -68,6 +68,7 @@ src/
   tools/               the visual audit tool definitions
 scripts/
   generate-icons.js    pure-Node placeholder icon generator
+  split-and-zip.js     post-build: per-browser dist/ folders + upload zips
 docs/                  project context + criteria JSON sources
 ```
 
@@ -80,26 +81,37 @@ Requires Node.js (ESM) and npm.
 ```bash
 npm install
 npm run generate-icons     # one-time: creates placeholder icons in public/icons
-npm run build              # builds the full extension → dist/
+npm run build              # builds → dist/chrome/ and dist/firefox/ (each with a .zip)
 ```
 
-> `npm run build` (a single `vite build`) produces a complete `dist/`: the main
-> pass builds the popup and service worker, then chains the IIFE content-script
-> build (axe-runner + a copy of axe-core) into the same folder. No second command
-> needed.
+> `npm run build` (a single `vite build`) builds the popup and service worker,
+> chains the IIFE content-script build (axe-runner + a copy of axe-core), then
+> splits the result into **`dist/chrome/`** and **`dist/firefox/`** — each with a
+> browser-specific `manifest.json` and an upload-ready
+> `checkfox-<browser>-v<version>.zip`. `public/manifest.json` is the single
+> canonical manifest; the per-browser variants drop the keys the other browser
+> doesn't understand (so neither store shows an "unrecognized key" warning).
+> Zipping uses the system `zip` utility (standard on macOS/Linux); if it's
+> missing, the unpacked folders are still produced.
 
 For iterative work:
 
 ```bash
-npm run dev                # rebuilds the main bundle + content script on change
+npm run dev                # watch mode — rebuilds dist/chrome/ + dist/firefox/ (no zip)
 ```
 
 ### Load the extension
 
-1. `chrome://extensions` → enable **Developer mode**.
-2. **Load unpacked** → select the `dist/` folder.
-3. Reload from this page after each `npm run build`. Freshly loaded MV3
-   extensions are unpinned — use the 🧩 toolbar menu to pin CheckFox.
+**Chrome** — `chrome://extensions` → enable **Developer mode** → **Load
+unpacked** → select `dist/chrome/`. Freshly loaded MV3 extensions are unpinned —
+use the 🧩 toolbar menu to pin CheckFox.
+
+**Firefox** — `about:debugging#/runtime/this-firefox` → **Load Temporary
+Add-on** → select `dist/firefox/manifest.json`.
+
+For fast iteration, `npm run dev` rebuilds `dist/chrome/` and `dist/firefox/` on
+every change (skipping the zip step) — load the folder for your browser and
+reload it after each change.
 
 ### Connect to CheckFox
 

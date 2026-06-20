@@ -20,7 +20,8 @@ const TRANSLATIONS = {
     'scan.failed': 'Scan failed with an unknown error.',
 
     // Context area
-    'ctx.notConfigured': 'Connect CheckFox in Settings to sync scan results with your audits.',
+    'ctx.notConfigured': 'Connect CheckFox in {0} to sync scan results with your audits.',
+    'ctx.notConfigured.word': 'Settings',
     'ctx.goToSettings': 'Go to Settings',
     'ctx.loading': 'Matching audit…',
     'ctx.invalidKey': 'Invalid API key. Check Settings.',
@@ -276,6 +277,8 @@ const TRANSLATIONS = {
     'results.learnMore': 'Learn more',
     'results.opensNewTab': ' (opens in new tab)',
     'results.needsReview': 'needs review',
+    'results.findElement': 'Find element',
+    'results.elementNotFound': 'Element not found on the page',
 
     // Date labels (audit due dates)
     'date.overdue': 'overdue',
@@ -337,7 +340,8 @@ const TRANSLATIONS = {
     'scan.failed': 'L\'analyse a échoué avec une erreur inconnue.',
 
     // Context area
-    'ctx.notConfigured': 'Connectez CheckFox dans les paramètres pour synchroniser les résultats avec vos audits.',
+    'ctx.notConfigured': 'Connectez CheckFox dans {0} pour synchroniser les résultats avec vos audits.',
+    'ctx.notConfigured.word': 'les paramètres',
     'ctx.goToSettings': 'Aller aux paramètres',
     'ctx.loading': 'Recherche d\'un audit correspondant…',
     'ctx.invalidKey': 'Clé API invalide. Vérifiez les paramètres.',
@@ -593,6 +597,8 @@ const TRANSLATIONS = {
     'results.learnMore': 'En savoir plus',
     'results.opensNewTab': ' (s\'ouvre dans un nouvel onglet)',
     'results.needsReview': 'à vérifier',
+    'results.findElement': 'Trouver l\'élément',
+    'results.elementNotFound': 'Élément introuvable sur la page',
 
     // Date labels (audit due dates)
     'date.overdue': 'en retard',

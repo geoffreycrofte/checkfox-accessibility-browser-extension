@@ -4,7 +4,7 @@ All notable changes to the CheckFox Accessibility Auditor extension are
 documented here. The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and the project aims to follow [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] - 2026-06-18
+## [0.3.0] - 2026-06-19
 
 ### Added
 - **Five new custom checks** that extend axe-core into RAWeb 1.1 / RGAA 4.1.2
@@ -24,6 +24,17 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
   - **Focus visibility** (10.7) — scans author stylesheets for `:focus` rules
     that suppress the outline with no in-rule replacement (border / box-shadow /
     background); cross-origin sheets are skipped.
+- **Firefox sidebar support** — the manifest now also declares `sidebar_action`,
+  and the side-panel toggle feature-detects: Chrome keeps `chrome.sidePanel`,
+  Firefox opens/closes its native sidebar via `browser.sidebarAction`.
+- **Per-browser builds** — `npm run build` now outputs `dist/chrome/` and
+  `dist/firefox/`, each with a browser-specific `manifest.json` (Chromium-only and
+  Firefox-only keys are stripped for the other) and an upload-ready
+  `checkfox-<browser>-v<version>.zip`. `npm run dev` refreshes both folders on
+  every change but skips the zip step.
+- **`docs/publish-extension.md`** — Chrome Web Store + Firefox AMO publishing
+  guide (assets, listing copy, permission justifications, privacy disclosures,
+  packaging and submission steps).
 
 ## [0.2.0] - 2026-06-16
 

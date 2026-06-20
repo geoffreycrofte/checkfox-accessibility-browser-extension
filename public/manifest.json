@@ -27,6 +27,16 @@
   "side_panel": {
     "default_path": "popup/popup.html"
   },
+  "sidebar_action": {
+    "default_panel": "popup/popup.html",
+    "default_title": "CheckFox Accessibility Auditor",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "64": "icons/icon64.png"
+    }
+  },
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {

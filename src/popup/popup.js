@@ -13,8 +13,9 @@ import { t, getLang, loadLang, saveLang } from '../i18n/index.js'
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Apply sidebar body class before any rendering to avoid layout shift.
+  // Side-panel mode is the default until the user opts out.
   const { cfx_sidebar } = await chrome.storage.local.get('cfx_sidebar')
-  if (cfx_sidebar) document.body.classList.add('side-panel')
+  if (cfx_sidebar ?? true) document.body.classList.add('side-panel')
 
   await loadLang()
   translatePage()
@@ -111,7 +112,7 @@ function initScanPanel(tabId, toolState, apiCtx) {
       if (response?.success) {
         response.violations = enrichViolations(response.violations)
         response.incomplete = enrichViolations(response.incomplete)
-        renderResults(resultsEl, response)
+        renderResults(resultsEl, response, tabId)
         resultsEl.hidden = false
 
         // Store violations so the context area's Push button can use them.
@@ -151,12 +152,15 @@ async function sendScanMessage(tabId) {
 
 async function initContextArea(tabUrl, apiCtx) {
   const area = document.getElementById('context-area')
-  if (!tabUrl) return
 
+  // Show the connect prompt whenever there's no API key — independent of the
+  // tab URL, so it never silently disappears on pages without a readable URL.
   if (!isConfigured(await loadConfig())) {
     renderCtxNotConfigured(area)
     return
   }
+
+  if (!tabUrl) return
 
   // Render immediately from local cache so the popup feels instant.
   const stored = await chrome.storage.local.get('cfx_ctx_cache')
@@ -199,12 +203,20 @@ function applyCtxData(area, tabUrl, audits, samples, apiCtx) {
 
 function renderCtxNotConfigured(area) {
   area.replaceChildren()
-  const card = el('div', { class: 'ctx-card' })
-  const msg = el('p', { class: 'ctx-notice' })
-  msg.textContent = t('ctx.notConfigured')
-  const btn = el('button', { class: 'btn btn--sm btn--ghost', type: 'button' })
+  const card = el('div', { class: 'ctx-connect' })
+
+  // Message with the "Settings" word emphasised (split around the {0} placeholder
+  // so the bold segment is correct in every language).
+  const msg = el('p', { class: 'ctx-connect__text' })
+  const [before, after] = t('ctx.notConfigured').split('{0}')
+  const strong = el('strong')
+  strong.textContent = t('ctx.notConfigured.word')
+  msg.append(document.createTextNode(before ?? ''), strong, document.createTextNode(after ?? ''))
+
+  const btn = el('button', { class: 'ctx-connect__btn', type: 'button' })
   btn.textContent = t('ctx.goToSettings')
   btn.addEventListener('click', () => document.getElementById('tab-settings').click())
+
   card.append(msg, btn)
   area.append(card)
 }
@@ -823,15 +835,33 @@ async function initSettingsPanel() {
   // Sidebar toggle
   const sidebarToggle = document.getElementById('settings-sidebar-toggle')
   const { cfx_sidebar } = await chrome.storage.local.get('cfx_sidebar')
-  if (cfx_sidebar) sidebarToggle.classList.add('tool-toggle--on')
-  sidebarToggle.setAttribute('aria-pressed', String(!!cfx_sidebar))
+  // Side-panel mode is the default until the user opts out.
+  const sidebarOn = cfx_sidebar ?? true
+  if (sidebarOn) sidebarToggle.classList.add('tool-toggle--on')
+  sidebarToggle.setAttribute('aria-pressed', String(sidebarOn))
   sidebarToggle.addEventListener('click', async () => {
     const isOn = sidebarToggle.classList.toggle('tool-toggle--on')
     sidebarToggle.setAttribute('aria-pressed', String(isOn))
     document.body.classList.toggle('side-panel', isOn)
+
+    // Firefox: open/close the native sidebar (sidebar_action). This must be
+    // invoked synchronously, before any await, so the user-gesture token from
+    // the click is still valid; we await the returned promise afterwards.
+    let firefoxSidebar
+    if (!chrome.sidePanel && globalThis.browser?.sidebarAction) {
+      firefoxSidebar = (isOn ? browser.sidebarAction.open() : browser.sidebarAction.close())
+        .catch(err => console.warn('[CheckFox] sidebarAction toggle failed:', err.message))
+    }
+
     await chrome.storage.local.set({ cfx_sidebar: isOn })
-    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: isOn })
-    await chrome.action.setPopup({ popup: isOn ? '' : 'popup/popup.html' })
+
+    // Chrome: switch the toolbar action between popup and side-panel-on-click.
+    if (chrome.sidePanel) {
+      await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: isOn })
+      await chrome.action.setPopup({ popup: isOn ? '' : 'popup/popup.html' })
+    }
+
+    await firefoxSidebar
   })
 
   tokenToggle.addEventListener('click', () => {
@@ -1203,6 +1233,36 @@ async function executeFunc(tabId, func, args = []) {
   }
 }
 
+// Scroll the matched element into view and flash a temporary outline on the page.
+// Returns true if the element was found, false otherwise (e.g. dynamic page
+// changed, or a restricted page where scripting is blocked).
+async function highlightElementOnPage(tabId, selector) {
+  try {
+    const [res] = await chrome.scripting.executeScript({
+      target: { tabId },
+      args: [selector],
+      func: (sel) => {
+        let node
+        try { node = document.querySelector(sel) } catch { return false }
+        if (!node) return false
+        node.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        const prev = { outline: node.style.outline, offset: node.style.outlineOffset }
+        node.style.outline = '3px solid #f97316'
+        node.style.outlineOffset = '2px'
+        setTimeout(() => {
+          node.style.outline = prev.outline
+          node.style.outlineOffset = prev.offset
+        }, 2000)
+        return true
+      },
+    })
+    return res?.result === true
+  } catch (err) {
+    console.warn('[CheckFox] highlightElementOnPage failed:', err)
+    return false
+  }
+}
+
 function getBadgeStrings() {
   return {
     altMissing:             t('badge.altMissing'),
@@ -1250,7 +1310,7 @@ function showStatus(el, type, message) {
   el.hidden = false
 }
 
-function renderResults(container, data) {
+function renderResults(container, data, tabId) {
   const { violations, incomplete, passes, url } = data
   container.replaceChildren()
 
@@ -1289,7 +1349,7 @@ function renderResults(container, data) {
   const summary = el('div', { class: 'summary', role: 'group', 'aria-label': t('results.filter.label') })
   summary.append(
     makeFilter('badge--error', 'violations', t('results.violations', violations.length)),
-    makeFilter('badge--warn', 'incomplete', t('results.incomplete', incomplete.length)),
+    makeFilter('badge--info', 'incomplete', t('results.incomplete', incomplete.length)),
     makeFilter('badge--ok', 'passes', t('results.passes', passes.length)),
   )
   container.append(summary)
@@ -1301,16 +1361,17 @@ function renderResults(container, data) {
   const impactOrder = { critical: 0, serious: 1, moderate: 2, minor: 3 }
   const byImpact = arr => [...arr].sort((a, b) => (impactOrder[a.impact] ?? 99) - (impactOrder[b.impact] ?? 99))
 
-  for (const v of byImpact(violations)) list.append(violationItem(v, 'violation'))
-  for (const v of byImpact(incomplete)) list.append(violationItem(v, 'incomplete'))
+  for (const v of byImpact(violations)) list.append(violationItem(v, 'violation', tabId))
+  for (const v of byImpact(incomplete)) list.append(violationItem(v, 'incomplete', tabId))
   for (const p of passes) list.append(passItem(p))
 
   syncFilter()
   container.append(list)
 }
 
-function violationItem(v, status = 'violation') {
-  const item = el('li', { class: `violation violation--${v.impact ?? 'unknown'} violation--${status}`, 'data-status': status })
+function violationItem(v, status = 'violation', tabId) {
+  // Left border comes from the status class; the impact only drives the badge below.
+  const item = el('li', { class: `violation violation--${status}`, 'data-status': status })
 
   const header = el('div', { class: 'violation__header' })
   const ruleEl = el('strong', { class: 'violation__rule' })
@@ -1350,11 +1411,36 @@ function violationItem(v, status = 'violation') {
   const nodes = el('ul', { class: 'nodes', 'aria-label': t('results.affected') })
   for (const n of v.nodes) {
     const nodeItem = el('li', { class: 'node' })
-    const selector = el('code', { class: 'node__selector', title: n.selector })
-    selector.textContent = truncate(n.selector, 60)
+
+    // Top row: selector on the left (orange, truncated), "Find element →" right.
+    const top = el('div', { class: 'node__top' })
+    // The raw selector (n.selector) is CSS.escape'd (e.g. `.dark\:hover\:px-3`)
+    // so it stays valid for querySelector. Show a de-escaped, readable version.
+    const readable = readableSelector(n.selector)
+    const selector = el('code', { class: 'node__selector', title: readable })
+    selector.textContent = truncate(readable, 60)
+    top.append(selector)
+
+    let feedback
+    if (tabId && n.selector) {
+      const findBtn = el('button', { class: 'node__find', type: 'button' })
+      findBtn.textContent = t('results.findElement')
+      const arrow = el('span', { 'aria-hidden': 'true' })
+      arrow.textContent = ' →'
+      findBtn.append(arrow)
+      feedback = el('span', { class: 'node__find-feedback', role: 'status' })
+      findBtn.addEventListener('click', async () => {
+        const found = await highlightElementOnPage(tabId, n.selector)
+        feedback.textContent = found ? '' : t('results.elementNotFound')
+      })
+      top.append(findBtn)
+    }
+
     const html = el('pre', { class: 'node__html' })
     html.textContent = n.htmlSnippet
-    nodeItem.append(selector, html)
+
+    nodeItem.append(top, html)
+    if (feedback) nodeItem.append(feedback)
     nodes.append(nodeItem)
   }
   item.append(nodes)
@@ -1486,4 +1572,11 @@ function el(tag, attrs = {}) {
 
 function truncate(str, max) {
   return str.length > max ? str.slice(0, max) + '…' : str
+}
+
+// Remove CSS escaping (backslashes) for human-readable display of a selector.
+// e.g. `.dark\:hover\:bg-accent\/50` → `.dark:hover:bg-accent/50`.
+// Display only — the original escaped selector is what gets queried.
+function readableSelector(sel) {
+  return sel.replace(/\\(.)/g, '$1')
 }

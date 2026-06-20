@@ -3,6 +3,7 @@ import { resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { rmSync } from 'fs'
 import contentConfig from './vite.config.content.js'
+import { splitAndZip } from './scripts/split-and-zip.js'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
@@ -29,11 +30,22 @@ const buildContentScript = {
   },
 }
 
+// Final step: split the flat dist/ into dist/chrome/ and dist/firefox/, each with
+// a browser-specific manifest. One-shot builds (`npm run build`) also produce an
+// upload-ready .zip per browser. Watch mode (`npm run dev`) skips zipping so
+// rebuilds stay fast, but still refreshes both folders for "Load unpacked".
+const packageBuilds = {
+  name: 'package-builds',
+  closeBundle() {
+    splitAndZip({ zip: !this.meta?.watchMode })
+  },
+}
+
 // Builds the popup HTML (with inlined CSS/JS) and the background service worker.
 // The content script is built with a separate config (IIFE format, needed to run
 // as a non-module script in the page context) and chained in via the plugin above.
 export default defineConfig({
-  plugins: [stripDsStore, buildContentScript],
+  plugins: [stripDsStore, buildContentScript, packageBuilds],
   root: 'src',
   // Relative base so asset URLs work inside chrome-extension:// origins
   base: './',

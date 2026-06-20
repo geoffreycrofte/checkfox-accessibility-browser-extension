@@ -23,6 +23,7 @@
   --color-minor: #6366f1;
   --color-ok: #22c55e;
   --color-incomplete: #60a5fa;
+  --color-violation: #dc726f;
   --radius: 6px;
   --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
 }
@@ -59,15 +60,20 @@ body.side-panel {
 }
 
 .header__logo {
-  font-size: 20px;
-  line-height: 1;
+  display: block;
+  height: 32px;
+  width: auto;
+  /* Light plate so the brand's dark (#262636) fox linework stays visible on the
+     dark header. Remove if the header background becomes light. */
+  background: #fff;
+  padding: 4px 8px;
+  border-radius: var(--radius);
 }
 
 .header__title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text);
+  display: flex;
+  align-items: center;
 }
 
 .header__subtitle {
@@ -257,6 +263,13 @@ body.side-panel {
   border: 1px solid #14532d;
 }
 
+/* Incomplete / needs-review — blue, matching the card border + "Needs review". */
+.badge--info {
+  background: #1e2a3b;
+  color: #93c5fd;
+  border: 1px solid #1e3a8a;
+}
+
 .badge--filter {
   cursor: pointer;
   transition: opacity 0.15s;
@@ -321,12 +334,11 @@ body.side-panel {
   gap: 6px;
 }
 
-.violation--critical { border-left: 3px solid var(--color-critical); }
-.violation--serious  { border-left: 3px solid var(--color-serious); }
-.violation--moderate { border-left: 3px solid var(--color-moderate); }
-.violation--minor    { border-left: 3px solid var(--color-minor); }
-.violation--incomplete { border-left-color: var(--color-incomplete); }
-.violation--pass     { border-left: 3px solid var(--color-ok); }
+/* Left border encodes STATUS (violation / needs-review / pass). Severity
+   (critical, serious, moderate, minor) is shown by the impact badge, top-right. */
+.violation--violation  { border-left: 3px solid var(--color-violation); }
+.violation--incomplete { border-left: 3px solid var(--color-incomplete); }
+.violation--pass       { border-left: 3px solid var(--color-ok); }
 
 .violation__header {
   display: flex;
@@ -411,14 +423,21 @@ body.side-panel {
   gap: 3px;
 }
 
+.node__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .node__selector {
+  flex: 1;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--color-accent);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
 }
 
 .node__html {
@@ -436,6 +455,33 @@ body.side-panel {
   max-height: 56px;
   overflow-y: auto;
 }
+
+.node__find {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.node__find:hover { color: var(--color-accent); }
+
+.node__find:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.node__find-feedback {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.node__find-feedback:not(:empty) { margin-top: 2px; }
 
 .violation__help {
   font-size: 11px;
@@ -570,7 +616,7 @@ body.side-panel {
   width: 34px;
   height: 20px;
   background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-text-muted);
   border-radius: 10px;
   cursor: pointer;
   position: relative;
@@ -723,6 +769,53 @@ body.cfx-noscroll { overflow: hidden; }
   font-size: 12px;
   color: var(--color-text-muted);
   padding: 10px 0 2px;
+}
+
+/* Not-connected prompt — "Connect CheckFox in Settings…" (see Figma 638:116) */
+.ctx-connect {
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.ctx-connect__text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.ctx-connect__text strong {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ctx-connect__btn {
+  background: var(--color-bg);
+  border: 1px solid var(--color-text-muted);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.ctx-connect__btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.ctx-connect__btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 .ctx-card {
