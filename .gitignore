@@ -3,3 +3,9 @@ dist/
 *.local
 .DS_Store
 .git */
+
+# Extension signing — never commit the private key or packed builds.
+# (Web Store distribution re-signs with Google's key; these only appear if
+# someone runs chrome://extensions "Pack extension" for self-hosting.)
+*.pem
+*.crx

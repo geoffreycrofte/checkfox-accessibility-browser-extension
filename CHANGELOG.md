@@ -6,7 +6,22 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **Firefox minimum raised to 140** (`gecko.strict_min_version`, was 128) — the
+  version where `data_collection_permissions` takes effect, and the current
+  Firefox ESR (128 is now End-of-Life). CheckFox stays desktop-only; Firefox for
+  Android isn't targeted (its primary surface, the side panel, doesn't exist
+  there), so `gecko_android` is intentionally omitted.
+
 ### Added
+- **Firefox data-collection consent** — declared
+  `browser_specific_settings.gecko.data_collection_permissions` with
+  `required: ["websiteContent", "browsingActivity", "authenticationInfo"]`,
+  mandatory for AMO submissions since 2025-11-03. Reflects what the extension
+  transmits: the HTML snippets pushed to a CheckFox audit, the audited page URL,
+  and the CheckFox API key (mirroring the Chrome Web Store "Authentication
+  information" disclosure). (Firefox-only; the Chrome build strips
+  `browser_specific_settings`.)
 - **Localized manifest metadata** — the extension `name`, `description` and
   Firefox sidebar title are now provided through `chrome.i18n` `_locales/`
   message catalogs (`_locales/en`, `_locales/fr`) with `__MSG_*__` placeholders
@@ -19,10 +34,10 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 ### Fixed
 - **Firefox install failure** — the Firefox build now ships the background as
   `background.scripts` (keeping `type: "module"`) instead of
-  `background.service_worker`, which Firefox 128 has disabled by default.
-  Loading the temporary add-on previously failed with *"background.service_worker
-  is currently disabled. Add background.scripts."* Chrome keeps
-  `service_worker` unchanged.
+  `background.service_worker`, which Firefox ships disabled by default (still
+  true at 140). Loading the temporary add-on previously failed with
+  *"background.service_worker is currently disabled. Add background.scripts."*
+  Chrome keeps `service_worker` unchanged.
 - **Interface language not fully applied on switch** — switching EN ⇄ FR now also
   re-translates the context area. The "Connect CheckFox in Settings…" prompt and
   its *Go to Settings* button (plus the match/selector card labels and Pull/Push

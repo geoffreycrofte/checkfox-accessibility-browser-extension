@@ -82,34 +82,57 @@ Scans the active web page for accessibility issues and maps each result to WCAG,
 ### Detailed description (CWS ≤16,000 · AMO description)
 CWS strips markdown — this is plain text with line breaks on purpose.
 ```
-CheckFox • Accessibility Companion accelerates manual accessibility audits. It runs an automated axe-core scan on the page you're auditing, maps every result to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1 criteria, and gives you a library of in-page visual tools to verify what automation can't.
+CheckFox • Accessibility Companion accelerates manual accessibility audits. It runs an automated axe-core + CheckFox improved scan on the page you're auditing, maps every result to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1 criteria, and gives you a library of in-page visual tools to verify what automation can't.
 
-It's a starting point, not an autopilot: the extension pre-fills findings and surfaces evidence — you always validate or override.
+It's a starting point, not an autopilot: the extension pre-fills findings and surfaces evidence, you always validate or override.
+
 
 FEATURES
+
 • Automated scan — injects axe-core into the active tab and returns a structured violation list (rule, impact, selector, HTML snippet, help link, WCAG tags).
+
 • Extended coverage — custom checks reach RAWeb/RGAA criteria axe-core doesn't cover: media (autoplay, controls, descriptions), links opening new windows (13.2), obsolete presentational elements (8.9), downloadable documents (13.3), canvas/embedded images (1.1.7–1.1.8) and focus visibility (10.7).
+
 • Triple criteria mapping — every result is mapped to WCAG 2.2, RGAA 4.1.2 and RAWeb 1.1 criterion IDs via a self-contained, auditable mapping layer.
+
 • Visual audit tools — 30+ toggleable in-page overlays for images, links, headings, landmarks, ARIA, tables, language & reading direction, focus, tab order and forms.
+
 • CheckFox sync — push pre-filled findings into your matching audit sample, pull existing findings as read-only context, and mark whole topics Not Applicable.
-• Side panel or popup, and a bilingual EN/FR interface — both toggleable in Settings.
+
+• Side panel or popup, and a bilingual EN/FR interface, both toggleable in Settings.
+
 
 HOW TO USE
+
 1. Click the CheckFox icon in the toolbar (or open the side panel).
 2. Click Scan to run axe-core + custom checks on the current page.
 3. Review the findings and their WCAG/RGAA/RAWeb criteria.
 4. (Optional) In Settings, paste your CheckFox API key to push findings to an audit on checkfox.eu.
 
+
 PRIVACY
-The extension only acts on the active tab when you run a scan or toggle a tool. Your CheckFox API key and preferences are stored locally on your device. Page data (the URL and the findings you choose to push) is sent only to your own CheckFox account at checkfox.eu, over HTTPS, and only when you explicitly connect or push. No analytics, no tracking, no data sold or shared. Full policy: [PRIVACY POLICY URL]
+
+The extension only acts on the active tab when you run a scan or toggle a tool. Your CheckFox API key and preferences are stored locally on your device. Page data (the URL and the findings you choose to push) is sent only to your own CheckFox account at checkfox.eu, over HTTPS, and only when you explicitly connect or push. No analytics, no tracking, no data sold or shared.
+Full policy: https://checkfox.eu/audit-tools/checkfox-browser-extension/privacy/
+
 
 PERMISSIONS
-• "Read and change data on sites you visit" — needed to inject the scanner and read the DOM of the page you're auditing. Auditors can't know which sites they'll audit in advance, so all-sites access is required; the extension only activates on the active tab when you act.
+
+"Read and change data on sites you visit" — needed to inject the scanner and read the DOM of the page you're auditing. Auditors can't know which sites they'll audit in advance, so all-sites access is required; the extension only activates on the active tab when you act.
 
 SUPPORT
-Questions or bugs? Email [SUPPORT EMAIL] or open an issue at [REPO/ISSUES URL].
 
-Version 0.3.0 — Added five custom checks extending axe-core into RAWeb/RGAA criteria (new windows, obsolete elements, downloads, canvas/embed images, focus visibility).
+Questions or bugs? Open the "About" page in the extension, and hit the e-mail address.
+
+Version 0.3.0
+• Added five custom checks extending axe-core into RAWeb/RGAA criteria (new windows, obsolete elements, downloads, canvas/embed images, focus visibility).
+• Added the ability to "jump to the element" triggering the accessibility issue directly from the side-panel.
+
+Version 0.2.0
+Added the connection between CheckFox audits and the extension.
+
+Version 0.1.0
+First release with basic tools and scan.
 ```
 
 ### Category
@@ -268,7 +291,39 @@ contents must be the folder's *contents*, not the folder itself).
 ## 8. Firefox Add-ons (AMO) — submission
 
 The manifest already carries `browser_specific_settings.gecko`
-(`id: extension@checkfox.eu`, `strict_min_version: 128.0`).
+(`id: extension@checkfox.eu`, `strict_min_version: 140.0`).
+
+> **Minimum version — 140 (desktop), Android not targeted.** The floor is
+> Firefox **140** because that's the version where
+> `data_collection_permissions` (below) takes effect — and 140 is the current
+> Firefox ESR, so the previous ESR (128, now End-of-Life) is the only thing
+> dropped. AMO shows two harmless warnings you can submit through:
+> - *"`strict_min_version` requires Firefox 128/140 … before 140/142 introduced
+>   `data_collection_permissions`"* — Android got the key at 142, but CheckFox is
+>   desktop-only (its primary surface is the side panel, absent on Firefox for
+>   Android), so we don't set `gecko_android` and accept the Android note.
+> - *"`sidePanel.setPanelBehavior` is not supported"* (in `popup.js` /
+>   `service-worker.js`) — a static-analysis false positive: the same JS bundle
+>   ships to both browsers, and every `chrome.sidePanel` call is runtime
+>   feature-detected (`if (!chrome.sidePanel) return`), so it never executes on
+>   Firefox. Removing it would break Chrome; leave it.
+
+> **Data collection consent (required since 3 Nov 2025).** AMO rejects uploads
+> without `browser_specific_settings.gecko.data_collection_permissions`. We
+> declare what actually leaves the device:
+> ```json
+> "data_collection_permissions": { "required": ["websiteContent", "browsingActivity", "authenticationInfo"] }
+> ```
+> - `websiteContent` — the HTML snippets of failing elements pushed to a
+>   CheckFox audit (`prefill` → `nodes[].html`).
+> - `browsingActivity` — the audited page's URL, per the privacy policy.
+> - `authenticationInfo` — the CheckFox API key the user enters to connect their
+>   account (stored in `chrome.storage.local`, sent only as a Bearer token).
+>   Declared to mirror the Chrome Web Store "Authentication information"
+>   disclosure for the same API key.
+>
+> This key is Firefox-only — the Chrome build strips `browser_specific_settings`
+> entirely (Chrome declares the same practices via the CWS privacy form instead).
 
 1. Account at [addons.mozilla.org](https://addons.mozilla.org/developers/).
 2. **Submit a New Add-on** → "On this site" (listed) → upload
@@ -296,12 +351,13 @@ The manifest already carries `browser_specific_settings.gecko`
 >   an error. Note one UX difference: on Firefox the toolbar icon always opens
 >   the popup, while the sidebar is opened from the Settings toggle or Firefox's
 >   own sidebar UI (the two surfaces are independent in Firefox).
-> - **`background.service_worker`** is disabled by default on Firefox 128, which
->   makes the install fail with *"background.service_worker is currently disabled.
->   Add background.scripts."* This is now handled: the build rewrites the Firefox
->   manifest's `background` to `{ scripts: [...], type: "module" }` (see §6.3).
->   The bundled worker is an ES module, so `type: "module"` must stay. Still
->   confirm the worker actually runs (alarms, storage, sync) on Firefox 128.
+> - **`background.service_worker`** is disabled by default on Firefox (still true
+>   at 140), which makes the install fail with *"background.service_worker is
+>   currently disabled. Add background.scripts."* This is now handled: the build
+>   rewrites the Firefox manifest's `background` to `{ scripts: [...], type:
+>   "module" }` (see §6.3). The bundled worker is an ES module, so `type:
+>   "module"` must stay. Still confirm the worker actually runs (alarms, storage,
+>   sync) on Firefox 140+.
 > - Firefox also warns that the `sidePanel` permission is unsupported — benign;
 >   Chrome needs it, so leave it.
 > - Re-run a full scan + sync flow in Firefox before shipping; don't assume the

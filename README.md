@@ -92,8 +92,8 @@ npm run build              # builds → dist/chrome/ and dist/firefox/ (each wit
 > `checkfox-<browser>-v<version>.zip`. `public/manifest.json` is the single
 > canonical manifest; the per-browser variants drop the keys the other browser
 > doesn't understand (so neither store shows an "unrecognized key" warning) and
-> rewrite the Firefox `background` to `scripts` (Firefox 128 ships MV3
-> `service_worker` disabled by default).
+> rewrite the Firefox `background` to `scripts` (Firefox ships MV3
+> `service_worker` disabled by default, still true at 140).
 > Zipping uses the system `zip` utility (standard on macOS/Linux); if it's
 > missing, the unpacked folders are still produced.
 
