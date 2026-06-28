@@ -10,6 +10,7 @@ const HELP = {
   infoRelationships: 'https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html',
   nonTextContent: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html',
   focusVisible:  'https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html',
+  parsing:       'https://www.w3.org/WAI/WCAG21/Understanding/parsing.html',
 }
 
 // Bilingual (EN/FR) hint that a link warns it opens a new window or tab.
@@ -18,6 +19,16 @@ const NEW_WINDOW_HINT = /new window|new tab|opens? (in|a new)|external link|nouv
 // Obsolete / purely presentational HTML elements (RAWeb/RGAA 8.9).
 // blink and marquee are intentionally excluded — axe-core already flags them.
 const DEPRECATED_PRESENTATIONAL = ['center', 'font', 'big', 'tt', 'strike', 'basefont']
+
+// Obsolete presentational HTML *attributes* (RAWeb/RGAA 10.1). Presentation must
+// live in CSS, not markup. width and height are intentionally excluded — they stay
+// valid on replaced elements (img, canvas, svg, video, iframe), so flagging them
+// would produce false positives.
+const DEPRECATED_PRESENTATIONAL_ATTRS = [
+  'align', 'bgcolor', 'background', 'bordercolor', 'border',
+  'cellpadding', 'cellspacing', 'valign', 'nowrap',
+  'hspace', 'vspace', 'frameborder', 'marginwidth', 'marginheight',
+]
 
 // Downloadable office-document formats (RAWeb/RGAA 13.3).
 const OFFICE_DOC_EXT = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf']
@@ -233,7 +244,149 @@ export function runCustomChecks() {
     ))
   }
 
+  // ── checkfox-doctype-missing ──────────────────────────────────────────────
+  // RAWeb/RGAA 8.1 — every page must declare a doctype. axe-core has no rule for
+  // this. The WCAG anchor 4.1.1 (Parsing) is deprecated in WCAG 2.2 but retained
+  // by RGAA, so we keep the tag for referential alignment. Deterministic.
+  if (!document.doctype || document.doctype.name.toLowerCase() !== 'html') {
+    const present = !!document.doctype
+    violations.push(rule(
+      'checkfox-doctype-missing',
+      'moderate',
+      present ? 'Document uses an obsolete or non-HTML doctype' : 'Document has no doctype declaration',
+      HELP.parsing,
+      ['wcag411'],
+      [{
+        selector: 'html',
+        htmlSnippet: present ? `<!DOCTYPE ${document.doctype.name}>` : '(no DOCTYPE declaration)',
+        failureSummary: 'Declare the HTML5 doctype as the very first line of the document: <!DOCTYPE html>',
+      }],
+    ))
+  }
+
+  // ── checkfox-duplicate-id ─────────────────────────────────────────────────
+  // RAWeb/RGAA 8.2 — ids must be unique. axe-core's duplicate-id rule is
+  // deprecated and disabled by default, so nothing in our run catches this.
+  // Duplicate ids silently break label/ARIA associations and in-page anchors.
+  const idMap = new Map()
+  for (const el of document.querySelectorAll('[id]')) {
+    if (!el.id) continue
+    if (!idMap.has(el.id)) idMap.set(el.id, [])
+    idMap.get(el.id).push(el)
+  }
+  const duplicatedIds = [...idMap.entries()].filter(([, els]) => els.length > 1)
+
+  if (duplicatedIds.length > 0) {
+    violations.push(rule(
+      'checkfox-duplicate-id',
+      'moderate',
+      'Duplicate id attribute — each id must be unique within the page',
+      HELP.parsing,
+      ['wcag411'],
+      duplicatedIds.flatMap(([id, els]) => els.map(el =>
+        nodeInfo(el, `The id "${id}" is used ${els.length} times on the page. Make every id unique — duplicate ids break label, ARIA and in-page-link associations`))),
+    ))
+  }
+
+  // ── checkfox-presentational-attr ──────────────────────────────────────────
+  // RAWeb/RGAA 10.1 — presentation must be handled by CSS, not markup. Our
+  // checkfox-deprecated-presentational rule catches obsolete *elements*; this
+  // catches obsolete presentational *attributes* (see DEPRECATED_PRESENTATIONAL_ATTRS).
+  const presentationalAttrEls = new Map() // el -> Set<attrName>
+  for (const attr of DEPRECATED_PRESENTATIONAL_ATTRS) {
+    for (const el of document.querySelectorAll(`[${attr}]`)) {
+      if (attr === 'border' && el.tagName === 'IMG') continue // legacy border="0" on img: excluded to limit false positives
+      if (!presentationalAttrEls.has(el)) presentationalAttrEls.set(el, new Set())
+      presentationalAttrEls.get(el).add(attr)
+    }
+  }
+
+  if (presentationalAttrEls.size > 0) {
+    violations.push(rule(
+      'checkfox-presentational-attr',
+      'minor',
+      'Presentational HTML attribute used — move the styling to CSS',
+      HELP.infoRelationships,
+      ['wcag131'],
+      [...presentationalAttrEls.entries()].map(([el, attrs]) =>
+        nodeInfo(el, `Remove the presentational attribute${attrs.size > 1 ? 's' : ''} ${[...attrs].map(a => `"${a}"`).join(', ')} from <${el.tagName.toLowerCase()}> and style it with CSS instead`)),
+    ))
+  }
+
+  // ── checkfox-fieldset-missing ─────────────────────────────────────────────
+  // RAWeb/RGAA 11.5 / 11.6 — fields of the same nature must be grouped and the
+  // group given a legend. axe-core has no rule for this. Radio buttons sharing a
+  // name (within a form) are a true group → violation. Checkboxes sharing a name
+  // are only probably a group → incomplete (grouping necessity is human judgment).
+  // A valid grouping = an enclosing <fieldset> with a non-empty <legend>, or a
+  // role="group"/"radiogroup" with an accessible name.
+  const formTokens = new Map()
+  const formToken = el => {
+    const f = el.form
+    if (!f) return 'no-form'
+    if (!formTokens.has(f)) formTokens.set(f, `form-${formTokens.size}`)
+    return formTokens.get(f)
+  }
+
+  // Same-name controls grouped per form; keep groups of ≥2 where at least one
+  // member lacks a valid grouping container.
+  const ungroupedNamedGroups = selector => {
+    const groups = new Map()
+    for (const el of document.querySelectorAll(selector)) {
+      if (!el.name) continue
+      const key = `${formToken(el)}::${el.name}`
+      if (!groups.has(key)) groups.set(key, [])
+      groups.get(key).push(el)
+    }
+    return [...groups.values()].filter(g => g.length >= 2 && g.some(el => !hasGroupingContainer(el)))
+  }
+
+  const ungroupedRadios = ungroupedNamedGroups('input[type="radio"]')
+  const ungroupedCheckboxes = ungroupedNamedGroups('input[type="checkbox"]')
+
+  if (ungroupedRadios.length > 0) {
+    violations.push(rule(
+      'checkfox-fieldset-missing',
+      'serious',
+      'Group of radio buttons is not enclosed in a fieldset with a legend',
+      HELP.infoRelationships,
+      ['wcag131', 'wcag332'],
+      ungroupedRadios.flatMap(g => g.map(el =>
+        nodeInfo(el, `Wrap the "${el.name}" radio group in a <fieldset> with a <legend>, or a container with role="group"/"radiogroup" and an accessible name`))),
+    ))
+  }
+
+  if (ungroupedCheckboxes.length > 0) {
+    incomplete.push(rule(
+      'checkfox-fieldset-missing',
+      'moderate',
+      'Checkboxes sharing a name are not grouped — verify whether they form a set needing a fieldset and legend',
+      HELP.infoRelationships,
+      ['wcag131', 'wcag332'],
+      ungroupedCheckboxes.flatMap(g => g.map(el =>
+        nodeInfo(el, `If these "${el.name}" checkboxes form a single question, wrap them in a <fieldset> with a <legend> (or a container with role="group" and an accessible name)`))),
+    ))
+  }
+
   return { violations, incomplete }
+}
+
+// True if `el` is enclosed by a <fieldset> carrying a non-empty <legend>, or by
+// an element with role="group"/"radiogroup" that has an accessible name. Used to
+// decide whether grouped form controls (RAWeb/RGAA 11.5/11.6) are correctly grouped.
+function hasGroupingContainer(el) {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    if (node.tagName === 'FIELDSET') {
+      const legend = node.querySelector(':scope > legend')
+      if (legend && legend.textContent.trim()) return true
+    }
+    const role = node.getAttribute('role')
+    if ((role === 'group' || role === 'radiogroup') &&
+        (node.getAttribute('aria-label')?.trim() || node.getAttribute('aria-labelledby'))) {
+      return true
+    }
+  }
+  return false
 }
 
 // Walk author stylesheets and return :focus rules that remove the outline
