@@ -54,15 +54,39 @@
     <main id="panel-scan" class="main" role="tabpanel" aria-labelledby="tab-scan">
       <div id="context-area"></div>
 
-      <button id="scan-btn" type="button" class="btn btn--primary" data-i18n="scan.btn">
-        Run accessibility scan
-      </button>
+      <!-- Topic N/A inventory: detect topics with no relevant elements on this
+           page and mark them Not Applicable. Sits right after the website match,
+           independent of the Scan / Audit inner tabs below. -->
+      <div id="inventory-area"></div>
 
-      <div id="status" class="status" hidden role="status" aria-live="polite"></div>
+      <!-- Inner tabs: shown only when a matching audit + sample is found.
+           In the no-match case they stay hidden and only the Scan button below shows. -->
+      <nav id="scan-subtabs" class="subtabs" role="tablist" data-i18n-aria-label="subtab.label" aria-label="Issue source" hidden>
+        <button class="subtab subtab--active" role="tab" aria-selected="true"  aria-controls="subpanel-scan"  id="subtab-scan"  data-i18n="subtab.scan">Scan issues</button>
+        <button class="subtab"                role="tab" aria-selected="false" aria-controls="subpanel-audit" id="subtab-audit" data-i18n="subtab.audit">Audit issues</button>
+      </nav>
 
-      <div id="results" hidden aria-live="polite"></div>
+      <!-- Scan issues: run a local scan, then push the results to CheckFox. -->
+      <div id="subpanel-scan" class="subpanel" role="tabpanel" aria-labelledby="subtab-scan">
+        <button id="scan-btn" type="button" class="btn btn--primary" data-i18n="scan.btn">
+          Run accessibility scan
+        </button>
 
-      <div id="findings-area" hidden aria-live="polite"></div>
+        <div id="status" class="status" hidden role="status" aria-live="polite"></div>
+
+        <div id="results" hidden aria-live="polite"></div>
+
+        <div id="push-feedback" class="ctx-card__feedback" role="status" aria-live="polite" hidden></div>
+        <button id="push-btn" type="button" class="btn btn--primary" data-i18n="ctx.btn.push" hidden>Push scan ↑</button>
+      </div>
+
+      <!-- Audit issues: pull the recorded findings from CheckFox and analyse them. -->
+      <div id="subpanel-audit" class="subpanel" role="tabpanel" aria-labelledby="subtab-audit" hidden>
+        <button id="pull-btn" type="button" class="btn btn--secondary" data-i18n="ctx.btn.pull">Pull findings</button>
+        <div id="pull-feedback" class="ctx-card__feedback" role="status" aria-live="polite" hidden></div>
+
+        <div id="findings-area" hidden aria-live="polite"></div>
+      </div>
     </main>
 
     <section id="panel-tools" class="main" role="tabpanel" aria-labelledby="tab-tools" hidden>

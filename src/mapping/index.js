@@ -61,6 +61,39 @@ export function scsToRaweb(scs) {
 export function enrichViolation(violation) {
   const wcag = tagsToWcagScs(violation.wcagTags)
   const override = RULE_CRITERIA[violation.ruleId]
+
+  // Element-routed rule (e.g. Label-in-Name): resolve criteria per affected node
+  // from its element type, attach them to each node, then surface the triggered
+  // union at the violation level. `criteria.domain` carries the rule's full set
+  // so the card can show every possible criterion and highlight the matched ones.
+  if (override?.resolve) {
+    const nodes = (violation.nodes ?? []).map(node => {
+      const resolved = override.resolve(node) ?? { rgaa: override.rgaa, raweb: override.raweb }
+      return {
+        ...node,
+        criteria: {
+          rgaa:  sortCriteriaIds([...resolved.rgaa]),
+          raweb: sortCriteriaIds([...resolved.raweb]),
+        },
+      }
+    })
+    const rgaa  = unionIds(nodes.map(n => n.criteria.rgaa))
+    const raweb = unionIds(nodes.map(n => n.criteria.raweb))
+    return {
+      ...violation,
+      nodes,
+      criteria: {
+        wcag,
+        rgaa:  rgaa.length  ? rgaa  : sortCriteriaIds([...override.rgaa]),
+        raweb: raweb.length ? raweb : sortCriteriaIds([...override.raweb]),
+        domain: {
+          rgaa:  sortCriteriaIds([...override.rgaa]),
+          raweb: sortCriteriaIds([...override.raweb]),
+        },
+      },
+    }
+  }
+
   return {
     ...violation,
     criteria: {
@@ -79,6 +112,13 @@ export function enrichViolation(violation) {
  */
 export function enrichViolations(violations) {
   return violations.map(enrichViolation)
+}
+
+// Deduplicated, sorted union of several criterion-id lists.
+function unionIds(lists) {
+  const set = new Set()
+  for (const list of lists) for (const id of list) set.add(id)
+  return sortCriteriaIds([...set])
 }
 
 // Sort criterion IDs numerically by topic then criterion (e.g. "10.2" after "9.4").

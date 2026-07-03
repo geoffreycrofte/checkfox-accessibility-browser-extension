@@ -1,4 +1,4 @@
-const BASE_URL = 'https://checkfox.eu'
+export const BASE_URL = 'https://checkfox.eu'
 
 export class ConfigError extends Error {}
 

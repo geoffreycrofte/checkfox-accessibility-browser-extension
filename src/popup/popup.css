@@ -535,6 +535,15 @@ body.side-panel {
 .tag--raweb      { background: #2d2200; color: #fcd34d; border-color: #78350f; }
 .tag--rgaa-raweb { background: #042f2e; color: #5eead4; border-color: #115e59; }
 
+/* A criterion the rule can map to but no affected element matched on this page.
+   Muted with a dashed border; text stays AA-contrasted (state also in .sr-only). */
+.tag--possible {
+  background: transparent;
+  color: var(--color-text-muted);
+  border-style: dashed;
+  opacity: 0.85;
+}
+
 /* ------------------------------------------------------------------ */
 /* Tabs                                                                 */
 /* ------------------------------------------------------------------ */
@@ -570,6 +579,55 @@ body.side-panel {
   outline: 2px solid var(--color-accent);
   outline-offset: -2px;
 }
+
+/* ------------------------------------------------------------------ */
+/* Scan inner sub-tabs (Scan issues / Audit issues)                     */
+/* ------------------------------------------------------------------ */
+
+.subtabs {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.subtab {
+  flex: 1;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.subtab:hover { color: var(--color-text); }
+
+.subtab--active {
+  background: #fff;
+  color: var(--color-bg);
+}
+
+.subtab--active:hover { color: var(--color-bg); }
+
+.subtab:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.subpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Action buttons fill the sub-panel width, matching the Scan button. */
+.subpanel .btn { width: 100%; }
 
 /* ------------------------------------------------------------------ */
 /* Tools panel                                                          */
@@ -876,16 +934,6 @@ body.cfx-noscroll { overflow: hidden; }
   white-space: nowrap;
 }
 
-.ctx-card__actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 2px;
-}
-
-.ctx-card__actions .btn--primary {
-  width: auto;
-}
-
 .ctx-card__feedback {
   font-size: 11px;
   padding: 5px 8px;
@@ -903,6 +951,21 @@ body.cfx-noscroll { overflow: hidden; }
   background: #3b1010;
   color: #fca5a5;
   border: 1px solid #7f1d1d;
+}
+
+/* Inherits the feedback box colour (keeps contrast) and is set apart from the
+   surrounding text by an underline + weight, never by colour alone. */
+.ctx-card__feedback-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.ctx-card__feedback-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .ctx-notice {
@@ -1189,20 +1252,43 @@ body.cfx-noscroll { overflow: hidden; }
   background: var(--color-bg-raised);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 7px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  overflow: hidden;
 }
 
 .finding--non-compliant { border-left: 3px solid var(--color-critical); }
-.finding--compliant     { border-left: 3px solid var(--color-ok); }
-.finding--not-applicable { border-left: 3px solid var(--color-border); }
 
-.finding__row {
+/* Expandable header — the whole row is the toggle control */
+.finding__toggle {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.finding__toggle:hover { background: rgba(255, 255, 255, 0.03); }
+.finding__toggle:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
+.finding__chevron {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  transition: transform 0.15s ease;
+}
+
+.finding__toggle[aria-expanded="true"] .finding__chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .finding__chevron { transition: none; }
 }
 
 .finding__num {
@@ -1222,8 +1308,10 @@ body.cfx-noscroll { overflow: hidden; }
 }
 
 .finding__status--non-compliant  { background: #3b1010; color: #fca5a5; }
-.finding__status--compliant      { background: #052e16; color: #86efac; }
-.finding__status--not-applicable { background: #262636; color: #9898b0; }
+
+.finding__body {
+  padding: 0 10px 8px 26px;
+}
 
 .finding__comment {
   margin: 0;

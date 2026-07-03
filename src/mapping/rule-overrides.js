@@ -8,9 +8,26 @@
 // are currently identical. If they diverge in a future version, replace the
 // relevant both() calls with explicit { rgaa: [...], raweb: [...] } objects.
 
+import { classifyLabelInName } from './classify-target.js'
+
 const both = ids => ({ rgaa: ids, raweb: ids })
 
-/** @type {Record<string, { rgaa: string[], raweb: string[] }>} */
+// Element-routed override. `domain` is the full set of criteria the rule *can*
+// map to (shown on the card); `classify(htmlSnippet)` resolves each affected node
+// to the single criterion its element actually belongs to. Used for rules like
+// Label-in-Name where one WCAG SC splits across RGAA/RAWeb criteria by element
+// type. Keeps rgaa/raweb = domain so the static consumers (coverage checks, the
+// generic display path) still see a valid criteria list.
+const byTarget = (domain, classify) => ({
+  ...both(domain),
+  domain,
+  resolve: node => {
+    const id = classify(node?.htmlSnippet)
+    return id ? both([id]) : null
+  },
+})
+
+/** @type {Record<string, { rgaa: string[], raweb: string[], domain?: string[], resolve?: Function }>} */
 export const RULE_CRITERIA = {
 
   // ── Topic 1 — Images ─────────────────────────────────────────────────────────
@@ -54,7 +71,7 @@ export const RULE_CRITERIA = {
   'empty-table-header':      both(['5.4', '5.5']),
 
   // ── Topic 6 — Links ──────────────────────────────────────────────────────────
-  'link-name':               both(['6.1', '6.2']),
+  'link-name':               both(['6.1']),
   'identical-links-same-purpose': both(['6.1', '6.2']),
 
   // ── Topic 7 — Scripts ────────────────────────────────────────────────────────
@@ -66,7 +83,7 @@ export const RULE_CRITERIA = {
   'aria-deprecated-role':    both(['7.1']),
   'aria-dialog-name':        both(['7.1']),
   'aria-hidden-body':        both(['7.1']),
-  'aria-hidden-focus':       both(['7.1', '7.3']),
+  'aria-hidden-focus':       both(['7.3']),
   'aria-meter-name':         both(['7.1']),
   'aria-progressbar-name':   both(['7.1']),
   'aria-prohibited-attr':    both(['7.1']),
@@ -113,6 +130,7 @@ export const RULE_CRITERIA = {
   'meta-viewport':           both(['10.4']),
   'meta-viewport-large':     both(['10.4']),
   'checkfox-focus-not-visible': both(['10.7']),
+  'checkfox-presentational-attr': both(['10.1']),
 
   // ── Topic 11 — Forms ─────────────────────────────────────────────────────────
   'autocomplete-valid':      both(['11.13']),
@@ -120,7 +138,9 @@ export const RULE_CRITERIA = {
   'form-field-multiple-labels': both(['11.2']),
   'input-button-name':       both(['11.9']),
   'label':                   both(['11.1', '11.2']),
-  'label-content-name-mismatch': both(['11.2', '11.9']),
+  // Label-in-Name (WCAG 2.5.3) routes per element: link 6.1 / form field 11.2 /
+  // button 11.9. See src/mapping/classify-target.js and docs/element-routed-criteria.md.
+  'label-content-name-mismatch': byTarget(['6.1', '11.2', '11.9'], classifyLabelInName),
   'label-title-only':        both(['11.1', '11.2']),
   'select-name':             both(['11.1']),
   'summary-name':            both(['11.9']),

@@ -15,6 +15,11 @@ const TRANSLATIONS = {
     // Scan panel
     'scan.btn': 'Run accessibility scan',
     'scan.btn.scanning': 'Scanning…',
+
+    // Inner sub-tabs (shown when a matching audit + sample is found)
+    'subtab.label': 'Issue source',
+    'subtab.scan': 'Scan page',
+    'subtab.audit': 'Audit findings',
     'scan.noTab': 'No active tab found.',
     'scan.noPage': 'Could not reach the page. Check that the URL is not a browser-internal page.',
     'scan.failed': 'Scan failed with an unknown error.',
@@ -46,12 +51,15 @@ const TRANSLATIONS = {
     'findings.title': 'Existing findings',
     'findings.close': 'Close findings',
     'findings.empty': 'No findings recorded yet.',
+    'findings.noFailures': 'No failures recorded. 🎉',
+    'findings.noDetails': 'No details recorded for this failure.',
     'findings.label': 'Existing findings',
 
     // Push result (functions)
     'push.result': (applied, skipped) => skipped > 0
       ? `${applied} criteria pre-filled, ${skipped} skipped (already assessed).`
       : `${applied} criteria pre-filled.`,
+    'push.viewSample': 'View sample in CheckFox',
 
     // Topic N/A inventory
     'inv.heading': 'Topic N/A inventory',
@@ -211,6 +219,7 @@ const TRANSLATIONS = {
     'tool.citations.description': 'Highlight block and inline quotations',
     'tool.presentation-attrs.label': 'Presentation attributes',
     'tool.presentation-attrs.description': 'Detect deprecated HTML presentation attributes and elements',
+    'tool.presentation-attrs.legend.0': 'deprecated presentation element or attribute (use CSS instead)',
     'tool.css-content.label': 'CSS generated content',
     'tool.css-content.description': 'Outline elements with ::before or ::after pseudo-elements carrying content',
     'tool.no-css.label': 'Disable CSS',
@@ -279,6 +288,8 @@ const TRANSLATIONS = {
     'results.needsReview': 'needs review',
     'results.findElement': 'Find element',
     'results.elementNotFound': 'Element not found on the page',
+    'results.criterionTriggered': ' (matched by an affected element)',
+    'results.criterionPossible': ' (possible for this rule, not matched here)',
 
     // Date labels (audit due dates)
     'date.overdue': 'overdue',
@@ -319,6 +330,8 @@ const TRANSLATIONS = {
     'badge.invalidDir':             'INVALID DIR',
     'badge.breaksTabOrder':         'BREAKS TAB ORDER',
     'badge.notInTabOrder':          'tabindex="-1" — not in tab order',
+    'badge.presNone':               '✓ No deprecated presentation elements or attributes',
+    'badge.presFound':              'deprecated presentation elements/attributes',
   },
 
   fr: {
@@ -334,6 +347,9 @@ const TRANSLATIONS = {
 
     // Scan panel
     'scan.btn': 'Lancer l\'analyse d\'accessibilité',
+    'subtab.label': 'Source des problèmes',
+    'subtab.scan': 'Analyser la page',
+    'subtab.audit': 'Consulter l\'audit',
     'scan.btn.scanning': 'Analyse en cours…',
     'scan.noTab': 'Aucun onglet actif trouvé.',
     'scan.noPage': 'Impossible d\'accéder à la page. Vérifiez que l\'URL n\'est pas une page interne du navigateur.',
@@ -366,12 +382,15 @@ const TRANSLATIONS = {
     'findings.title': 'Résultats existants',
     'findings.close': 'Fermer les résultats',
     'findings.empty': 'Aucun résultat enregistré.',
+    'findings.noFailures': 'Aucune non-conformité enregistrée. 🎉',
+    'findings.noDetails': 'Aucun détail enregistré pour cette non-conformité.',
     'findings.label': 'Résultats existants',
 
     // Push result (functions)
     'push.result': (applied, skipped) => skipped > 0
       ? `${applied} critères pré-remplis, ${skipped} ignorés (déjà évalués).`
       : `${applied} critères pré-remplis.`,
+    'push.viewSample': 'Voir l\'échantillon dans CheckFox',
 
     // Inventaire thématiques N/A
     'inv.heading': 'Inventaire thématiques N/A',
@@ -531,6 +550,7 @@ const TRANSLATIONS = {
     'tool.citations.description': 'Met en évidence les citations de bloc et en ligne',
     'tool.presentation-attrs.label': 'Attributs de présentation',
     'tool.presentation-attrs.description': 'Détecte les attributs et éléments HTML de présentation obsolètes',
+    'tool.presentation-attrs.legend.0': 'élément ou attribut de présentation obsolète (utiliser CSS à la place)',
     'tool.css-content.label': 'Contenu généré par CSS',
     'tool.css-content.description': 'Contourne les pseudo-éléments ::before ou ::after portant du contenu',
     'tool.no-css.label': 'Désactiver le CSS',
@@ -599,6 +619,8 @@ const TRANSLATIONS = {
     'results.needsReview': 'à vérifier',
     'results.findElement': 'Trouver l\'élément',
     'results.elementNotFound': 'Élément introuvable sur la page',
+    'results.criterionTriggered': ' (correspond à un élément concerné)',
+    'results.criterionPossible': ' (possible pour cette règle, non concerné ici)',
 
     // Date labels (audit due dates)
     'date.overdue': 'en retard',
@@ -639,6 +661,8 @@ const TRANSLATIONS = {
     'badge.invalidDir':             'DIR INVALIDE',
     'badge.breaksTabOrder':         'ROMPT L’ORDRE DE TABULATION',
     'badge.notInTabOrder':          'tabindex="-1" — hors ordre de tabulation',
+    'badge.presNone':               '✓ Aucun attribut ou balise de présentation obsolète',
+    'badge.presFound':              'attributs ou balises de présentation obsolètes',
   },
 }
 

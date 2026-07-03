@@ -36,6 +36,7 @@ The auditor always validates or overrides pre-filled data. The extension is a **
 - **LLM pre-fill** happens server-side in CheckFox (not in the extension itself) — extension sends raw violations, server enriches them into natural-language findings
 - **No headless browser** needed — the auditor's own browser IS the scan environment (solves auth, SPA timing, CSP issues naturally)
 - **Bearer token** stored in `chrome.storage.local` for CheckFox API auth
+- **Element-routed criteria** — rules where one WCAG SC splits across RGAA/RAWeb criteria by element type (e.g. Label-in-Name → link 6.1 / button 11.9 / form field 11.2) resolve the criterion per affected node and split on push. See [docs/element-routed-criteria.md](element-routed-criteria.md)
 
 ---
 
@@ -155,6 +156,30 @@ Extension tasks:
   - Multimedia criteria differ by referential: RGAA 4.1–4.13, RAWeb 4.1–4.18.
 - **API**: `api.markTopicNA(auditId, sampleId, payload)` → `POST /api/v1/audits/:id/samples/:sid/mark-topic-na`. Body is `{ topic: 'Images' }` (canonical topic name, case-insensitive) **or** `{ criterionIds: [...] }` (criterion UUIDs from the findings endpoint). Response: `{ sample_id, topic, applied, skipped_count, applied_criteria, skipped }`. Like `prefill`, criteria with a human verdict (Success/Failure/Derogation) are skipped, never overwritten; already-N/A criteria count as skipped no-ops.
   - **The extension uses the `criterionIds` path** for robustness: on "Mark N/A" it GETs `findings`, collects `criterion_id` UUIDs whose `criterion_num` topic-segment matches a selected topic number, and posts them in one call. This sidesteps localized topic-name mismatches (e.g. RGAA "Formulaires" vs "Forms"). Result surfaced with `inv.result` mirroring `formatPushResult` (applied vs skipped_count).
+
+---
+
+### Session 6 — Scan panel inner tabs (Scan issues / Audit issues)
+
+> Restructures the Scan panel so scanning and auditing are two distinct workflows instead of four loose buttons.
+
+- **Decision**: replaced the single "Run accessibility scan" button + the context card's inline Pull/Push buttons with **two inner tabs** rendered below the website-match block: **Scan issues** (run a local scan → Push results) and **Audit issues** (Pull recorded findings → analyse, plus the topic N/A inventory).
+- **Tabs appear only on a confirmed match.** When the URL maps to a known audit + sample, `setScanMode('match')` reveals the `#scan-subtabs` tablist and the Push button. When there is **no match**, the manual audit/sample picker stays but only the local Scan button shows (`setScanMode('scan-only')`) — Push/Pull are unavailable since scanning is local but pushing/pulling need a real match. Decision per Geoffrey: "tabs exist only when a matching website audit + sample is found, otherwise the Scan button would be the only option."
+- **Architecture**: buttons (`#scan-btn`, `#push-btn`, `#pull-btn`) and panels (`#subpanel-scan`, `#subpanel-audit`) live in **static markup** inside `#panel-scan`; handlers are wired once in `initScanWorkspace(apiCtx)` and read the current audit/sample from the shared `apiCtx` at click time. This avoids re-binding on every context re-render and keeps `#status`/`#results`/`#findings-area` as stable nodes. `renderCtxMatch`/`renderCtxSelector` now only render the context card and call `setScanMode()`.
+- `initTabs()` was scoped to `.tabs [role="tab"]` so the nested sub-tablist doesn't collide with the top-level tab logic.
+- The topic N/A inventory section moved from the context card into the **Audit issues** tab (it's part of the audit workflow).
+- New i18n keys: `subtab.label`, `subtab.scan`, `subtab.audit` (EN + FR).
+
+---
+
+### Session 7 — Inventory placement + active subtab styling
+
+> Repositions the topic N/A inventory and tweaks the inner-tab visuals.
+
+- **Decision (per Geoffrey)**: the topic N/A inventory section moves back **out** of the Audit issues tab to sit directly under the website-match block, **above** the `#scan-subtabs` inner tabs. `#inventory-area` is now a standalone node in `#panel-scan` (no longer inside `#subpanel-audit`), so it stays visible regardless of the active inner tab. `renderCtxMatch` still appends `buildInventorySection()` to it; `setScanMode()` still clears it on every context switch. Supersedes Session 6's note that the inventory lived in the Audit tab.
+- **Active subtab background changed from accent orange to white** (`.subtab--active` → `background:#fff; color:var(--color-bg)`), keeping AA contrast (dark text on white).
+- **Push feedback moved above the Push button** (`#push-feedback` now precedes `#push-btn` in `#subpanel-scan`) so the "N criteria pre-filled" result is visible without scrolling past the button.
+- **Push result now links to the sample** in the web app: `buildPushResult(result, audit, sample)` appends an `↗` link to `${BASE_URL}/audit/{auditId}/sample/{sampleId}/` (target `_blank`, `rel="noopener noreferrer"`, `.sr-only` "opens in new tab"). `BASE_URL` is now exported from `src/api/index.js` (single source). `showCtxFeedback()` accepts a string **or** a DOM node so rich content can flow through the shared styling. New i18n key `push.viewSample` (EN + FR).
 
 ---
 

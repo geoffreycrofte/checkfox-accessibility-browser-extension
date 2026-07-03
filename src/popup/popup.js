@@ -2,7 +2,7 @@ import { enrichViolations } from '../mapping/index.js'
 import { TOOLS, TOOL_MAP, TOOL_GROUPS } from '../tools/index.js'
 import {
   loadConfig, saveConfig, clearConfig, pingConnection,
-  isConfigured, api, ApiError, ConfigError,
+  isConfigured, api, ApiError, ConfigError, BASE_URL,
 } from '../api/index.js'
 import {
   INVENTORY_TOPICS, isInventoryGuideline, criteriaForGuideline, countTopics,
@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const apiCtx = { context: null, violations: null, refreshPush: null, tabId }
 
   // Context area fetches the API — run async without blocking the scan button.
+  initScanWorkspace(apiCtx)
   initContextArea(tab?.url, apiCtx).catch(console.error)
   initSettingsPanel()
   initScanPanel(tabId, toolState, apiCtx)
@@ -61,7 +62,9 @@ function translatePage() {
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
 function initTabs() {
-  const tabs = document.querySelectorAll('[role="tab"]')
+  // Scope to the top-level tablist only — the Scan panel has its own nested
+  // sub-tabs (#scan-subtabs) wired up separately in initScanWorkspace().
+  const tabs = document.querySelectorAll('.tabs [role="tab"]')
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       tabs.forEach(tabEl => {
@@ -146,6 +149,115 @@ async function sendScanMessage(tabId) {
   } catch {
     return null
   }
+}
+
+// ─── Scan workspace (inner tabs + push / pull) ──────────────────────────────────
+//
+// The Scan panel holds two inner tabs that are revealed only when the page maps
+// to a known audit + sample (see setScanMode):
+//   • "Scan page"      — run a local scan, then push the results to CheckFox.
+//   • "Audit findings" — pull the recorded findings and analyse them.
+// In the no-match case the tabs stay hidden and only the local Scan button shows.
+//
+// Buttons live in static markup, so their handlers are wired once here and read
+// the current audit/sample from the shared apiCtx at click time.
+
+function initScanWorkspace(apiCtx) {
+  const subtabScan   = document.getElementById('subtab-scan')
+  const subtabAudit  = document.getElementById('subtab-audit')
+  const subpanelScan = document.getElementById('subpanel-scan')
+  const subpanelAudit = document.getElementById('subpanel-audit')
+
+  const selectSubtab = (which) => {
+    const scanActive = which === 'scan'
+    subtabScan.classList.toggle('subtab--active', scanActive)
+    subtabAudit.classList.toggle('subtab--active', !scanActive)
+    subtabScan.setAttribute('aria-selected', String(scanActive))
+    subtabAudit.setAttribute('aria-selected', String(!scanActive))
+    subpanelScan.hidden = !scanActive
+    subpanelAudit.hidden = scanActive
+  }
+  subtabScan.addEventListener('click', () => selectSubtab('scan'))
+  subtabAudit.addEventListener('click', () => selectSubtab('audit'))
+  apiCtx.selectSubtab = selectSubtab
+
+  // ── Push: upload the latest scan's violations ──
+  const pushBtn = document.getElementById('push-btn')
+  const pushFeedback = document.getElementById('push-feedback')
+
+  apiCtx.refreshPush = () => {
+    pushBtn.disabled = !(apiCtx.violations?.length && apiCtx.context)
+  }
+
+  pushBtn.addEventListener('click', async () => {
+    if (!apiCtx.violations?.length || !apiCtx.context) return
+    const { audit, sample } = apiCtx.context
+    pushBtn.disabled = true
+    pushBtn.textContent = t('ctx.btn.pushing')
+    try {
+      const result = await api.prefill(audit.id, sample.id, apiCtx.violations.flatMap(toApiPayloads))
+      showCtxFeedback(pushFeedback, 'ok', buildPushResult(result, audit, sample))
+    } catch (err) {
+      showCtxFeedback(pushFeedback, 'error', err.message ?? t('ctx.error.push'))
+      console.error('[CheckFox] push:', err)
+    } finally {
+      pushBtn.disabled = !(apiCtx.violations?.length && apiCtx.context)
+      pushBtn.textContent = t('ctx.btn.push')
+    }
+  })
+
+  // ── Pull: fetch and render the recorded findings ──
+  const pullBtn = document.getElementById('pull-btn')
+  const pullFeedback = document.getElementById('pull-feedback')
+
+  pullBtn.addEventListener('click', async () => {
+    if (!apiCtx.context) return
+    const { audit, sample } = apiCtx.context
+    pullBtn.disabled = true
+    pullBtn.textContent = t('ctx.btn.pulling')
+    try {
+      const result = await api.findings(audit.id, sample.id)
+      renderFindings(result.findings ?? [])
+    } catch (err) {
+      showCtxFeedback(pullFeedback, 'error', t('ctx.error.pull'))
+      console.error('[CheckFox] pull:', err)
+    } finally {
+      pullBtn.disabled = false
+      pullBtn.textContent = t('ctx.btn.pull')
+    }
+  })
+}
+
+/**
+ * Toggle the Scan panel layout based on whether we have a confirmed audit + sample.
+ *   'match'     → reveal the inner tabs (Scan / Audit), expose Push, reset to Scan tab.
+ *   'scan-only' → hide the tabs and the audit side; only the local Scan button shows.
+ * Also clears transient UI (feedback, pulled findings, inventory) on every switch.
+ */
+function setScanMode(mode, apiCtx) {
+  const subtabs       = document.getElementById('scan-subtabs')
+  const subpanelScan  = document.getElementById('subpanel-scan')
+  const subpanelAudit = document.getElementById('subpanel-audit')
+  const pushBtn       = document.getElementById('push-btn')
+
+  if (mode === 'match') {
+    subtabs.hidden = false
+    pushBtn.hidden = false
+    apiCtx.selectSubtab?.('scan')
+  } else {
+    subtabs.hidden = true
+    subpanelAudit.hidden = true
+    subpanelScan.hidden = false
+    pushBtn.hidden = true
+  }
+
+  // Reset transient state so a fresh context never shows stale results.
+  document.getElementById('push-feedback').hidden = true
+  document.getElementById('pull-feedback').hidden = true
+  document.getElementById('findings-area').hidden = true
+  document.getElementById('inventory-area').replaceChildren()
+
+  apiCtx.refreshPush?.()
 }
 
 // ─── Context area ─────────────────────────────────────────────────────────────
@@ -265,55 +377,18 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
   identEl.textContent = truncate(sample.identifier ?? '', 50)
   identEl.title = sample.identifier ?? ''
 
-  const actions = el('div', { class: 'ctx-card__actions' })
-  const pullBtn = el('button', { class: 'btn btn--sm btn--secondary', type: 'button' })
-  pullBtn.textContent = t('ctx.btn.pull')
-  const pushBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button' })
-  pushBtn.textContent = t('ctx.btn.push')
-  pushBtn.disabled = true
-  actions.append(pullBtn, pushBtn)
-
-  const feedback = el('div', { class: 'ctx-card__feedback', hidden: '' })
-
-  card.append(meta, sampleName, identEl, actions, feedback)
-  if (isInventoryGuideline(audit.guideline)) card.append(buildInventorySection(apiCtx))
+  card.append(meta, sampleName, identEl)
   area.append(card)
 
-  apiCtx.refreshPush = () => {
-    if (apiCtx.violations?.length) pushBtn.disabled = false
+  // Confirmed audit + sample → reveal the Scan / Audit inner tabs.
+  apiCtx.context = { audit, sample }
+  setScanMode('match', apiCtx)
+
+  // Topic N/A inventory sits directly under the website match, above the
+  // Scan / Audit inner tabs — shown only for guidelines that support it.
+  if (isInventoryGuideline(audit.guideline)) {
+    document.getElementById('inventory-area').append(buildInventorySection(apiCtx))
   }
-
-  pullBtn.addEventListener('click', async () => {
-    pullBtn.disabled = true
-    pullBtn.textContent = t('ctx.btn.pulling')
-    try {
-      const result = await api.findings(audit.id, sample.id)
-      renderFindings(result.findings ?? [])
-    } catch (err) {
-      showCtxFeedback(feedback, 'error', t('ctx.error.pull'))
-      console.error('[CheckFox] pull:', err)
-    } finally {
-      pullBtn.disabled = false
-      pullBtn.textContent = t('ctx.btn.pull')
-    }
-  })
-
-  pushBtn.addEventListener('click', async () => {
-    if (!apiCtx.violations?.length) return
-    pushBtn.disabled = true
-    pushBtn.textContent = t('ctx.btn.pushing')
-    try {
-      const result = await api.prefill(audit.id, sample.id, apiCtx.violations.map(toApiShape))
-      const msg = formatPushResult(result)
-      showCtxFeedback(feedback, 'ok', msg)
-    } catch (err) {
-      showCtxFeedback(feedback, 'error', err.message ?? t('ctx.error.push'))
-      console.error('[CheckFox] push:', err)
-    } finally {
-      pushBtn.disabled = !apiCtx.violations?.length
-      pushBtn.textContent = t('ctx.btn.push')
-    }
-  })
 }
 
 function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
@@ -327,13 +402,14 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
   const auditLabelEl = el('label', { class: 'ctx-label', id: 'ctx-audit-label' })
   auditLabelEl.textContent = t('ctx.label.audit')
 
+  // The manual picker only attaches the page to an audit/sample for local
+  // scanning — Push/Pull stay unavailable until the URL genuinely matches, so
+  // selecting here just records the context without revealing the inner tabs.
   const auditCombo = buildAuditCombobox(audits, 'ctx-audit-label', (audit) => {
     apiCtx.context = null
-    actions.hidden = true
     sampleComboWrap.replaceChildren(
       buildSampleCombobox(allSamples[audit.id] ?? [], 'ctx-sample-label', (sample) => {
         apiCtx.context = { audit, sample }
-        actions.hidden = false
         apiCtx.refreshPush?.()
       })
     )
@@ -347,56 +423,11 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
   const sampleComboWrap = el('div')
   sampleField.append(sampleLabelEl, sampleComboWrap)
 
-  const actions = el('div', { class: 'ctx-card__actions', hidden: '' })
-  const pullBtn = el('button', { class: 'btn btn--sm btn--secondary', type: 'button' })
-  pullBtn.textContent = t('ctx.btn.pull')
-  const pushBtn = el('button', { class: 'btn btn--sm btn--primary', type: 'button' })
-  pushBtn.textContent = t('ctx.btn.push')
-  pushBtn.disabled = true
-  actions.append(pullBtn, pushBtn)
-
-  const feedback = el('div', { class: 'ctx-card__feedback', hidden: '' })
-
-  card.append(notice, auditField, sampleField, actions, feedback, buildInventorySection(apiCtx))
+  card.append(notice, auditField, sampleField)
   area.append(card)
 
-  apiCtx.refreshPush = () => {
-    if (apiCtx.violations?.length && apiCtx.context) pushBtn.disabled = false
-  }
-
-  pullBtn.addEventListener('click', async () => {
-    if (!apiCtx.context) return
-    const { audit, sample } = apiCtx.context
-    pullBtn.disabled = true
-    pullBtn.textContent = t('ctx.btn.pulling')
-    try {
-      const result = await api.findings(audit.id, sample.id)
-      renderFindings(result.findings ?? [])
-    } catch (err) {
-      showCtxFeedback(feedback, 'error', t('ctx.error.pull'))
-      console.error('[CheckFox] pull:', err)
-    } finally {
-      pullBtn.disabled = false
-      pullBtn.textContent = t('ctx.btn.pull')
-    }
-  })
-
-  pushBtn.addEventListener('click', async () => {
-    if (!apiCtx.violations?.length || !apiCtx.context) return
-    const { audit, sample } = apiCtx.context
-    pushBtn.disabled = true
-    pushBtn.textContent = t('ctx.btn.pushing')
-    try {
-      const result = await api.prefill(audit.id, sample.id, apiCtx.violations.map(toApiShape))
-      showCtxFeedback(feedback, 'ok', formatPushResult(result))
-    } catch (err) {
-      showCtxFeedback(feedback, 'error', err.message ?? t('ctx.error.push'))
-      console.error('[CheckFox] push:', err)
-    } finally {
-      pushBtn.disabled = !(apiCtx.violations?.length && apiCtx.context)
-      pushBtn.textContent = t('ctx.btn.push')
-    }
-  })
+  // No confirmed match → local Scan button only, no inner tabs.
+  setScanMode('scan-only', apiCtx)
 }
 
 // ─── Topic N/A inventory ────────────────────────────────────────────────────
@@ -520,6 +551,11 @@ function buildInventorySection(apiCtx) {
         criterionIds,
       })
       const result = await api.markTopicNA(audit.id, sample.id, { criterionIds })
+      // Success: collapse the review UI (notice + checkboxes + button) so only
+      // the result message remains.
+      list.replaceChildren()
+      list.hidden = true
+      markBtn.hidden = true
       showCtxFeedback(feedback, 'ok', t('inv.result', result.applied ?? 0, result.skipped_count ?? 0))
     } catch (err) {
       showCtxFeedback(feedback, 'error', err.message ?? t('inv.error'))
@@ -787,35 +823,49 @@ function renderFindings(findings) {
   header.append(title, closeBtn)
   area.append(header)
 
-  const relevant = findings.filter(f => f.status && f.status !== 'not_tested')
-  if (relevant.length === 0) {
+  // Only list failures. The API returns human-readable statuses:
+  // "Not tested" | "N/A" | "Success" | "Failure".
+  const failures = findings.filter(f => f.status === 'Failure')
+  if (failures.length === 0) {
     const none = el('p', { class: 'findings-empty' })
-    none.textContent = t('findings.empty')
+    none.textContent = t('findings.noFailures')
     area.append(none)
     return
   }
 
-  const order = { non_compliant: 0, compliant: 1, not_applicable: 2 }
-  const sorted = [...relevant].sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9))
-
   const list = el('ul', { class: 'findings-list', 'aria-label': t('findings.label') })
-  for (const f of sorted) {
-    const cssStatus = f.status.replace(/_/g, '-')
-    const item = el('li', { class: `finding finding--${cssStatus}` })
-    const row = el('div', { class: 'finding__row' })
+  failures.forEach((f, i) => {
+    const item = el('li', { class: 'finding finding--non-compliant' })
+
+    const bodyId = `finding-body-${i}`
+    const toggle = el('button', {
+      class: 'finding__toggle',
+      type: 'button',
+      'aria-expanded': 'false',
+      'aria-controls': bodyId,
+    })
+    const chevron = el('span', { class: 'finding__chevron', 'aria-hidden': 'true' })
+    chevron.textContent = '▸'
     const num = el('code', { class: 'finding__num' })
     num.textContent = f.criterion_num
-    const statusBadge = el('span', { class: `finding__status finding__status--${cssStatus}` })
-    statusBadge.textContent = f.status.replace(/_/g, ' ')
-    row.append(num, statusBadge)
-    item.append(row)
-    if (f.comment?.problem) {
-      const comment = el('p', { class: 'finding__comment' })
-      comment.textContent = truncate(f.comment.problem, 120)
-      item.append(comment)
-    }
+    const statusBadge = el('span', { class: 'finding__status finding__status--non-compliant' })
+    statusBadge.textContent = f.status
+    toggle.append(chevron, num, statusBadge)
+
+    const body = el('div', { class: 'finding__body', id: bodyId, hidden: '' })
+    const comment = el('p', { class: 'finding__comment' })
+    comment.textContent = f.comment?.problem || t('findings.noDetails')
+    body.append(comment)
+
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true'
+      toggle.setAttribute('aria-expanded', String(!expanded))
+      body.hidden = expanded
+    })
+
+    item.append(toggle, body)
     list.append(item)
-  }
+  })
   area.append(list)
 }
 
@@ -1008,10 +1058,8 @@ function retranslateContextArea() {
   const sampleLabel = area.querySelector('#ctx-sample-label')
   if (sampleLabel) sampleLabel.textContent = t('ctx.label.sample')
 
-  // Pull / Push action buttons (shared by match and selector). A mid-action
-  // button is re-labelled by its own finally handler, so set unconditionally.
-  area.querySelectorAll('.ctx-card__actions .btn--secondary').forEach(n => { n.textContent = t('ctx.btn.pull') })
-  area.querySelectorAll('.ctx-card__actions .btn--primary').forEach(n => { n.textContent = t('ctx.btn.push') })
+  // (Pull / Push buttons now live in the static sub-panels and are retranslated
+  // by translatePage() via their data-i18n attributes.)
 
   // Error card retry button.
   area.querySelectorAll('.ctx-card--error .btn').forEach(n => { n.textContent = t('ctx.btn.retry') })
@@ -1335,6 +1383,8 @@ function getBadgeStrings() {
     invalidDir:             t('badge.invalidDir'),
     breaksTabOrder:         t('badge.breaksTabOrder'),
     notInTabOrder:          t('badge.notInTabOrder'),
+    presNone:               t('badge.presNone'),
+    presFound:              t('badge.presFound'),
   }
 }
 
@@ -1432,13 +1482,20 @@ function violationItem(v, status = 'violation', tabId) {
     const criteriaEl = el('div', { class: 'violation__criteria' })
     if (v.criteria.wcag.length > 0) criteriaEl.append(criteriaGroup('WCAG', v.criteria.wcag))
 
-    const { rgaa, raweb } = v.criteria
-    const identical = rgaa.length > 0 && rgaa.length === raweb.length && rgaa.every((id, i) => id === raweb[i])
+    // For element-routed rules, `domain` holds every criterion the rule can map
+    // to; `rgaa`/`raweb` hold the ones actually matched by an affected element.
+    // We show the full domain and mute the criteria not triggered on this page.
+    const { rgaa, raweb, domain } = v.criteria
+    const showRgaa  = domain?.rgaa  ?? rgaa
+    const showRaweb = domain?.raweb ?? raweb
+    const activeRgaa  = domain ? new Set(rgaa)  : null
+    const activeRaweb = domain ? new Set(raweb) : null
+    const identical = showRgaa.length > 0 && showRgaa.length === showRaweb.length && showRgaa.every((id, i) => id === showRaweb[i])
     if (identical) {
-      criteriaEl.append(criteriaGroup('RGAA / RAWeb', rgaa, 'rgaa-raweb'))
+      criteriaEl.append(criteriaGroup('RGAA / RAWeb', showRgaa, 'rgaa-raweb', activeRgaa))
     } else {
-      if (rgaa.length > 0)  criteriaEl.append(criteriaGroup('RGAA', rgaa))
-      if (raweb.length > 0) criteriaEl.append(criteriaGroup('RAWeb', raweb))
+      if (showRgaa.length > 0)  criteriaEl.append(criteriaGroup('RGAA', showRgaa, null, activeRgaa))
+      if (showRaweb.length > 0) criteriaEl.append(criteriaGroup('RAWeb', showRaweb, null, activeRaweb))
     }
 
     item.append(criteriaEl)
@@ -1507,15 +1564,24 @@ function passItem(p) {
   return item
 }
 
-function criteriaGroup(label, ids, cssKey) {
+// When `activeSet` is provided, `ids` is treated as the full domain and each
+// chip is marked triggered (in the set) or possible-but-not-matched (muted).
+// State is conveyed with an sr-only suffix, never colour alone.
+function criteriaGroup(label, ids, cssKey, activeSet) {
   const group = el('div', { class: 'criteria-group' })
   const labelEl = el('span', { class: 'criteria-group__label' })
   labelEl.textContent = label + ':'
   group.append(labelEl)
   const cls = cssKey ?? label.toLowerCase()
   for (const id of ids) {
-    const code = el('code', { class: `tag tag--${cls}` })
+    const triggered = !activeSet || activeSet.has(id)
+    const code = el('code', { class: `tag tag--${cls}${triggered ? '' : ' tag--possible'}` })
     code.textContent = id
+    if (activeSet) {
+      const sr = el('span', { class: 'sr-only' })
+      sr.textContent = triggered ? t('results.criterionTriggered') : t('results.criterionPossible')
+      code.append(sr)
+    }
     group.append(code)
   }
   return group
@@ -1559,27 +1625,70 @@ function findUrlMatch(tabUrl, audits, samples) {
   return null
 }
 
-function toApiShape(v) {
+function apiViolation(v, nodes, criteria) {
   return {
     ruleId: v.ruleId,
     impact: v.impact,
     description: v.description,
     help: v.help,
     helpUrl: v.helpUrl,
-    nodes: v.nodes.map(n => ({ html: n.htmlSnippet, failureSummary: n.failureSummary })),
-    criteria: v.criteria,
+    nodes: nodes.map(n => ({ html: n.htmlSnippet, failureSummary: n.failureSummary })),
+    criteria,
   }
 }
 
-function formatPushResult(result) {
-  const applied = result.applied ?? 0
-  const skipped = result.skipped_count ?? 0
-  return t('push.result', applied, skipped)
+// Map a violation to one or more prefill payloads. Element-routed violations
+// (whose nodes carry their own resolved criteria) are split so each occurrence
+// pre-fills exactly its element's criterion — a mismatched link lands on 6.1, a
+// button on 11.9 — instead of stamping every candidate criterion on every node.
+// Everything else maps 1:1. Returns an array so callers can flatMap.
+function toApiPayloads(v) {
+  if (!v.nodes?.some(n => n.criteria)) return [apiViolation(v, v.nodes, v.criteria)]
+
+  const groups = new Map()
+  for (const n of v.nodes) {
+    const c = n.criteria ?? { rgaa: v.criteria.rgaa, raweb: v.criteria.raweb }
+    const key = c.rgaa.join(',') + '|' + c.raweb.join(',')
+    if (!groups.has(key)) groups.set(key, { criteria: c, nodes: [] })
+    groups.get(key).nodes.push(n)
+  }
+  return [...groups.values()].map(g =>
+    apiViolation(v, g.nodes, { wcag: v.criteria.wcag, rgaa: g.criteria.rgaa, raweb: g.criteria.raweb }),
+  )
 }
 
+// Build the push success message ("N criteria pre-filled.") followed by a link
+// that opens the matched sample in the CheckFox web app for review.
+function buildPushResult(result, audit, sample) {
+  const applied = result.applied ?? 0
+  const skipped = result.skipped_count ?? 0
+
+  const frag = document.createDocumentFragment()
+  frag.append(document.createTextNode(t('push.result', applied, skipped) + ' '))
+
+  const link = el('a', {
+    href: `${BASE_URL}/audit/${audit.id}/sample/${sample.id}/`,
+    target: '_blank',
+    rel: 'noopener noreferrer',
+    class: 'ctx-card__feedback-link',
+  })
+  link.textContent = t('push.viewSample')
+  const arrow = el('span', { 'aria-hidden': 'true' })
+  arrow.textContent = ' ↗'
+  const srText = el('span', { class: 'sr-only' })
+  srText.textContent = t('results.opensNewTab')
+  link.append(arrow, srText)
+
+  frag.append(link)
+  return frag
+}
+
+// Accepts either a plain string or a DOM node so callers can include rich
+// content (e.g. a link) without bypassing the shared styling/visibility logic.
 function showCtxFeedback(feedbackEl, type, message) {
   feedbackEl.className = `ctx-card__feedback ctx-card__feedback--${type}`
-  feedbackEl.textContent = message
+  if (message instanceof Node) feedbackEl.replaceChildren(message)
+  else feedbackEl.textContent = message
   feedbackEl.hidden = false
 }
 

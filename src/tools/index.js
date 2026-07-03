@@ -1100,37 +1100,109 @@ export const TOOLS = [
     label: 'Presentation attributes',
     description: 'Detect deprecated HTML presentation attributes and elements',
     criteria: ['10.01'],
+    legend: [
+      { border: `3px solid ${C.err}`, label: 'deprecated presentation element or attribute (use CSS instead)' },
+    ],
     type: 'js',
     args: [SHARED_CSS],
-    inject: (css) => {
+    inject: (css, s) => {
       const ID = 'presentation-attrs'
       document.getElementById(`__checkfox_${ID}`)?.remove()
       document.querySelectorAll(`[data-cf="${ID}"]`).forEach(e => e.remove())
 
+      // Detection set mirrors the RAWeb 10.01 reference stylesheet.
+      const PRES_ELEMENTS = ['basefont', 'blink', 'center', 'font', 'marquee', 's', 'strike', 'tt', 'big']
+      // Attributes that are presentational wherever they appear.
+      const PRES_ATTRS = [
+        'align', 'alink', 'background', 'bgcolor', 'border', 'cellpadding', 'cellspacing',
+        'char', 'charoff', 'clear', 'compact', 'face', 'frameborder', 'hspace', 'link',
+        'marginheight', 'marginwidth', 'text', 'valign', 'vlink', 'vspace', 'size',
+      ]
+      // width/height set intrinsic dimensions on replaced/media elements, so they
+      // are only presentational elsewhere. color is presentational solely on these tags.
+      const DIM_EXCLUDE = ':not(img):not(svg):not(canvas):not(object):not(embed)'
+      const DIM_SEL = `[width]${DIM_EXCLUDE},[height]${DIM_EXCLUDE}`
+      const COLOR_SEL = 'font[color],basefont[color],hr[color]'
+
+      const outlineSel = [
+        ...PRES_ELEMENTS,
+        ...PRES_ATTRS.map(a => `[${a}]`),
+        DIM_SEL,
+        COLOR_SEL,
+      ].join(',')
+
       const style = document.createElement('style')
       style.id = `__checkfox_${ID}`
       style.textContent = css +
-        '[align],[bgcolor],[color],[face],[hspace],[vspace]{outline:3px solid #ef4444!important}' +
-        '[border]:not(img):not(table){outline:2px solid #f97316!important}'
+        `${outlineSel}{outline:3px solid #ef4444!important}` +
+        // Pin only the summary badge; inline badges stay next to their element.
+        `#__checkfox_${ID}_summary{position:fixed!important;top:8px!important;left:8px!important;z-index:2147483647!important;max-height:80vh!important;overflow:auto!important;pointer-events:auto!important}` +
+        `#__checkfox_${ID}_summary ul{margin:4px 0 0!important;padding:0 0 0 1.1em!important;list-style:disc!important}`
       document.head.appendChild(style)
 
-      const mk = (text, v) => {
+      const mk = (text) => {
         const b = document.createElement('span')
-        b.className = `__cfbadge __cfbadge--${v}`
+        b.className = '__cfbadge __cfbadge--err'
         b.dataset.cf = ID
         b.textContent = text
         return b
       }
 
-      const PRES_ATTRS = ['align', 'bgcolor', 'color', 'face', 'hspace', 'vspace', 'border']
-      const seen = new WeakSet()
+      // Accumulate every reason (deprecated tag + each offending attribute) per
+      // element, so an element carries a single badge listing all of them.
+      const hits = new Map()
+      const add = (el, label) => {
+        if (!hits.has(el)) hits.set(el, [])
+        if (!hits.get(el).includes(label)) hits.get(el).push(label)
+      }
 
+      document.querySelectorAll(PRES_ELEMENTS.join(',')).forEach(el => add(el, `<${el.tagName.toLowerCase()}>`))
       document.querySelectorAll(PRES_ATTRS.map(a => `[${a}]`).join(',')).forEach(el => {
-        if (seen.has(el)) return
-        seen.add(el)
-        const found = PRES_ATTRS.filter(a => el.hasAttribute(a)).map(a => `${a}="${el.getAttribute(a)}"`)
-        el.insertAdjacentElement('beforebegin', mk(`${el.tagName.toLowerCase()} ${found.join(' ')}`, 'err'))
+        PRES_ATTRS.forEach(a => { if (el.hasAttribute(a)) add(el, `${a}="${el.getAttribute(a)}"`) })
       })
+      document.querySelectorAll(DIM_SEL).forEach(el => {
+        for (const a of ['width', 'height']) if (el.hasAttribute(a)) add(el, `${a}="${el.getAttribute(a)}"`)
+      })
+      document.querySelectorAll(COLOR_SEL).forEach(el => add(el, `color="${el.getAttribute('color')}"`))
+
+      hits.forEach((labels, el) => {
+        el.insertAdjacentElement('beforebegin', mk(`${el.tagName.toLowerCase()} — ${labels.join(' ')}`))
+      })
+
+      // Always leave a fixed summary badge so it's clear the tool ran, even when
+      // the page is clean: green "none found", or red with the count and a
+      // breakdown of exactly what was found (e.g. "width on <input> ×2").
+      const total = [...hits.values()].reduce((n, labels) => n + labels.length, 0)
+      const summary = document.createElement('span')
+      summary.id = `__checkfox_${ID}_summary`
+      summary.dataset.cf = ID
+      summary.className = `__cfbadge __cfbadge--${total === 0 ? 'ok' : 'err'}`
+
+      if (total === 0) {
+        summary.textContent = s.presNone
+      } else {
+        // Group occurrences by kind: "<tag> element" for deprecated elements,
+        // "<attr> on <tag>" for attributes — with a count each.
+        const breakdown = new Map()
+        hits.forEach((labels, el) => {
+          const tag = el.tagName.toLowerCase()
+          for (const label of labels) {
+            const desc = label[0] === '<' ? `${label} element` : `${label.split('=')[0]} on <${tag}>`
+            breakdown.set(desc, (breakdown.get(desc) ?? 0) + 1)
+          }
+        })
+
+        const head = document.createElement('strong')
+        head.textContent = `${total} ${s.presFound}`
+        const list = document.createElement('ul')
+        for (const [desc, n] of [...breakdown.entries()].sort((a, b) => b[1] - a[1])) {
+          const li = document.createElement('li')
+          li.textContent = n > 1 ? `${desc} ×${n}` : desc
+          list.appendChild(li)
+        }
+        summary.append(head, list)
+      }
+      document.body.insertAdjacentElement('afterbegin', summary)
     },
     remove: () => {
       const ID = 'presentation-attrs'

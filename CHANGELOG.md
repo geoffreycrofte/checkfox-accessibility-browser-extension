@@ -6,7 +6,41 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Presentation attributes tool now detects the full deprecated set** — the
+  *Presentation attributes* tool (RAWeb 10.01) previously checked only 7
+  attributes (`align, bgcolor, color, face, hspace, vspace, border`) and no
+  deprecated elements, so pages whose only legacy markup was e.g. `width` showed
+  nothing. It now flags the deprecated elements (`<basefont> <blink> <center>
+  <font> <marquee> <s> <strike> <tt> <big>`) and the full attribute set — matching
+  the reference stylesheet — with `width`/`height` excluded on media/replaced
+  elements and `color` limited to `<font>`/`<basefont>`/`<hr>`. It now also shows
+  a fixed summary badge confirming the check ran — green *"No deprecated
+  presentation elements or attributes"* when clean, or a red occurrence count when
+  legacy markup is found — so a clean page reads as verified rather than skipped.
+
 ### Changed
+- **Label-in-Name criteria now route by element** — `label-content-name-mismatch`
+  (WCAG 2.5.3) previously stamped a static `11.2 / 11.9` on every occurrence.
+  Each affected element is now classified — link → **6.1**, button → **11.9**,
+  form field → **11.2** — so the card shows all three candidate criteria with only
+  the matched ones highlighted (the rest muted), and pushing splits each
+  occurrence to its correct criterion instead of over-filling. See
+  [docs/element-routed-criteria.md](docs/element-routed-criteria.md).
+
+## [0.4.0] - 2026-07-01
+
+### Changed
+- **Topic N/A inventory repositioned** — the empty-topic detection section (detect
+  button, results, and *Mark N/A* action) now sits directly under the website-match
+  block, above the Scan / Audit inner tabs, instead of inside the Audit issues tab.
+  It stays visible regardless of which inner tab is active.
+- **Active inner tab restyled** — the selected *Scan issues / Audit issues* sub-tab
+  now uses a white background with dark text instead of the orange accent fill
+  (keeps AA contrast).
+- **Push result moved above the Push button** — the "N criteria pre-filled"
+  confirmation now renders before the button, so it's visible without scrolling
+  past it.
 - **Firefox minimum raised to 140** (`gecko.strict_min_version`, was 128) — the
   version where `data_collection_permissions` takes effect, and the current
   Firefox ESR (128 is now End-of-Life). CheckFox stays desktop-only; Firefox for
@@ -14,6 +48,10 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
   there), so `gecko_android` is intentionally omitted.
 
 ### Added
+- **Sample link in the push confirmation** — after a successful push, the result
+  message includes a *View sample in CheckFox ↗* link to the matched audit sample
+  (`/audit/{auditId}/sample/{sampleId}/`), opening in a new tab with a
+  screen-reader "opens in new tab" note. New i18n key `push.viewSample` (EN/FR).
 - **Firefox data-collection consent** — declared
   `browser_specific_settings.gecko.data_collection_permissions` with
   `required: ["websiteContent", "browsingActivity", "authenticationInfo"]`,
@@ -151,7 +189,8 @@ Initial working extension.
 - **Side panel mode** and **EN/FR interface language**, both toggleable in
   Settings.
 
-[Unreleased]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/checkfox/checkfox-browser-extension/releases/tag/v0.1.0

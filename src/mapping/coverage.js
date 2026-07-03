@@ -170,6 +170,44 @@ const colorViolation = enrichViolation({ ruleId: 'color-contrast', impact: 'seri
 assert('color-contrast → rgaa is [3.2]', JSON.stringify(colorViolation.criteria.rgaa) === '["3.2"]')
 assert('color-contrast → raweb is [3.2] (shared topic)', JSON.stringify(colorViolation.criteria.raweb) === '["3.2"]')
 
+// ── 5b. Element-routed criteria (Label-in-Name) ──────────────────────────────
+console.log('\n[5b] Element-routed criteria (label-content-name-mismatch)')
+
+import { classifyLabelInName } from './classify-target.js'
+
+assert('classify <a href> → 6.1', classifyLabelInName('<a href="/x">Go</a>') === '6.1')
+assert('classify role="link" → 6.1', classifyLabelInName('<span role="link">Go</span>') === '6.1')
+assert('classify <button> → 11.9', classifyLabelInName('<button>Save</button>') === '11.9')
+assert('classify <input type=submit> → 11.9', classifyLabelInName('<input type="submit" value="Send">') === '11.9')
+assert('classify role="button" → 11.9', classifyLabelInName('<div role="button">Save</div>') === '11.9')
+assert('classify <input> (default text) → 11.2', classifyLabelInName('<input aria-label="Name">') === '11.2')
+assert('classify <select> → 11.2', classifyLabelInName('<select aria-label="Country"></select>') === '11.2')
+assert('classify unknown element → null', classifyLabelInName('<div>hi</div>') === null)
+
+const lcnm = enrichViolation({
+  ruleId: 'label-content-name-mismatch',
+  impact: 'serious',
+  wcagTags: ['wcag253', 'wcag2a'],
+  nodes: [
+    { selector: 'a.cta', htmlSnippet: '<a href="/buy" aria-label="Purchase">Buy now</a>' },
+    { selector: 'button#save', htmlSnippet: '<button aria-label="Store">Save</button>' },
+  ],
+})
+assert('label-in-name → node 0 (link) criteria [6.1]', JSON.stringify(lcnm.nodes[0].criteria.rgaa) === '["6.1"]')
+assert('label-in-name → node 1 (button) criteria [11.9]', JSON.stringify(lcnm.nodes[1].criteria.rgaa) === '["11.9"]')
+assert('label-in-name → violation union is [6.1, 11.9]', JSON.stringify(lcnm.criteria.rgaa) === '["6.1","11.9"]')
+assert('label-in-name → domain is full [6.1, 11.2, 11.9]', JSON.stringify(lcnm.criteria.domain.rgaa) === '["6.1","11.2","11.9"]')
+
+// Unknown element falls back to the full domain so no criterion is dropped.
+const lcnmFallback = enrichViolation({
+  ruleId: 'label-content-name-mismatch',
+  impact: 'serious',
+  wcagTags: ['wcag253', 'wcag2a'],
+  nodes: [{ selector: 'x', htmlSnippet: '<my-widget>Go</my-widget>' }],
+})
+assert('label-in-name → unknown node falls back to full domain',
+  JSON.stringify(lcnmFallback.nodes[0].criteria.rgaa) === '["6.1","11.2","11.9"]')
+
 console.log(`\n  Enriched sample:\n${JSON.stringify(enriched, null, 4)}`)
 
 // ── Summary ───────────────────────────────────────────────────────────────────
