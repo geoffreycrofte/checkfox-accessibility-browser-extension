@@ -11,6 +11,8 @@ const HELP = {
   nonTextContent: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-content.html',
   focusVisible:  'https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html',
   parsing:       'https://www.w3.org/WAI/WCAG21/Understanding/parsing.html',
+  nonTextContrast: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html',
+  reflow:        'https://www.w3.org/WAI/WCAG21/Understanding/reflow.html',
 }
 
 // Bilingual (EN/FR) hint that a link warns it opens a new window or tab.
@@ -368,6 +370,121 @@ export function runCustomChecks() {
     ))
   }
 
+  // ── checkfox-motion-uncontrolled ──────────────────────────────────────────
+  // RAWeb/RGAA 13.8 — moving/blinking content that starts automatically and lasts
+  // more than 5s must be pausable/stoppable/hideable (WCAG 2.2.2). axe has no rule
+  // for CSS-driven motion. We use the Web Animations timeline (getAnimations) to
+  // find elements with an infinitely-looping animation — precise and cheap, no
+  // full-tree walk. Reported 'incomplete': whether a pause control exists (or the
+  // motion is under 5s) is human judgment. Guarded for engines without the API.
+  if (typeof document.getAnimations === 'function') {
+    let anims = []
+    try { anims = document.getAnimations() } catch { anims = [] }
+    const seenMotion = new Set()
+    const loopingEls = []
+    for (const a of anims) {
+      if (loopingEls.length >= 25) break
+      let timing = null
+      try { timing = a.effect && a.effect.getComputedTiming ? a.effect.getComputedTiming() : null } catch { timing = null }
+      if (!timing || timing.iterations !== Infinity) continue
+      if (a.playState === 'idle' || a.playState === 'finished') continue
+      const el = a.effect && a.effect.target
+      if (!el || el.nodeType !== 1 || !el.isConnected || seenMotion.has(el)) continue
+      seenMotion.add(el)
+      loopingEls.push(el)
+    }
+
+    if (loopingEls.length > 0) {
+      incomplete.push(rule(
+        'checkfox-motion-uncontrolled',
+        'serious',
+        'Element has a continuously looping animation — verify it can be paused, stopped or hidden',
+        HELP.pauseStopHide,
+        ['wcag222'],
+        loopingEls.map(el => nodeInfo(el, 'If this animation starts automatically and runs longer than 5 seconds, provide a visible mechanism to pause, stop or hide it, and honour prefers-reduced-motion: reduce')),
+      ))
+    }
+  }
+
+  // ── checkfox-nontext-contrast ─────────────────────────────────────────────
+  // RAWeb/RGAA 3.3 — the visual boundary of a UI component must reach 3:1 against
+  // adjacent colours (WCAG 1.4.11). axe does not check this. Scoped to form
+  // controls to limit false positives: a control needs SOME visible boundary,
+  // either a border or its own fill, contrasting ≥3:1 with what surrounds it. If
+  // neither does, it's flagged 'incomplete' — a box-shadow, outline or icon we
+  // did not measure may still provide the boundary, so a human confirms.
+  const nonTextControls = [...document.querySelectorAll('input:not([type="hidden"]), select, textarea, button')]
+  const lowBoundaryControls = []
+  for (const el of nonTextControls) {
+    if (lowBoundaryControls.length >= 40) break
+    if (!isRendered(el)) continue
+    const cs = getComputedStyle(el)
+    const adj = effectiveBackground(el.parentElement || el)
+    const ownBg = parseCssColor(cs.backgroundColor) || { r: 0, g: 0, b: 0, a: 0 }
+    const fillContrast = contrastRatio(compositeOver(ownBg, adj), adj)
+
+    let borderContrast = 0
+    for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+      const w = parseFloat(cs[`border${side}Width`])
+      const style = cs[`border${side}Style`]
+      if (!(w >= 1 && style && style !== 'none' && style !== 'hidden')) continue
+      const bc = parseCssColor(cs[`border${side}Color`])
+      if (bc && bc.a > 0) borderContrast = Math.max(borderContrast, contrastRatio(compositeOver(bc, adj), adj))
+    }
+
+    if (Math.max(fillContrast, borderContrast) < 3) lowBoundaryControls.push(el)
+  }
+
+  if (lowBoundaryControls.length > 0) {
+    incomplete.push(rule(
+      'checkfox-nontext-contrast',
+      'moderate',
+      'Form control has no boundary reaching 3:1 contrast with its surroundings — verify its visual limits are perceivable',
+      HELP.nonTextContrast,
+      ['wcag1411'],
+      lowBoundaryControls.map(el => nodeInfo(el, 'Give the control a border, background or focus/state indicator that contrasts at least 3:1 with the adjacent colour (WCAG 1.4.11). If a box-shadow, outline or icon already provides this, confirm it is sufficient')),
+    ))
+  }
+
+  // ── checkfox-reflow ───────────────────────────────────────────────────────
+  // RAWeb/RGAA 10.11 — content must reflow to a 320 CSS px viewport without a
+  // second scroll direction (WCAG 1.4.10). We can't resize the viewport from an
+  // injected check, so we flag the classic reflow blockers: a fixed pixel
+  // min-width (which cannot shrink) or an inline fixed pixel width larger than
+  // 320px on a non-replaced element. Reported 'incomplete' — final confirmation
+  // needs an actual 320px render. Replaced elements (img/video/…) are excluded.
+  const REFLOW_MIN = 320
+  const REFLOW_REPLACED = new Set(['IMG', 'VIDEO', 'CANVAS', 'SVG', 'IFRAME', 'EMBED', 'OBJECT', 'PICTURE', 'MAP'])
+  const reflowEls = []
+  const allEls = document.body ? document.body.getElementsByTagName('*') : []
+  const scanLimit = Math.min(allEls.length, 6000)
+  for (let i = 0; i < scanLimit; i++) {
+    if (reflowEls.length >= 50) break
+    const el = allEls[i]
+    if (REFLOW_REPLACED.has(el.tagName)) continue
+    const cs = getComputedStyle(el)
+    let reason = null
+    const mw = cs.minWidth
+    if (mw && mw.endsWith('px') && parseFloat(mw) > REFLOW_MIN) {
+      reason = `min-width: ${mw}`
+    } else {
+      const iw = el.style && el.style.width
+      if (iw && iw.endsWith('px') && parseFloat(iw) > REFLOW_MIN) reason = `width: ${iw}`
+    }
+    if (reason) reflowEls.push({ el, reason })
+  }
+
+  if (reflowEls.length > 0) {
+    incomplete.push(rule(
+      'checkfox-reflow',
+      'moderate',
+      'Fixed pixel width may prevent reflow to a 320px viewport',
+      HELP.reflow,
+      ['wcag1410'],
+      reflowEls.map(({ el, reason }) => nodeInfo(el, `${reason} can force horizontal scrolling at small viewports. Verify content reflows to 320 CSS px (equivalent to 1280px at 400% zoom) without loss of information and without a second scroll direction`)),
+    ))
+  }
+
   return { violations, incomplete }
 }
 
@@ -419,4 +536,82 @@ function collectOutlineSuppressingFocusRules() {
     if (rules) visit(rules)
   }
   return matches
+}
+
+// True if the element is actually rendered (in the box tree and not visually
+// hidden). Used by the non-text-contrast check so we never measure invisible
+// controls. In non-layout engines (jsdom) getClientRects is empty and
+// offsetParent is null, so this returns false and the check stays inert there.
+function isRendered(el) {
+  if (!el || !el.isConnected) return false
+  const cs = getComputedStyle(el)
+  if (cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse') return false
+  if (parseFloat(cs.opacity) === 0) return false
+  const rects = el.getClientRects ? el.getClientRects() : []
+  return el.offsetParent !== null || cs.position === 'fixed' || rects.length > 0
+}
+
+// Parse a CSS colour as returned by getComputedStyle into { r, g, b, a } (0–255,
+// alpha 0–1), or null if it isn't a resolvable rgb/rgba value. Handles both the
+// legacy comma form `rgb(0, 0, 0)` / `rgba(0, 0, 0, .5)` and the modern
+// space/slash form `rgb(0 0 0 / .5)` that recent engines emit. `transparent`
+// resolves to fully transparent black.
+function parseCssColor(str) {
+  if (!str) return null
+  const s = String(str).trim().toLowerCase()
+  if (s === 'transparent') return { r: 0, g: 0, b: 0, a: 0 }
+  const m = s.match(/^rgba?\(([^)]+)\)$/)
+  if (!m) return null
+  const parts = m[1].split(/[\s,/]+/).filter(Boolean)
+  if (parts.length < 3) return null
+  const r = parseFloat(parts[0])
+  const g = parseFloat(parts[1])
+  const b = parseFloat(parts[2])
+  const a = parts.length >= 4 ? parseFloat(parts[3]) : 1
+  if ([r, g, b].some(Number.isNaN)) return null
+  return { r, g, b, a: Number.isNaN(a) ? 1 : a }
+}
+
+// Composite a (possibly translucent) foreground colour over an opaque background,
+// returning the resulting opaque { r, g, b }.
+function compositeOver(fg, bg) {
+  const a = fg.a == null ? 1 : fg.a
+  return {
+    r: fg.r * a + bg.r * (1 - a),
+    g: fg.g * a + bg.g * (1 - a),
+    b: fg.b * a + bg.b * (1 - a),
+  }
+}
+
+// The opaque colour visible *behind* an element: walk ancestors compositing their
+// background-colours (nearest last) over an assumed white page base, stopping at
+// the first fully-opaque background.
+function effectiveBackground(el) {
+  const stack = [] // nearest ancestor first
+  for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+    const c = parseCssColor(getComputedStyle(n).backgroundColor)
+    if (c && c.a > 0) stack.push(c)
+    if (c && c.a === 1) break
+  }
+  let acc = { r: 255, g: 255, b: 255 }
+  for (let i = stack.length - 1; i >= 0; i--) acc = compositeOver(stack[i], acc)
+  return acc
+}
+
+// WCAG relative luminance of an opaque { r, g, b } (0–255).
+function relativeLuminance({ r, g, b }) {
+  const f = v => {
+    const c = v / 255
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+  }
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+}
+
+// WCAG contrast ratio between two opaque colours (1–21).
+function contrastRatio(c1, c2) {
+  const l1 = relativeLuminance(c1)
+  const l2 = relativeLuminance(c2)
+  const hi = Math.max(l1, l2)
+  const lo = Math.min(l1, l2)
+  return (hi + 0.05) / (lo + 0.05)
 }

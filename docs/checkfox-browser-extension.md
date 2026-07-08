@@ -183,6 +183,30 @@ Extension tasks:
 
 ---
 
+### Session 8 — Validate a manual selection to unlock the full workflow
+
+> Lets a manually picked audit + sample behave like a real URL match once confirmed.
+
+- **Decision (per Geoffrey)**: the manual audit/sample picker (reached via the **Change** button, or shown when the URL has no match) no longer stays permanently in `scan-only` mode. Once a **sample** is selected, a **Validate selection** button (`.ctx-validate`, `btn--primary`) appears. Clicking it calls `renderCtxMatch(area, apiCtx.context, …, { manual: true })`, which switches to the confirmed context card and `setScanMode('match')` — unlocking the Scan / Audit inner tabs, Push, Pull, and the Topic N/A inventory ("Detect empty topics") exactly as a genuine URL match does. **Supersedes Session 6's rule** that Push/Pull are unavailable without a real URL match.
+- **Manual vs. match distinction kept visible**: `renderCtxMatch` gained a `{ manual }` option. A genuine URL match still shows the green `Match` badge; a validated manual selection shows a distinct blue **Manual** badge (`.ctx-badge--manual`). The **Change** button on the confirmed card returns to the picker in both cases.
+- **Flow**: `renderCtxSelector` tracks the pending choice in `apiCtx.context`; the Validate button is hidden until a sample is chosen and re-hidden if the audit is changed. No new state is threaded — it reuses the existing `apiCtx.context`.
+- New i18n keys: `ctx.badge.manual`, `ctx.btn.validate` (EN + FR).
+
+---
+
+### Design decision — the `needs_review` status stays out of the extension
+
+> Concerns the CheckFox API's `needs_review` criterion status (mirrors axe-core's `incomplete` / "needs review" result type).
+
+- **Decision (per Geoffrey)**: the extension does **nothing** with the `needs_review` status. It neither writes it on push nor derives it from axe `incomplete` results. The status lives at the **CheckFox Audit tool level** (a value a human auditor can pick manually) and at the **MCP level** (so an AI can select it when it is genuinely uncertain about a criterion).
+- **Rationale**:
+  - Axe's `incomplete` is a *tool's statement of uncertainty*, not a verdict. The criterion status is a *human (or AI) auditor's formal decision*. Auto-writing one into the other conflates two different things.
+  - The axe→criterion mapping is lossy and many-to-one: several axe results (pass + violation + incomplete) can map to a single criterion, and a criterion is broader than any axe rule. One `incomplete` finding does not mean the whole criterion needs review.
+  - Auto-setting a status would risk clobbering a verdict the auditor already recorded — the extension's push contract already refuses to overwrite human verdicts (see the `prefill` note), and this keeps that guarantee intact.
+- **Consequence**: axe `incomplete` results are, at most, surfaced to the extension user as an advisory ("N automated checks need manual review") — never turned into a criterion status. The auditor or the MCP-driven AI remains the sole author of `needs_review`.
+
+---
+
 ## Reference Links
 
 - axe-core: https://github.com/dequelabs/axe-core

@@ -915,6 +915,7 @@ body.cfx-noscroll { overflow: hidden; }
 }
 
 .ctx-badge--match   { background: #052e16; color: #86efac; border: 1px solid #14532d; }
+.ctx-badge--manual  { background: #1e1b4b; color: #a5b4fc; border: 1px solid #3730a3; }
 .ctx-badge--raweb   { background: #2d2200; color: #fcd34d; border: 1px solid #78350f; }
 .ctx-badge--rgaa    { background: #052e16; color: #86efac; border: 1px solid #14532d; }
 .ctx-badge--wcag    { background: #1e1b4b; color: #a5b4fc; border: 1px solid #3730a3; }
@@ -1043,6 +1044,10 @@ body.cfx-noscroll { overflow: hidden; }
   flex-direction: column;
   gap: 4px;
   margin-top: 4px;
+}
+
+.ctx-validate {
+  margin-top: 10px;
 }
 
 .ctx-label {

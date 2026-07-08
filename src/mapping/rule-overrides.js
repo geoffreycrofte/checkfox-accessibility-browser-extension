@@ -46,7 +46,7 @@ export const RULE_CRITERIA = {
   // ── Topic 3 — Colours ────────────────────────────────────────────────────────
   'color-contrast':          both(['3.2']),
   'color-contrast-enhanced': both(['3.2']),
-  'link-in-text-block':      both(['3.1']),
+  'checkfox-nontext-contrast': both(['3.3']),   // UI-component / boundary contrast (WCAG 1.4.11)
 
   // ── Topic 4 — Multimedia ─────────────────────────────────────────────────────
   'no-autoplay-audio':       both(['4.10']),
@@ -71,7 +71,10 @@ export const RULE_CRITERIA = {
   'empty-table-header':      both(['5.4', '5.5']),
 
   // ── Topic 6 — Links ──────────────────────────────────────────────────────────
-  'link-name':               both(['6.1']),
+  // "Links must have discernible text" = the link HAS an accessible name → 6.2
+  // ("chaque lien a-t-il un intitulé ?"), NOT 6.1 (link text is *explicit*, which
+  // needs human judgement and axe can't verify). WCAG 2.4.4 fans to both; narrow it.
+  'link-name':               both(['6.2']),
   'identical-links-same-purpose': both(['6.1', '6.2']),
 
   // ── Topic 7 — Scripts ────────────────────────────────────────────────────────
@@ -113,6 +116,9 @@ export const RULE_CRITERIA = {
   'html-xml-lang-mismatch':  both(['8.3', '8.4']),
   'valid-lang':              both(['8.7', '8.8']),
   'checkfox-deprecated-presentational': both(['8.9']),
+  // CheckFox custom checks added after this map was last synced (validate).
+  'checkfox-doctype-missing': both(['8.1']),
+  'checkfox-duplicate-id':    both(['8.2']),
 
   // ── Topic 9 — Information structure ──────────────────────────────────────────
   'bypass':                  both(['9.1', '12.6', '12.7']),
@@ -130,7 +136,12 @@ export const RULE_CRITERIA = {
   'meta-viewport':           both(['10.4']),
   'meta-viewport-large':     both(['10.4']),
   'checkfox-focus-not-visible': both(['10.7']),
+  'checkfox-reflow':         both(['10.11']),   // fixed px widths / no reflow at 320px (WCAG 1.4.10)
   'checkfox-presentational-attr': both(['10.1']),
+  // Links distinguishable in a text block without relying on colour → link
+  // visibility relative to surrounding text (RGAA 10.6), NOT the generic
+  // "info by colour alone" (3.1). WCAG 1.4.1 fans out to both; this narrows it.
+  'link-in-text-block':      both(['10.6']),
 
   // ── Topic 11 — Forms ─────────────────────────────────────────────────────────
   'autocomplete-valid':      both(['11.13']),
@@ -142,6 +153,8 @@ export const RULE_CRITERIA = {
   // button 11.9. See src/mapping/classify-target.js and docs/element-routed-criteria.md.
   'label-content-name-mismatch': byTarget(['6.1', '11.2', '11.9'], classifyLabelInName),
   'label-title-only':        both(['11.1', '11.2']),
+  // CheckFox custom check added after this map was last synced (validate).
+  'checkfox-fieldset-missing': both(['11.5', '11.6']),
   'select-name':             both(['11.1']),
   'summary-name':            both(['11.9']),
   'aria-input-field-name':   both(['11.1']),
@@ -167,6 +180,7 @@ export const RULE_CRITERIA = {
   'css-orientation-lock':    both(['13.9']),
   'meta-refresh':            both(['13.1', '13.8']),
   'meta-refresh-no-exceptions': both(['13.1', '13.8']),
+  'checkfox-motion-uncontrolled': both(['13.8']),   // infinite CSS animation w/o pause control (WCAG 2.2.2)
   'checkfox-new-window-link': both(['13.2']),
   'checkfox-download-document': both(['13.3']),
 

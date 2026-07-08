@@ -352,7 +352,7 @@ function renderCtxError(area, message, onRetry) {
   area.append(card)
 }
 
-function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
+function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx, { manual = false } = {}) {
   area.replaceChildren()
   const card = el('div', { class: 'ctx-card' })
 
@@ -360,8 +360,10 @@ function renderCtxMatch(area, { audit, sample }, audits, allSamples, apiCtx) {
   const auditName = el('span', { class: 'ctx-card__audit' })
   auditName.textContent = audit.name
   auditName.title = audit.name
-  const badge = el('span', { class: 'ctx-badge ctx-badge--match' })
-  badge.textContent = t('ctx.badge.match')
+  // A genuine URL match shows the green "Match" badge; a manually validated
+  // selection shows a distinct "Manual" badge but unlocks the same actions.
+  const badge = el('span', { class: `ctx-badge ctx-badge--${manual ? 'manual' : 'match'}` })
+  badge.textContent = manual ? t('ctx.badge.manual') : t('ctx.badge.match')
   const changeBtn = el('button', { class: 'btn btn--xs btn--ghost', type: 'button' })
   changeBtn.textContent = t('ctx.btn.change')
   changeBtn.addEventListener('click', () => {
@@ -402,15 +404,17 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
   const auditLabelEl = el('label', { class: 'ctx-label', id: 'ctx-audit-label' })
   auditLabelEl.textContent = t('ctx.label.audit')
 
-  // The manual picker only attaches the page to an audit/sample for local
-  // scanning — Push/Pull stay unavailable until the URL genuinely matches, so
-  // selecting here just records the context without revealing the inner tabs.
+  // The manual picker records the chosen audit/sample. Selecting a sample
+  // reveals a Validate button that confirms the choice and unlocks the same
+  // actions as a genuine URL match (Scan / Pull + the Topic N/A inventory).
   const auditCombo = buildAuditCombobox(audits, 'ctx-audit-label', (audit) => {
     apiCtx.context = null
+    validateBtn.hidden = true
     sampleComboWrap.replaceChildren(
       buildSampleCombobox(allSamples[audit.id] ?? [], 'ctx-sample-label', (sample) => {
         apiCtx.context = { audit, sample }
         apiCtx.refreshPush?.()
+        validateBtn.hidden = false
       })
     )
     sampleField.hidden = false
@@ -423,10 +427,19 @@ function renderCtxSelector(area, audits, allSamples, apiCtx, noticeText) {
   const sampleComboWrap = el('div')
   sampleField.append(sampleLabelEl, sampleComboWrap)
 
-  card.append(notice, auditField, sampleField)
+  // Hidden until a sample is picked; confirms the manual selection and switches
+  // the view to the same confirmed layout a URL match produces.
+  const validateBtn = el('button', { class: 'btn btn--sm btn--primary ctx-validate', type: 'button', hidden: '' })
+  validateBtn.textContent = t('ctx.btn.validate')
+  validateBtn.addEventListener('click', () => {
+    if (!apiCtx.context) return
+    renderCtxMatch(area, apiCtx.context, audits, allSamples, apiCtx, { manual: true })
+  })
+
+  card.append(notice, auditField, sampleField, validateBtn)
   area.append(card)
 
-  // No confirmed match → local Scan button only, no inner tabs.
+  // Nothing confirmed yet → local Scan button only, no inner tabs.
   setScanMode('scan-only', apiCtx)
 }
 

@@ -1,50 +1,23 @@
 import { runCustomChecks } from './custom-checks.js'
+import {
+  CFX_RULE_OVERRIDES,
+  verifyExperimentalRules,
+} from './axe-experimental-rules.js'
 
 // axe-core is loaded as a separate content script declared before this one in manifest.json
 const axe = window.axe
 
-// RGAA-relevant axe rules that ship tagged `experimental`. axe excludes those by
-// default (audit.tagExclude = ['experimental','deprecated']), so they never fire
-// from our tag-based runOnly even though their WCAG tags would otherwise match.
-// A per-rule { enabled: true } short-circuits ruleShouldRun() *before* the tag
-// logic, opting each one in without touching runOnly or un-excluding every
-// experimental rule. Each closes a documented RGAA automation gap — see
-// docs/rgaa-automation-coverage-diff.md §4 (Tier 1, #5). Validate for noise
-// before shipping: these are experimental precisely because Deque considers them
-// noisier than the stable set.
-const CFX_EXPERIMENTAL_RULES = [
-  'css-orientation-lock',         // RGAA 13.9 / WCAG 1.3.4 — orientation lock
-  'p-as-heading',                 // RGAA 9.1  / WCAG 1.3.1 — styled <p> used as heading
-  'table-fake-caption',           // RGAA 5.4  / WCAG 1.3.1 — caption faked with a cell/row
-  'td-has-header',                // RGAA 5.7  / WCAG 1.3.1 — data cells without headers
-  'label-content-name-mismatch',  // RGAA 6.1  / WCAG 2.5.3 — visible label not in accessible name
-]
-
-const CFX_RULE_OVERRIDES = Object.fromEntries(
-  CFX_EXPERIMENTAL_RULES.map(id => [id, { enabled: true }]),
-)
-
-// Upgrade guard: if a future axe-core build renames or drops one of the rules we
-// opt into above, our { enabled: true } silently no-ops and RGAA coverage quietly
-// regresses. Compare our expected IDs against the engine's registered rules once
-// and warn loudly if any have disappeared.
+// The curated experimental-rule set (CFX_EXPERIMENTAL_RULES / CFX_RULE_OVERRIDES)
+// and the upgrade guard (verifyExperimentalRules) are the SINGLE SOURCE OF TRUTH
+// shared with the server-side scanner — see ./axe-experimental-rules.js. Keep a
+// once-guard here so the guard warns at most once per page load; the shared
+// verifyExperimentalRules(axe) is stateless and takes `axe` explicitly so it stays
+// import-free and reusable in the injected bundle.
 let cfxRulesVerified = false
-function verifyExperimentalRules() {
+function verifyRulesOnce() {
   if (cfxRulesVerified) return
   cfxRulesVerified = true
-  try {
-    const available = new Set(axe.getRules().map(r => r.ruleId))
-    const missing = CFX_EXPERIMENTAL_RULES.filter(id => !available.has(id))
-    if (missing.length) {
-      console.warn(
-        `[CheckFox] axe-core ${axe.version || '(unknown version)'} no longer registers ` +
-        `expected rule(s): ${missing.join(', ')}. RGAA automation coverage is reduced — ` +
-        'see docs/rgaa-automation-coverage-diff.md §4.',
-      )
-    }
-  } catch (err) {
-    console.warn('[CheckFox] could not verify axe rule availability:', err)
-  }
+  verifyExperimentalRules(axe)
 }
 
 // Guard: register the message listener only once per page load.
@@ -75,7 +48,7 @@ async function runScan() {
     await new Promise(resolve => window.addEventListener('load', resolve, { once: true }))
   }
 
-  verifyExperimentalRules()
+  verifyRulesOnce()
 
   const results = await axe.run(document, {
     runOnly: {
