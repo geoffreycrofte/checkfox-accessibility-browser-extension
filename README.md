@@ -27,6 +27,10 @@ audits smarter.
   images, links, headings, landmarks, ARIA, tables (summary / caption / headers /
   layout), language & reading direction, focus visibility, tab order, forms, and
   more. Each maps to the specific criteria it helps assess.
+- **Colour contrast (3.2)** — the *Colors › Contrast* tool measures every
+  text/background colour pair on the page, grouped by pair and sorted
+  worst-ratio-first, splitting results into fails, passes, and image-backed text
+  that needs manual review. Locate any occurrence straight from the panel.
 - **CheckFox sync**: you'll need an API Key from the CheckFox [Accessibility Audit tool](https://checkfox.eu).
   - **Push** pre-filled findings into the matching Audit › Sample.
   - **Pull** existing findings as read-only context while auditing.

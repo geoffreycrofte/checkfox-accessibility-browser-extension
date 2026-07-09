@@ -524,6 +524,103 @@ export function runCustomChecks() {
   return { violations, incomplete }
 }
 
+// ─── Colours 3.2 — text contrast collection (Tools → Colors → Contrast) ────────
+// Measures every text-bearing element's computed colour against its effective
+// background and returns a flat list; the popup groups it by colour pair. This
+// is the interactive complement to axe's flat `color-contrast` violation.
+//
+// Elements sitting over a background image or gradient can't have their real
+// backdrop known from colour alone, so they are measured against a best-effort
+// solid fallback and flagged `undetermined` (the popup shows them as a "needs
+// review" alert) — never silently dropped. The solid-fallback fix itself is the
+// future criterion-10.5 tool.
+export function collectContrast() {
+  const items = []
+
+  const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'SVG', 'CANVAS', 'IFRAME'])
+  const all = document.body ? document.body.getElementsByTagName('*') : []
+  const scanLimit = Math.min(all.length, 8000)
+
+  for (let i = 0; i < scanLimit && items.length < 4000; i++) {
+    const el = all[i]
+    if (SKIP_TAGS.has(el.tagName)) continue
+    if (!hasDirectText(el)) continue
+    if (!isRendered(el)) continue
+
+    const cs = getComputedStyle(el)
+    const fg = parseCssColor(cs.color)
+    if (!fg || fg.a === 0) continue // fully transparent text — nothing to read
+
+    // Best-effort backdrop: composite solid background-colours up the ancestor
+    // chain over the white page base. `hasImage` means a background image or
+    // gradient sits over that solid colour, so the true backdrop is unknown — we
+    // still report the element (flagged `undetermined` for manual review) rather
+    // than dropping it, so image-backed text (a 3.2 risk, and a 10.5 fallback
+    // concern) is never silently forgotten.
+    const { bg, hasImage } = resolveBackground(el)
+    const fgOpaque = compositeOver(fg, bg) // flatten translucent text onto its bg
+    const ratio = contrastRatio(fgOpaque, bg)
+
+    const size = parseFloat(cs.fontSize) || 16
+    const weight = parseInt(cs.fontWeight, 10) || 400
+    // WCAG "large text": ≥ 24px, or ≥ 18.66px (14pt) when bold.
+    const isLarge = size >= 24 || (size >= 18.66 && weight >= 700)
+
+    items.push({
+      ...nodeInfo(el, ''),
+      fg: rgbToHex(fgOpaque),
+      bg: rgbToHex(bg),
+      ratio: Math.round(ratio * 100) / 100,
+      required: isLarge ? 3 : 4.5,
+      isLarge,
+      undetermined: hasImage,
+    })
+  }
+
+  return { items }
+}
+
+// True if `el` has a non-whitespace direct text-node child, i.e. its own colour
+// actually paints some text (as opposed to only wrapping other elements).
+function hasDirectText(el) {
+  for (const node of el.childNodes) {
+    if (node.nodeType === 3 && node.nodeValue.trim() !== '') return true
+  }
+  return false
+}
+
+// Resolve the effective backdrop behind an element's text: composite every
+// background-colour from the element up to (and including) the first fully
+// opaque ancestor over the white page base, and report whether a background
+// image or gradient sits at or above that opaque layer (i.e. paints over the
+// solid colour we measured), which makes the true backdrop unknown.
+//
+// This is deliberately a read-only ancestor walk: `background-color: inherit`
+// would only read one level, and mutating each element's style to read it back
+// would force a reflow per element — the walk is both richer and cheaper.
+function resolveBackground(el) {
+  const layers = [] // nearest ancestor first
+  let hasImage = false
+  for (let n = el; n && n.nodeType === 1; n = n.parentElement) {
+    const cs = getComputedStyle(n)
+    if (cs.backgroundImage && cs.backgroundImage !== 'none') hasImage = true
+    const c = parseCssColor(cs.backgroundColor)
+    if (c && c.a > 0) {
+      layers.push(c)
+      if (c.a === 1) break // opaque — nothing below it shows through
+    }
+  }
+  let acc = { r: 255, g: 255, b: 255 }
+  for (let i = layers.length - 1; i >= 0; i--) acc = compositeOver(layers[i], acc)
+  return { bg: acc, hasImage }
+}
+
+// Format an opaque { r, g, b } (0–255, possibly fractional) as a #rrggbb string.
+function rgbToHex({ r, g, b }) {
+  const h = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')
+  return `#${h(r)}${h(g)}${h(b)}`
+}
+
 // True if an <svg> is actually painted. Unlike isRendered(), this avoids
 // offsetParent — an HTMLElement-only property that is undefined on SVG elements
 // and would read as "rendered" even inside a display:none ancestor. getClientRects

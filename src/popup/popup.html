@@ -91,6 +91,10 @@
 
     <section id="panel-tools" class="main" role="tabpanel" aria-labelledby="tab-tools" hidden>
       <div id="tools-list" class="tools-list"></div>
+      <!-- Report tools (e.g. Colors → Contrast) render here: an overlay panel
+           that slides in from the right over the tools list. Starts inert +
+           aria-hidden so keyboard/AT users can't reach it until it opens. -->
+      <div id="tools-detail" class="tools-detail" aria-hidden="true" inert></div>
     </section>
 
     <section id="panel-settings" class="main settings-panel" role="tabpanel" aria-labelledby="tab-settings" hidden>

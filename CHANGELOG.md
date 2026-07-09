@@ -6,6 +6,24 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-09
+
+### Added
+- **Colours → Contrast tool (RGAA/RAWeb 3.2)** — a new *Colors* tool group
+  (theme 3, 3rd in the Tools tab). Toggling *Contrast* on slides an overlay panel
+  in from the right that measures every text element's computed colour against its
+  effective background and lists the results **grouped by unique colour pair**,
+  worst-ratio-first — each row showing the ratio, the required threshold (4.5 / 3.0
+  by font size + weight), a live swatch, an occurrence count, and prev/next
+  controls that flash each occurrence on the page. Results split into **Fails /
+  Review / Passes**: text over a background image or gradient (whose true backdrop
+  can't be measured from colour alone) is surfaced as a **⚠ needs-review** alert
+  against a best-effort fallback instead of being dropped, so image-backed text
+  without a colour fallback still raises a 3.2 flag. Text contrast only — non-text
+  contrast (3.3) stays in the axe scan. The panel is keyboard-operable and
+  screen-reader friendly (list made `inert` while open, focus moves to the panel
+  and returns to the toggle, Escape closes, respects `prefers-reduced-motion`).
+
 ### Fixed
 - **Presentation attributes tool now detects the full deprecated set** — the
   *Presentation attributes* tool (RAWeb 10.01) previously checked only 7

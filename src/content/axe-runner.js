@@ -1,4 +1,4 @@
-import { runCustomChecks } from './custom-checks.js'
+import { runCustomChecks, collectContrast } from './custom-checks.js'
 import {
   CFX_RULE_OVERRIDES,
   verifyExperimentalRules,
@@ -31,13 +31,24 @@ if (!window.__checkfoxAxeRunner) {
   window.__checkfoxAxeRunner = true
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (message.action !== 'run-scan') return false
+    if (message.action === 'run-scan') {
+      runScan().then(sendResponse).catch(err => {
+        sendResponse({ success: false, error: err.message })
+      })
+      return true // keep message channel open for async response
+    }
 
-    runScan().then(sendResponse).catch(err => {
-      sendResponse({ success: false, error: err.message })
-    })
+    // Tools → Colors → Contrast: synchronous colour-pair collection (3.2).
+    if (message.action === 'run-contrast') {
+      try {
+        sendResponse({ success: true, ...collectContrast() })
+      } catch (err) {
+        sendResponse({ success: false, error: err.message })
+      }
+      return false // responded synchronously
+    }
 
-    return true // keep message channel open for async response
+    return false
   })
 }
 

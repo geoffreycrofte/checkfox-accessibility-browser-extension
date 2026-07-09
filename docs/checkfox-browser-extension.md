@@ -207,6 +207,40 @@ Extension tasks:
 
 ---
 
+### Session 9 — Colors → Contrast tool (RGAA/RAWeb 3.2)
+
+New tool group **Colors** (theme 3), positioned 3rd in the Tools tab (after Frames/2,
+before Tables/5). First tool: **Contrast**.
+
+- **What it does**: measures every text-bearing element's computed colour against its
+  effective background (`collectContrast()` in `src/content/custom-checks.js`, reusing the
+  existing `effectiveBackground` / `contrastRatio` / `isRendered` helpers), then the popup
+  groups the results **by unique colour pair** (`fg|bg|required-threshold`), sorted
+  worst-ratio-first. Each group shows the ratio, required threshold (4.5 / 3.0 by
+  font size+weight), a live swatch, an occurrence count, and prev/next navigation that
+  reuses `highlightElementOnPage` to flash each occurrence.
+- **Data path**: a new `run-contrast` action on the `axe-runner.js` message listener returns
+  `{ items, skippedImage }` synchronously; the popup fetches it with the same
+  inject-then-retry pattern as the scan.
+- **Design decision — sliding panel, new `type: 'report'` tool**: the grouped table is too
+  invasive to sit inline in a tool row, so it renders in a **two-slide horizontal track**
+  inside `#panel-tools` (tools list ⟷ detail). The off-screen slide is made `inert` +
+  `aria-hidden`; opening moves focus to the detail heading, Back/Escape return focus to the
+  toggle; the slide transition respects `prefers-reduced-motion`. Report tools have no
+  page-side `inject`/`remove` — their output lives entirely in the popup, keeping the
+  contrast maths as a single source of truth in `custom-checks.js`.
+- **Scope decisions (per Geoffrey)**: **3.2 text contrast only** — 3.3 non-text contrast
+  stays in the axe scanner.
+- **Background image / gradient handling**: `resolveBackground()` walks the ancestor chain
+  read-only (richer than `background-color: inherit`, and no per-element reflow). When an
+  image/gradient sits over the measured solid colour the true backdrop is unknown, so the
+  element is measured against the best-effort fallback and flagged `undetermined` →
+  rendered as a **third "⚠ needs review" status** in the panel (fail / review / pass), never
+  silently dropped. This means image-backed text without a colour fallback now raises a 3.2
+  alert. The **solid-fallback fix itself** remains deferred to a future **criterion-10.5 tool**.
+
+---
+
 ## Reference Links
 
 - axe-core: https://github.com/dequelabs/axe-core

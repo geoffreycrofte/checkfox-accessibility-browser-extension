@@ -32,6 +32,9 @@ body {
   margin: 0;
   width: 400px;
   min-height: 80px;
+  /* Keep the off-screen (translateX(100%)) report panel from creating a
+     horizontal scrollbar while it's parked to the right. */
+  overflow-x: hidden;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: system-ui, -apple-system, sans-serif;
@@ -775,6 +778,200 @@ body.side-panel {
 }
 
 .tool-row--active .tool-custom-area { display: flex; }
+
+/* ─── Colors → Contrast: overlay report panel (slides in from the right) ────── */
+
+/* The panel is absolutely positioned over the Tools tab and slides in from the
+   right edge; the tools list stays underneath (made inert from JS). */
+#panel-tools { position: relative; }
+
+.tools-detail {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: var(--color-bg);
+  box-shadow: -8px 0 20px rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.22s ease;
+}
+
+.tools-detail.is-open { transform: translateX(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .tools-detail { transition: none; }
+}
+
+.tools-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tools-detail__back {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  padding: 3px 8px;
+  cursor: pointer;
+}
+
+.tools-detail__back:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+
+.tools-detail__back:focus-visible,
+.tools-detail__title:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.tools-detail__title { font-size: 13px; font-weight: 700; margin: 0; }
+
+.tools-detail__empty {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 4px 0;
+}
+
+.contrast-summary { font-size: 12px; color: var(--color-text); }
+
+.contrast-note {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  border-left: 2px solid var(--color-moderate);
+  padding-left: 8px;
+}
+
+.contrast-filters { display: flex; gap: 6px; }
+
+.contrast-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contrast-list.hide-fail [data-status="fail"] { display: none; }
+.contrast-list.hide-review [data-status="review"] { display: none; }
+.contrast-list.hide-pass [data-status="pass"] { display: none; }
+
+.contrast-group {
+  border: 1px solid var(--color-border);
+  border-left-width: 3px;
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  background: var(--color-bg-raised);
+}
+
+.contrast-group--fail { border-left-color: var(--color-critical); }
+.contrast-group--review { border-left-color: var(--color-moderate); }
+.contrast-group--pass { border-left-color: var(--color-ok); }
+
+.contrast-group__main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.contrast-group__icon { font-weight: 700; }
+.contrast-group--fail .contrast-group__icon { color: var(--color-critical); }
+.contrast-group--review .contrast-group__icon { color: var(--color-moderate); }
+.contrast-group--pass .contrast-group__icon { color: var(--color-ok); }
+
+.contrast-group__swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 20px;
+  border-radius: 3px;
+  border: 1px solid var(--color-border);
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.contrast-group__ratio { font-variant-numeric: tabular-nums; }
+.contrast-group__need { color: var(--color-text-muted); font-size: 11px; }
+
+.contrast-group__hex {
+  font-family: ui-monospace, "Cascadia Code", "Fira Code", monospace;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.contrast-group__count {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.contrast-group__nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.contrast-group__type { margin-right: auto; }
+
+.contrast-nav__btn {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.contrast-nav__btn:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+.contrast-nav__btn:disabled { opacity: 0.4; cursor: default; }
+
+.contrast-nav__btn:focus-visible,
+.contrast-nav__find:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.contrast-nav__pos {
+  font-variant-numeric: tabular-nums;
+  min-width: 34px;
+  text-align: center;
+}
+
+.contrast-nav__find {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 4px;
+}
+
+.contrast-nav__find:hover { text-decoration: underline; }
+
+.contrast-nav__feedback:not(:empty) {
+  color: var(--color-critical);
+  width: 100%;
+}
 
 .cm-editor-wrap {
   height: 50vh;

@@ -137,6 +137,22 @@ export const TOOLS = [
     },
   },
 
+  // ── 3. COLORS ────────────────────────────────────────────────────────────────
+
+  {
+    id: 'contrast',
+    group: 'Colors',
+    label: 'Contrast',
+    description: 'Measure each text colour against its background and list every failing colour pair',
+    criteria: ['03.02'],
+    // Results render in the popup's sliding panel (Tools tab), not on the page:
+    // toggling on slides the tools list left to reveal the grouped table, and
+    // "Find element" flashes each occurrence on demand. The contrast maths live
+    // once in src/content/custom-checks.js (collectContrast) — see popup.js
+    // buildToolRow's report handling for the panel lifecycle.
+    type: 'report',
+  },
+
   // ── 5. TABLES ────────────────────────────────────────────────────────────────
 
   {

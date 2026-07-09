@@ -1143,11 +1143,297 @@ async function deactivateAll(tabId, activeIds, stateKey) {
   }
   activeIds.clear()
   await chrome.storage.session.set({ [stateKey]: [] })
+  closeReportIfOpen()
   document.querySelectorAll('.tool-toggle--on').forEach(toggleEl => {
     toggleEl.classList.remove('tool-toggle--on')
     toggleEl.setAttribute('aria-pressed', 'false')
   })
   document.querySelectorAll('.tool-row--active').forEach(r => r.classList.remove('tool-row--active'))
+}
+
+// ─── Colors → Contrast report panel (Tools tab sliding detail) ─────────────────
+
+// One report tool exists, so a single module-level Escape handler is enough.
+let contrastEscHandler = null
+
+async function openReport(tool, tabId, toggle, { focus = true } = {}) {
+  const list = document.getElementById('tools-list')
+  const detail = document.getElementById('tools-detail')
+  if (!list || !detail) return
+
+  const onBack = () => toggle.click() // one deactivation path: through the toggle
+
+  renderContrastLoading(detail, onBack)
+  openPanel(list, detail)
+
+  const data = tabId ? await fetchContrast(tabId) : null
+  renderContrast(detail, data, tabId, onBack)
+  if (focus) detail.querySelector('.tools-detail__title')?.focus()
+
+  if (contrastEscHandler) document.removeEventListener('keydown', contrastEscHandler)
+  contrastEscHandler = (e) => {
+    if (e.key === 'Escape' && detail.classList.contains('is-open')) {
+      e.stopPropagation()
+      toggle.click()
+    }
+  }
+  document.addEventListener('keydown', contrastEscHandler)
+}
+
+function closeReport(toggle) {
+  closeReportIfOpen()
+  toggle?.focus()
+}
+
+function closeReportIfOpen() {
+  const detail = document.getElementById('tools-detail')
+  if (!detail || !detail.classList.contains('is-open')) return
+  const list = document.getElementById('tools-list')
+  closePanel(list, detail)
+  if (contrastEscHandler) {
+    document.removeEventListener('keydown', contrastEscHandler)
+    contrastEscHandler = null
+  }
+}
+
+// Slide the overlay panel in over the tools list; the list becomes inert so
+// keyboard/AT users can't tab into content hidden behind the panel.
+function openPanel(list, detail) {
+  detail.classList.add('is-open')
+  detail.removeAttribute('inert')
+  detail.removeAttribute('aria-hidden')
+  list.setAttribute('inert', '')
+  list.setAttribute('aria-hidden', 'true')
+}
+
+// Slide the panel back off-screen. Content is left in place (inert, parked to
+// the right) so the slide-out isn't emptied mid-animation; the next open
+// replaces it via renderContrastLoading.
+function closePanel(list, detail) {
+  detail.classList.remove('is-open')
+  detail.setAttribute('inert', '')
+  detail.setAttribute('aria-hidden', 'true')
+  list.removeAttribute('inert')
+  list.removeAttribute('aria-hidden')
+}
+
+// Ask the page for its colour-pair data, injecting the runner on first use
+// (mirrors the scan flow's inject-then-retry).
+async function fetchContrast(tabId) {
+  const send = async () => {
+    try { return await chrome.tabs.sendMessage(tabId, { action: 'run-contrast' }) }
+    catch { return null }
+  }
+  let res = await send()
+  if (res === null) {
+    try {
+      await chrome.scripting.executeScript({ target: { tabId }, files: ['content/axe-runner.js'] })
+    } catch { return null }
+    res = await send()
+  }
+  return res
+}
+
+function contrastHeader(onBack) {
+  const header = el('div', { class: 'tools-detail__header' })
+  const back = el('button', { class: 'tools-detail__back', type: 'button', 'aria-label': t('contrast.back') })
+  const backArrow = el('span', { 'aria-hidden': 'true' })
+  backArrow.textContent = '‹ '
+  const backLabel = el('span')
+  backLabel.textContent = t('contrast.backLabel')
+  back.append(backArrow, backLabel)
+  back.addEventListener('click', onBack)
+  const title = el('h4', { class: 'tools-detail__title', tabindex: '-1' })
+  title.textContent = t('contrast.title')
+  header.append(back, title)
+  return header
+}
+
+function renderContrastLoading(detail, onBack) {
+  detail.replaceChildren()
+  detail.append(contrastHeader(onBack))
+  const loading = el('p', { class: 'tools-detail__empty', role: 'status' })
+  loading.textContent = t('contrast.loading')
+  detail.append(loading)
+}
+
+function renderContrast(detail, data, tabId, onBack) {
+  detail.replaceChildren()
+  detail.append(contrastHeader(onBack))
+
+  if (!data || !data.success) {
+    const err = el('p', { class: 'tools-detail__empty' })
+    err.textContent = t('contrast.error')
+    detail.append(err)
+    return
+  }
+
+  const groups = groupContrast(data.items)
+  const fails = groups.filter(g => g.status === 'fail')
+  const reviews = groups.filter(g => g.status === 'review')
+  const passes = groups.filter(g => g.status === 'pass')
+
+  const summary = el('p', { class: 'contrast-summary' })
+  summary.textContent = t('contrast.summary', fails.length, reviews.length, passes.length)
+  detail.append(summary)
+
+  if (groups.length === 0) {
+    const empty = el('p', { class: 'tools-detail__empty' })
+    empty.textContent = t('contrast.none')
+    detail.append(empty)
+    return
+  }
+
+  // Actionable groups (fails + needs-review) shown by default; passes toggle on.
+  const activeFilters = new Set()
+  if (fails.length) activeFilters.add('fail')
+  if (reviews.length) activeFilters.add('review')
+  if (activeFilters.size === 0) activeFilters.add('pass')
+
+  const listEl = el('ul', { class: 'contrast-list', 'aria-label': t('contrast.listLabel') })
+  const sync = () => {
+    listEl.classList.toggle('hide-fail', !activeFilters.has('fail'))
+    listEl.classList.toggle('hide-review', !activeFilters.has('review'))
+    listEl.classList.toggle('hide-pass', !activeFilters.has('pass'))
+  }
+
+  const mkFilter = (key, cls, label) => {
+    const on = activeFilters.has(key)
+    const btn = el('button', {
+      class: `badge badge--filter ${cls}${on ? '' : ' badge--off'}`,
+      'aria-pressed': String(on),
+      type: 'button',
+    })
+    btn.textContent = label
+    btn.addEventListener('click', () => {
+      if (activeFilters.has(key)) {
+        activeFilters.delete(key)
+        btn.classList.add('badge--off')
+        btn.setAttribute('aria-pressed', 'false')
+      } else {
+        activeFilters.add(key)
+        btn.classList.remove('badge--off')
+        btn.setAttribute('aria-pressed', 'true')
+      }
+      sync()
+    })
+    return btn
+  }
+
+  const filterBar = el('div', { class: 'contrast-filters', role: 'group', 'aria-label': t('contrast.filter.label') })
+  filterBar.append(
+    mkFilter('fail', 'badge--error', t('contrast.filter.fails', fails.length)),
+    mkFilter('review', 'badge--warn', t('contrast.filter.review', reviews.length)),
+    mkFilter('pass', 'badge--ok', t('contrast.filter.passes', passes.length)),
+  )
+  detail.append(filterBar)
+
+  for (const g of groups) listEl.append(contrastRow(g, tabId))
+  sync()
+  detail.append(listEl)
+}
+
+// Collapse identical (foreground, background, required-threshold) triples into a
+// single counted group, worst ratio first, failures before passes.
+function groupContrast(items) {
+  const map = new Map()
+  for (const it of items) {
+    // Image-backed text can't be measured reliably → 'review', not pass/fail.
+    const status = it.undetermined ? 'review' : (it.ratio < it.required ? 'fail' : 'pass')
+    const key = `${status}|${it.fg}|${it.bg}|${it.required}`
+    let g = map.get(key)
+    if (!g) {
+      g = {
+        status, fg: it.fg, bg: it.bg, required: it.required,
+        isLarge: it.isLarge, ratio: it.ratio, nodes: [],
+      }
+      map.set(key, g)
+    }
+    g.nodes.push(it)
+  }
+  const order = { fail: 0, review: 1, pass: 2 }
+  return [...map.values()].sort((a, b) => {
+    if (a.status !== b.status) return order[a.status] - order[b.status]
+    return a.ratio - b.ratio
+  })
+}
+
+function contrastRow(g, tabId) {
+  const item = el('li', {
+    class: `contrast-group contrast-group--${g.status}`,
+    'data-status': g.status,
+  })
+
+  const ICON = { fail: '✕', review: '⚠', pass: '✓' }
+
+  const main = el('div', { class: 'contrast-group__main' })
+  const icon = el('span', { class: 'contrast-group__icon', 'aria-hidden': 'true' })
+  icon.textContent = ICON[g.status]
+  const srStatus = el('span', { class: 'sr-only' })
+  srStatus.textContent = t(`contrast.status.${g.status}`)
+
+  const swatch = el('span', {
+    class: 'contrast-group__swatch',
+    'aria-hidden': 'true',
+    style: `color:${g.fg};background:${g.bg}`,
+  })
+  swatch.textContent = 'Aa'
+
+  const ratioWrap = el('span', { class: 'contrast-group__ratio' })
+  const ratioVal = el('strong')
+  // Review items are measured against a best-effort fallback (an image hides the
+  // true backdrop), so mark the ratio approximate with a leading ≈.
+  ratioVal.textContent = `${g.status === 'review' ? '≈' : ''}${g.ratio.toFixed(2)}:1`
+  const need = el('span', { class: 'contrast-group__need' })
+  need.textContent = t('contrast.need', g.required)
+  ratioWrap.append(ratioVal, ' ', need)
+
+  const hex = el('span', { class: 'contrast-group__hex' })
+  hex.textContent = `${g.fg} ${t('contrast.on')} ${g.bg}`
+
+  const count = el('span', { class: 'contrast-group__count' })
+  count.textContent = `×${g.nodes.length}`
+
+  main.append(icon, srStatus, swatch, ratioWrap, hex, count)
+  item.append(main)
+
+  const nav = el('div', { class: 'contrast-group__nav' })
+  const type = el('span', { class: 'contrast-group__type' })
+  type.textContent = g.status === 'review'
+    ? t('contrast.reviewLabel')
+    : (g.isLarge ? t('contrast.large') : t('contrast.normal'))
+  nav.append(type)
+
+  if (tabId) {
+    let idx = 0
+    const pos = el('span', { class: 'contrast-nav__pos', role: 'status', 'aria-live': 'polite' })
+    pos.textContent = t('contrast.position', 1, g.nodes.length)
+    const feedback = el('span', { class: 'contrast-nav__feedback' })
+
+    const go = async () => {
+      pos.textContent = t('contrast.position', idx + 1, g.nodes.length)
+      const found = await highlightElementOnPage(tabId, g.nodes[idx].selector)
+      feedback.textContent = found ? '' : t('results.elementNotFound')
+    }
+
+    const prev = el('button', { class: 'contrast-nav__btn', type: 'button', 'aria-label': t('contrast.prev') })
+    prev.textContent = '‹'
+    const next = el('button', { class: 'contrast-nav__btn', type: 'button', 'aria-label': t('contrast.next') })
+    next.textContent = '›'
+    prev.disabled = g.nodes.length < 2
+    next.disabled = g.nodes.length < 2
+    prev.addEventListener('click', () => { idx = (idx - 1 + g.nodes.length) % g.nodes.length; go() })
+    next.addEventListener('click', () => { idx = (idx + 1) % g.nodes.length; go() })
+
+    const findBtn = el('button', { class: 'contrast-nav__find', type: 'button' })
+    findBtn.textContent = t('contrast.find')
+    findBtn.addEventListener('click', go)
+
+    nav.append(prev, pos, next, findBtn, feedback)
+  }
+
+  item.append(nav)
+  return item
 }
 
 function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitle) {
@@ -1242,6 +1528,10 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
     if (isActive) mountCustomEditor().then(() => customView?.requestMeasure())
   }
 
+  // Restore an already-active report panel on popup open, without stealing focus
+  // (the popup opens on the Scan tab, so the Tools panel may be hidden).
+  if (tool.type === 'report' && isActive) openReport(tool, tabId, toggle, { focus: false })
+
   toggle.addEventListener('click', async () => {
     const nowActive = !activeIds.has(tool.id)
 
@@ -1261,6 +1551,11 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
         customView.requestMeasure()
         customView.focus()
       }
+      // Report tools (Colors → Contrast) slide the tools list left to show a
+      // detail panel built from a page-side collection pass.
+      if (tool.type === 'report') {
+        await openReport(tool, tabId, toggle)
+      }
     } else {
       activeIds.delete(tool.id)
       toggle.classList.remove('tool-toggle--on')
@@ -1271,6 +1566,10 @@ function buildToolRow(tool, isActive, tabId, activeIds, stateKey, refreshSubtitl
         if (tool.type === 'css')    await removeCSS(tabId, tool.css)
         else if (tool.type === 'js') await executeFunc(tabId, tool.remove)
         else if (tool.type === 'custom') await removeCSS(tabId, null, '__checkfox_custom')
+      }
+      // Slide the report panel away and return focus to this toggle.
+      if (tool.type === 'report') {
+        closeReport(toggle)
       }
       // Leaving fullscreen if the editor was maximised when toggled off.
       if (tool.type === 'custom') {
