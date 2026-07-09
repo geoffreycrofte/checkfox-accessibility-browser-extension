@@ -223,6 +223,42 @@ export function runCustomChecks() {
     ))
   }
 
+  // ── checkfox-svg-name-or-hide ─────────────────────────────────────────────
+  // RAWeb/RGAA 1.1 / 1.2 / 1.3 — an inline <svg> that draws something is either
+  // informative (needs role="img" + an accessible name → 1.1/1.3) or decorative
+  // (must be removed from the a11y tree with aria-hidden/hidden → 1.2). The author
+  // has to make that call. axe-core's svg-img-alt already covers the FIRST branch:
+  // any svg-namespace element carrying role="img"/graphics-* with no name is
+  // flagged by it. The gap it leaves — and what we fill here — is the svg that has
+  // committed to NEITHER branch: it renders graphics, exposes them to AT, yet has
+  // no role, no name and is not hidden. Reported 'incomplete' because only a human
+  // knows whether the graphic conveys information. To avoid overlapping axe we skip
+  // any svg that already declares role="img"/graphics-*/presentation/none (or holds
+  // a descendant that does), that already has a name, or that is hidden from AT.
+  const SVG_DRAWABLE = 'path, circle, rect, ellipse, line, polygon, polyline, use, image, text'
+  const SVG_HANDLED_ROLES = ['img', 'graphics-document', 'graphics-symbol', 'presentation', 'none']
+  const ambiguousSvgs = [...document.querySelectorAll('svg')].filter(el => {
+    if (el.ownerSVGElement) return false                         // nested svg — judged via its outermost root
+    const role = (el.getAttribute('role') || '').trim().toLowerCase()
+    if (SVG_HANDLED_ROLES.includes(role)) return false           // author already declared intent (or axe's territory)
+    if (el.querySelector('[role="img"], [role="graphics-symbol"], [role="graphics-document"]')) return false // axe flags the inner node
+    if (svgHasAccessibleName(el)) return false                   // named → treated as informative, out of scope
+    if (el.closest('[aria-hidden="true"], [hidden]')) return false // already ignored by AT (decorative decision made)
+    if (!el.querySelector(SVG_DRAWABLE)) return false            // nothing rendered → nothing to describe
+    return isSvgVisible(el)
+  }).slice(0, 25)
+
+  if (ambiguousSvgs.length > 0) {
+    incomplete.push(rule(
+      'checkfox-svg-name-or-hide',
+      'serious',
+      'Inline SVG exposed to assistive technologies with no accessible name — verify it is named if informative, or hidden if decorative',
+      HELP.nonTextContent,
+      ['wcag111'],
+      ambiguousSvgs.map(el => nodeInfo(el, 'If this SVG conveys information, give it role="img" and an accessible name (aria-label / aria-labelledby, or a <title> child) — and make sure that name is relevant (RGAA 1.3). If it is purely decorative, remove it from the accessibility tree with aria-hidden="true" or the hidden attribute (RGAA 1.2)')),
+    ))
+  }
+
   // ── checkfox-focus-not-visible ────────────────────────────────────────────
   // RAWeb/RGAA 10.7 — focus must stay visible. axe-core has no rule for this.
   // We scan author stylesheets for :focus rules that suppress the outline with
@@ -486,6 +522,31 @@ export function runCustomChecks() {
   }
 
   return { violations, incomplete }
+}
+
+// True if an <svg> is actually painted. Unlike isRendered(), this avoids
+// offsetParent — an HTMLElement-only property that is undefined on SVG elements
+// and would read as "rendered" even inside a display:none ancestor. getClientRects
+// is empty both for hidden subtrees and in layout-less engines (jsdom), so the
+// check is correct in the browser and inert in tests.
+function isSvgVisible(el) {
+  if (!el.isConnected) return false
+  const cs = getComputedStyle(el)
+  if (cs.display === 'none' || cs.visibility === 'hidden' || cs.visibility === 'collapse') return false
+  if (parseFloat(cs.opacity) === 0) return false
+  return (el.getClientRects ? el.getClientRects().length : 0) > 0
+}
+
+// True if an <svg> exposes an accessible name to assistive technologies: an
+// aria-label / aria-labelledby, a title *attribute*, or a non-empty <title>
+// child (the SVG-native naming mechanism, which must be a direct child to name
+// the root). Used by checkfox-svg-name-or-hide to skip already-named graphics.
+function svgHasAccessibleName(el) {
+  if (el.getAttribute('aria-label')?.trim()) return true
+  if (el.getAttribute('aria-labelledby')?.trim()) return true
+  if (el.getAttribute('title')?.trim()) return true
+  const title = el.querySelector(':scope > title')
+  return !!(title && title.textContent.trim())
 }
 
 // True if `el` is enclosed by a <fieldset> carrying a non-empty <legend>, or by

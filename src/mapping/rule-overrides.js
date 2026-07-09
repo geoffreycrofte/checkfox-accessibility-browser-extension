@@ -60,6 +60,7 @@ export const RULE_CRITERIA = {
   'checkfox-media-no-controls': both(['4.11']),
   'checkfox-video-description': both(['4.1']),
   'checkfox-graphic-alt':       both(['1.1', '1.2']),
+  'checkfox-svg-name-or-hide':  both(['1.1', '1.2', '1.3']),   // inline SVG: name it (1.1/1.3) or hide it (1.2)
 
   // ── Topic 5 — Tables ─────────────────────────────────────────────────────────
   'td-headers-attr':         both(['5.6', '5.7']),
