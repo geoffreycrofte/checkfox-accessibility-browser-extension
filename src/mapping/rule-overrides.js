@@ -7,6 +7,11 @@
 // files in docs/). both() is used for all entries since the two referentials
 // are currently identical. If they diverge in a future version, replace the
 // relevant both() calls with explicit { rgaa: [...], raweb: [...] } objects.
+//
+// Reconciled against the official RAWeb "contrôle simplifié" axe→criterion table.
+// Where we knowingly differ from it (ARIA validity → 7.1, lists → 9.3, and the
+// deliberately narrowed link/label rules), the reasons are recorded in
+// docs/axe-criteria-mapping.md — read it before "fixing" one of those entries.
 
 import { classifyLabelInName } from './classify-target.js'
 
@@ -37,10 +42,10 @@ export const RULE_CRITERIA = {
   'role-img-alt':            both(['1.1', '1.2']),
   'svg-img-alt':             both(['1.1', '1.2']),
   'image-redundant-alt':     both(['1.2']),
-  'area-alt':                both(['1.1', '6.1', '6.2']),
+  'area-alt':                both(['1.1', '1.2']),
 
   // ── Topic 2 — Frames ─────────────────────────────────────────────────────────
-  'frame-title':             both(['2.1', '2.2']),
+  'frame-title':             both(['2.1']),
   'frame-title-unique':      both(['2.1']),
 
   // ── Topic 3 — Colours ────────────────────────────────────────────────────────
@@ -50,7 +55,7 @@ export const RULE_CRITERIA = {
 
   // ── Topic 4 — Multimedia ─────────────────────────────────────────────────────
   'no-autoplay-audio':       both(['4.10']),
-  'video-caption':           both(['4.3', '4.4']),
+  'video-caption':           both(['4.3']),
   'frame-focusable-content': both(['4.11', '4.12']),
   'scrollable-region-focusable': both(['4.11', '4.12']),
   'server-side-image-map':   both(['4.11', '4.12']),
@@ -63,11 +68,13 @@ export const RULE_CRITERIA = {
   'checkfox-svg-name-or-hide':  both(['1.1', '1.2', '1.3']),   // inline SVG: name it (1.1/1.3) or hide it (1.2)
 
   // ── Topic 5 — Tables ─────────────────────────────────────────────────────────
-  'td-headers-attr':         both(['5.6', '5.7']),
-  'th-has-data-cells':       both(['5.4', '5.5']),
+  // The header↔cell *association technique* is 5.7. 5.4–5.6 cover captions and
+  // header relevance, which axe cannot judge. See docs/axe-criteria-mapping.md.
+  'td-headers-attr':         both(['5.7']),
+  'th-has-data-cells':       both(['5.7']),
+  'td-has-header':           both(['5.7']),
+  'scope-attr-valid':        both(['5.7']),
   'table-fake-caption':      both(['5.1', '5.2']),
-  'td-has-header':           both(['5.6', '5.7']),
-  'scope-attr-valid':        both(['5.6', '5.7']),
   'table-duplicate-name':    both(['5.1', '5.2']),
   'empty-table-header':      both(['5.4', '5.5']),
 
@@ -86,8 +93,7 @@ export const RULE_CRITERIA = {
   'aria-conditional-attr':   both(['7.1']),
   'aria-deprecated-role':    both(['7.1']),
   'aria-dialog-name':        both(['7.1']),
-  'aria-hidden-body':        both(['7.1']),
-  'aria-hidden-focus':       both(['7.3']),
+  // NB: aria-hidden-body / aria-hidden-focus map to 10.8, see Topic 10 below.
   'aria-meter-name':         both(['7.1']),
   'aria-progressbar-name':   both(['7.1']),
   'aria-prohibited-attr':    both(['7.1']),
@@ -104,25 +110,25 @@ export const RULE_CRITERIA = {
   'aria-valid-attr-value':   both(['7.1']),
   'focus-order-semantics':   both(['7.3']),
   'presentation-role-conflict': both(['7.1']),
-  'blink':                   both(['13.1']),
-  'marquee':                 both(['13.1']),
 
   // ── Topic 8 — Mandatory elements ─────────────────────────────────────────────
   'document-title':          both(['8.5', '8.6']),
   'duplicate-id-aria':       both(['8.2']),
-  'duplicate-id-active':     both(['8.1', '8.2']),
-  'duplicate-id':            both(['8.1', '8.2']),
-  'html-has-lang':           both(['8.3', '8.4']),
-  'html-lang-valid':         both(['8.3', '8.4']),
+  // Duplicate IDs are a source-validity failure (8.2). 8.1 is doctype presence.
+  'duplicate-id-active':     both(['8.2']),
+  'duplicate-id':            both(['8.2']),
+  // 8.3 = a default language is *declared*; 8.4 = that language code is *valid*.
+  // Each axe rule checks exactly one of the two — don't fan out to both.
+  'html-has-lang':           both(['8.3']),
+  'html-lang-valid':         both(['8.4']),
   'html-xml-lang-mismatch':  both(['8.3', '8.4']),
-  'valid-lang':              both(['8.7', '8.8']),
+  'valid-lang':              both(['8.8']),
   'checkfox-deprecated-presentational': both(['8.9']),
   // CheckFox custom checks added after this map was last synced (validate).
   'checkfox-doctype-missing': both(['8.1']),
   'checkfox-duplicate-id':    both(['8.2']),
 
   // ── Topic 9 — Information structure ──────────────────────────────────────────
-  'bypass':                  both(['9.1', '12.6', '12.7']),
   'definition-list':         both(['9.3']),
   'dlitem':                  both(['9.3']),
   'empty-heading':           both(['9.1']),
@@ -133,6 +139,10 @@ export const RULE_CRITERIA = {
   'page-has-heading-one':    both(['9.1']),
 
   // ── Topic 10 — Presentation ──────────────────────────────────────────────────
+  // aria-hidden is a hidden-content concern, not a script/ARIA-compatibility one:
+  // both rules describe content wrongly removed from (or left in) the a11y tree.
+  'aria-hidden-body':        both(['10.8']),
+  'aria-hidden-focus':       both(['10.8']),
   'avoid-inline-spacing':    both(['10.12']),
   'meta-viewport':           both(['10.4']),
   'meta-viewport-large':     both(['10.4']),
@@ -149,11 +159,11 @@ export const RULE_CRITERIA = {
   'button-name':             both(['11.9']),
   'form-field-multiple-labels': both(['11.2']),
   'input-button-name':       both(['11.9']),
-  'label':                   both(['11.1', '11.2']),
+  'label':                   both(['11.1']),
   // Label-in-Name (WCAG 2.5.3) routes per element: link 6.1 / form field 11.2 /
   // button 11.9. See src/mapping/classify-target.js and docs/element-routed-criteria.md.
   'label-content-name-mismatch': byTarget(['6.1', '11.2', '11.9'], classifyLabelInName),
-  'label-title-only':        both(['11.1', '11.2']),
+  'label-title-only':        both(['11.1']),
   // CheckFox custom check added after this map was last synced (validate).
   'checkfox-fieldset-missing': both(['11.5', '11.6']),
   'select-name':             both(['11.1']),
@@ -163,24 +173,38 @@ export const RULE_CRITERIA = {
 
   // ── Topic 12 — Navigation ────────────────────────────────────────────────────
   'accesskeys':              both(['12.10']),
+  // axe's `bypass` only verifies a skip link / landmark / heading exists to jump
+  // past the header — that is 12.7 alone, not the heading-hierarchy (9.1) or
+  // landmark-completeness (12.6) criteria.
+  'bypass':                  both(['12.7']),
   'landmark-banner-is-top-level':      both(['12.6']),
   'landmark-complementary-is-top-level': both(['12.6']),
   'landmark-contentinfo-is-top-level': both(['12.6']),
   'landmark-main-is-top-level':        both(['12.6']),
   'landmark-no-duplicate-banner':      both(['12.6']),
   'landmark-no-duplicate-contentinfo': both(['12.6']),
-  'landmark-no-duplicate-main':        both(['12.6']),
+  // Landmark *coverage* — "is every region of the page inside a landmark?" and
+  // "is there exactly one main?" — is a document-structure question (9.2), not a
+  // navigation-mechanism one (12.6). Aligned with the official RAWeb simplified
+  // control. The landmark-*-is-top-level / no-duplicate-banner rules above stay
+  // on 12.6: those are about the navigation landmarks themselves.
+  'landmark-no-duplicate-main':        both(['9.2']),
+  'region':                  both(['9.2']),
   'landmark-one-main':       both(['12.6']),
   'landmark-unique':         both(['12.6']),
   'nested-interactive':      both(['12.9']),
-  'region':                  both(['12.6']),
   'skip-link':               both(['12.7']),
   'tabindex':                both(['12.8']),
 
   // ── Topic 13 — Consultation ──────────────────────────────────────────────────
   'css-orientation-lock':    both(['13.9']),
-  'meta-refresh':            both(['13.1', '13.8']),
-  'meta-refresh-no-exceptions': both(['13.1', '13.8']),
+  // meta-refresh = a time limit the user cannot control → 13.1 (time limits),
+  // not 13.8 (moving/blinking content).
+  'meta-refresh':            both(['13.1']),
+  'meta-refresh-no-exceptions': both(['13.1']),
+  // <blink> / <marquee> are moving-content controls → 13.8, not time limits.
+  'blink':                   both(['13.8']),
+  'marquee':                 both(['13.8']),
   'checkfox-motion-uncontrolled': both(['13.8']),   // infinite CSS animation w/o pause control (WCAG 2.2.2)
   'checkfox-new-window-link': both(['13.2']),
   'checkfox-download-document': both(['13.3']),

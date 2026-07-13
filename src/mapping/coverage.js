@@ -162,9 +162,11 @@ assert('list → rgaa is exactly [9.3]', JSON.stringify(listViolation.criteria.r
 assert('list → raweb is [9.3] (RAWeb topic 9 covers structure)', JSON.stringify(listViolation.criteria.raweb) === '["9.3"]')
 assert('list → wcag includes 1.3.1', listViolation.criteria.wcag.includes('1.3.1'))
 
+// `label` checks a label *exists* (11.1); whether it is *relevant* (11.2) is a
+// manual test. See docs/axe-criteria-mapping.md.
 const labelViolation = enrichViolation({ ruleId: 'label', impact: 'critical', wcagTags: ['wcag412', 'wcag2a'], nodes: [] })
-assert('label → rgaa is [11.1, 11.2]', JSON.stringify(labelViolation.criteria.rgaa) === '["11.1","11.2"]')
-assert('label → raweb is [11.1, 11.2] (RAWeb topic 11 covers forms)', JSON.stringify(labelViolation.criteria.raweb) === '["11.1","11.2"]')
+assert('label → rgaa is exactly [11.1]', JSON.stringify(labelViolation.criteria.rgaa) === '["11.1"]')
+assert('label → raweb is [11.1] (RAWeb topic 11 covers forms)', JSON.stringify(labelViolation.criteria.raweb) === '["11.1"]')
 
 const colorViolation = enrichViolation({ ruleId: 'color-contrast', impact: 'serious', wcagTags: ['wcag143', 'wcag2aa'], nodes: [] })
 assert('color-contrast → rgaa is [3.2]', JSON.stringify(colorViolation.criteria.rgaa) === '["3.2"]')
