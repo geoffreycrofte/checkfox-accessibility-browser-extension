@@ -210,6 +210,37 @@ const lcnmFallback = enrichViolation({
 assert('label-in-name → unknown node falls back to full domain',
   JSON.stringify(lcnmFallback.nodes[0].criteria.rgaa) === '["6.1","11.2","11.9"]')
 
+// ── 5c. Checks adapted from pour engine ──────────────────────────────────────
+// These eight rules were ported from pour-engine (MIT) — see
+// docs/pour-engine-rule-port.md. Each one is narrowed to a single criterion on
+// purpose; assert that narrowing here so a later "fix" to the WCAG-SC fallback
+// cannot silently widen them back out.
+console.log('\n[5c] Checks adapted from pour engine')
+
+const POUR_PORT_EXPECTED = [
+  // [ruleId, wcagTags, expected RGAA/RAWeb criteria, why it is narrowed]
+  ['checkfox-focus-obscured',        ['wcag2411'], ['10.7'],  'WCAG 2.2 SC with no RGAA/RAWeb criterion — parked on visible focus'],
+  ['checkfox-auth-obstruction',      ['wcag338'],  ['11.13'], 'WCAG 2.2 SC with no RGAA/RAWeb criterion — parked on input purpose'],
+  ['checkfox-text-spacing',          ['wcag1412'], ['10.12'], 'same criterion as avoid-inline-spacing'],
+  ['checkfox-visual-order',          ['wcag243'],  ['12.8'],  '2.4.3 fans to 10.3/12.7/12.8 — this is tab-vs-reading order only'],
+  ['checkfox-error-message-linkage', ['wcag331'],  ['11.10'], 'error identification, not labelling'],
+  ['checkfox-on-input-change',       ['wcag322'],  ['7.4'],   'uncontrolled change of context'],
+  ['checkfox-link-text-generic',     ['wcag244'],  ['6.1'],   '2.4.4 fans to 6.1/6.2 — this is intitulé explicite only'],
+  ['checkfox-placeholder-contrast',  ['wcag143'],  ['3.2'],   '1.4.3 fans to 3.2/10.5 — this is text contrast only'],
+]
+
+for (const [ruleId, wcagTags, expected, why] of POUR_PORT_EXPECTED) {
+  const v = enrichViolation({ ruleId, impact: 'serious', wcagTags, nodes: [] })
+  const got = JSON.stringify(v.criteria.rgaa)
+  assert(`${ruleId} → rgaa is ${JSON.stringify(expected)} (${why})`, got === JSON.stringify(expected), got)
+  assert(`${ruleId} → raweb matches rgaa`, JSON.stringify(v.criteria.raweb) === got, JSON.stringify(v.criteria.raweb))
+}
+
+// Every ported rule must be present in the override table: without an entry the
+// generic WCAG-SC fallback would fan each one out across a whole topic.
+const missingPortOverrides = POUR_PORT_EXPECTED.map(([id]) => id).filter(id => !(id in RULE_CRITERIA))
+assert('all 8 ported rules have an explicit override entry', missingPortOverrides.length === 0, missingPortOverrides.join(', '))
+
 console.log(`\n  Enriched sample:\n${JSON.stringify(enriched, null, 4)}`)
 
 // ── Summary ───────────────────────────────────────────────────────────────────

@@ -6,6 +6,62 @@ and the project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-16
+
+### Added
+- **Eight new custom checks**, ported and adapted from the
+  [pour.dev engine](https://github.com/pourdev/pour-engine) (see
+  [Contributions](./README.md#contributions)). All are advisory by design — they
+  return **review** verdicts (two also raise hard **fails**), because each one
+  detects a *pattern* that an auditor still has to judge in context:
+
+  | Rule | WCAG | RGAA/RAWeb | Verdict |
+  |---|---|---|---|
+  | `checkfox-focus-obscured` | 2.4.11 | 10.7 | review |
+  | `checkfox-text-spacing` | 1.4.12 | 10.12 | review |
+  | `checkfox-visual-order` | 2.4.3 | 12.8 | review |
+  | `checkfox-auth-obstruction` | 3.3.8 | 11.13 | fail + review |
+  | `checkfox-error-message-linkage` | 3.3.1 | 11.10 | review |
+  | `checkfox-on-input-change` | 3.2.2 | 7.4 | review |
+  | `checkfox-link-text-generic` | 2.4.4 | 6.1 | review |
+  | `checkfox-placeholder-contrast` | 1.4.3 | 3.2 | fail + review |
+
+- **Placeholder contrast (3.2)** — reads `getComputedStyle(el, '::placeholder')`,
+  which axe-core never inspects. This is net-new coverage rather than a port: the
+  upstream `control-contrast` rule's placeholder branch is unreachable dead code,
+  and its value-text branch duplicates axe's own `color-contrast`.
+- **Generic link text is bilingual** — the upstream word list was English-only.
+  French phrasings (*en savoir plus*, *lire la suite*, *cliquez ici*, *voir plus*,
+  *découvrir*, …) are included, and name normalisation folds accents and trailing
+  glyphs so "En savoir plus →" still matches.
+
+- **axe-core licence bundled in the build** — `split-and-zip.js` now copies
+  `node_modules/axe-core/LICENSE` into each per-browser folder as
+  `third-party/axe-core-LICENSE.txt`, so the MPL-2.0 text ships with the binary as
+  §3.2 requires (axe-core is redistributed verbatim inside the content script). A
+  missing `node_modules/` warns instead of failing the build. The `THIRD_PARTY`
+  list at the top of the script is the place to register any future bundled
+  dependency.
+
+### Changed
+- **axe-core floor raised to `^4.11.4`** (was `^4.10.0`) — matches the version
+  already resolved in `package-lock.json` and therefore the one actually shipping
+  in the bundle.
+- **Text-spacing findings are deduplicated** — one design-system component
+  repeated across a card grid used to return 30 identical rows for what is a
+  single CSS fix. Findings are now grouped by tag + class signature, capped at 3
+  rows per shape, with the real repeat count carried in the message.
+- **Explicit criterion mapping for all eight rules** in `rule-overrides.js` —
+  without overrides, 2.4.4 would fan out to 6.1 + 6.2 and 2.4.3 to
+  10.3 + 12.7 + 12.8. The narrowings are locked by 17 new assertions in
+  `coverage.js` §5c.
+- **WCAG 2.2-only criteria are parked, and flagged as such** — RGAA 4.1.2 and
+  RAWeb 1.1 both track WCAG 2.1, so 2.4.11 and 3.3.8 have no criterion of their
+  own. They map to 10.7 and 11.13 respectively so findings still surface where an
+  auditor will look, with an inline note (mirrored beside `target-size`, which
+  currently maps to nothing) that these must move when RAWeb 1.2 / RGAA 5.0
+  introduce dedicated criteria.
+
 ## [0.5.0] - 2026-07-09
 
 ### Added
@@ -207,7 +263,9 @@ Initial working extension.
 - **Side panel mode** and **EN/FR interface language**, both toggleable in
   Settings.
 
-[Unreleased]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/checkfox/checkfox-browser-extension/compare/v0.1.0...v0.2.0

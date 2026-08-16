@@ -13,7 +13,46 @@ const HELP = {
   parsing:       'https://www.w3.org/WAI/WCAG21/Understanding/parsing.html',
   nonTextContrast: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html',
   reflow:        'https://www.w3.org/WAI/WCAG21/Understanding/reflow.html',
+  // Checks adapted from pour engine — see the block at the end of runCustomChecks().
+  focusNotObscured: 'https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html',
+  focusOrder:    'https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html',
+  errorIdentification: 'https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html',
+  onInput:       'https://www.w3.org/WAI/WCAG22/Understanding/on-input.html',
+  linkPurpose:   'https://www.w3.org/WAI/WCAG22/Understanding/link-purpose-in-context.html',
+  accessibleAuth: 'https://www.w3.org/WAI/WCAG22/Understanding/accessible-authentication-minimum.html',
+  contrastMinimum: 'https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html',
+  textSpacing:   'https://www.w3.org/WAI/WCAG22/Understanding/text-spacing.html',
 }
+
+// Natively focusable elements plus anything made focusable with tabindex.
+const FOCUSABLE_SELECTOR = 'a[href], button, input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])'
+
+// Credential fields SC 3.3.8 is about.
+const AUTH_FIELD_SELECTOR = 'input[type="password"], input[autocomplete~="current-password"], input[autocomplete~="new-password"], input[autocomplete~="one-time-code"]'
+
+// Inline-handler bodies that navigate or submit, i.e. change the context.
+const CONTEXT_CHANGE_RE = /\blocation\s*(=|\.\s*(href|assign|replace|reload))|\.(submit|requestSubmit)\s*\(|window\.open\s*\(/
+
+// Link names that carry no destination on their own (RAWeb/RGAA 6.1). Bilingual:
+// French sites are a first-class target, and "en savoir plus" is as common as
+// "read more". Compared after normalizeLinkName(), so accents and punctuation
+// are already stripped ("En savoir plus →" → "en savoir plus").
+const GENERIC_LINK_TEXT = new Set([
+  // English
+  'read more', 'read more about this', 'more', 'much more', 'learn more',
+  'click here', 'click', 'click this', 'tap here', 'press here',
+  'here', 'this', 'this link', 'link', 'this page', 'go', 'go here',
+  'more info', 'more information', 'further information',
+  'see more', 'view more', 'show more', 'find out more', 'discover more',
+  'continue', 'continue reading', 'keep reading', 'full story', 'full article',
+  'details', 'see details', 'view details', 'more details',
+  // French
+  'en savoir plus', 'savoir plus', 'lire la suite', 'lire plus', 'plus',
+  'cliquez ici', 'cliquer ici', 'clique ici', 'ici', 'ce lien', 'lien',
+  'cette page', 'voir plus', 'en voir plus', 'afficher plus', 'afficher', 'voir', 'voir le détail',
+  'voir les détails', 'plus de détails', 'plus d\'informations', 'plus d\'infos',
+  'en savoir davantage', 'découvrir', 'découvrez', 'continuer', 'suite',
+])
 
 // Bilingual (EN/FR) hint that a link warns it opens a new window or tab.
 const NEW_WINDOW_HINT = /new window|new tab|opens? (in|a new)|external link|nouvelle fenêtre|nouvel onglet|ouvre dans|s'ouvre dans|nouvelle page/i
@@ -521,6 +560,284 @@ export function runCustomChecks() {
     ))
   }
 
+  // ══ Checks adapted from pour engine (MIT) ═════════════════════════════════
+  // The eight blocks below are ported from https://github.com/pourdev/pour-engine
+  // by David Yarham (MIT), a clean-room WCAG 2.2 engine. Each closes an
+  // automation gap that neither axe-core 4.9.1 nor our own checks covered.
+  // Adapted to our procedural shape, our violations/incomplete split and our
+  // budget caps; French phrasings added where the original was English-only.
+  // See docs/pour-engine-rule-port.md for the per-rule diff and attribution.
+
+  // ── checkfox-focus-obscured ───────────────────────────────────────────────
+  // WCAG 2.2 SC 2.4.11 (Focus Not Obscured). No axe rule exists. A sticky or
+  // fixed opaque panel can entirely cover a control that already sits in the
+  // viewport — the browser will not scroll it into view, so focus lands
+  // invisibly. Always 'incomplete': whether it actually breaks 2.4.11 depends
+  // on the scroll position when focus arrives, which a static scan can't know.
+  const focusObscured = []
+  if (!hasOpenModal()) {
+    const overlayVerdict = new Map()
+    const focusables = [...document.querySelectorAll(FOCUSABLE_SELECTOR)].slice(0, 1500)
+    for (const el of focusables) {
+      if (focusObscured.length >= 25) break
+      const blocker = obscuringOverlayFor(el, overlayVerdict)
+      if (blocker) focusObscured.push({ el, edge: blocker.edge })
+    }
+  }
+
+  if (focusObscured.length > 0) {
+    incomplete.push(rule(
+      'checkfox-focus-obscured',
+      'serious',
+      'Focusable element sits under an opaque fixed panel — verify its focus indicator is never fully hidden',
+      HELP.focusNotObscured,
+      ['wcag2411'],
+      focusObscured.map(({ el, edge }) => nodeInfo(el, `This element is currently underneath an opaque fixed or sticky panel. The browser does not scroll an element that is already in the viewport but merely covered, so focus can land invisibly. Tab through the page and verify the focus indicator is never entirely hidden. Fix: reserve room with scroll-padding-${edge || 'bottom'} on the scrolling container, or move focus clear of the panel while it is up`)),
+    ))
+  }
+
+  // ── checkfox-visual-order ─────────────────────────────────────────────────
+  // RAWeb/RGAA 12.8 (WCAG 2.4.3). Flexbox/grid `order` or `*-reverse` can lay
+  // controls out in a different sequence from the DOM, so Tab jumps against
+  // the visual layout. axe has no equivalent. Reported once per diverging
+  // container, on its first control.
+  const visualOrderGroups = collectVisualOrderDivergence()
+
+  if (visualOrderGroups.length > 0) {
+    incomplete.push(rule(
+      'checkfox-visual-order',
+      'moderate',
+      'CSS reordering makes the tab sequence diverge from the visual order',
+      HELP.focusOrder,
+      ['wcag243'],
+      visualOrderGroups.map(({ el, count, cause }) => nodeInfo(el, `Keyboard focus moves through these ${count} controls in DOM order, but ${cause} arranges them differently on screen, so Tab jumps against the visual layout. Verify the focus sequence still preserves meaning and operability. Fix: reorder the source to match the visual order rather than reordering with CSS`)),
+    ))
+  }
+
+  // ── checkfox-error-message-linkage ────────────────────────────────────────
+  // RAWeb/RGAA 11.10 (WCAG 3.3.1). A field marked aria-invalid must have its
+  // error described in text and programmatically linked. axe checks neither.
+  const errorLinkage = []
+  for (const el of document.querySelectorAll('[aria-invalid="true"], [aria-invalid="spelling"], [aria-invalid="grammar"], [aria-errormessage]')) {
+    if (errorLinkage.length >= 30) break
+    const state = el.getAttribute('aria-invalid')
+    const invalid = !!state && state !== 'false' && state !== 'undefined'
+
+    if (el.hasAttribute('aria-errormessage')) {
+      if (!invalid) continue // the reference is inert until the field is invalid
+      const targets = idRefTargets(el, 'aria-errormessage')
+      if (targets.some(hasReadableText)) continue
+      errorLinkage.push({
+        el,
+        reason: targets.length
+          ? 'this field is marked invalid, but the element its aria-errormessage points at is empty or hidden'
+          : 'this field is marked invalid, but its aria-errormessage points at nothing',
+      })
+      continue
+    }
+
+    if (!invalid) continue
+    if (idRefTargets(el, 'aria-describedby').some(hasReadableText)) continue
+    errorLinkage.push({ el, reason: 'this field is marked invalid, but no error text is programmatically linked to it' })
+  }
+
+  if (errorLinkage.length > 0) {
+    incomplete.push(rule(
+      'checkfox-error-message-linkage',
+      'serious',
+      'Field marked invalid has no error text linked to it',
+      HELP.errorIdentification,
+      ['wcag331'],
+      errorLinkage.map(({ el, reason }) => nodeInfo(el, `WCAG 3.3.1 requires the error to be described to the user in text: ${reason}. Screen readers follow the reference and find nothing. Verify a visible message exists and associate it with aria-describedby or aria-errormessage so it is announced with the field`)),
+    ))
+  }
+
+  // ── checkfox-on-input-change ──────────────────────────────────────────────
+  // RAWeb/RGAA 7.4 (WCAG 3.2.2 / 3.2.1). An inline onchange/oninput/onfocus
+  // handler that navigates or submits changes context without the user asking.
+  // Only inline handlers are statically visible; framework listeners are not,
+  // so this is a floor, not a ceiling. axe has no equivalent.
+  const contextChangers = []
+  for (const el of document.querySelectorAll('[onchange], [oninput], [onfocus]')) {
+    if (contextChangers.length >= 30) break
+    const onfocus = el.getAttribute('onfocus')
+    if (onfocus && CONTEXT_CHANGE_RE.test(onfocus)) {
+      contextChangers.push({
+        el,
+        reason: 'Focusing this element appears to navigate or submit: its onfocus handler reaches for location, submit or window.open. A change of context on focus alone fails WCAG 3.2.1',
+        fix: 'Trigger navigation from activation (click / Enter), never from focus',
+      })
+      continue
+    }
+    const onchange = el.getAttribute('onchange') || el.getAttribute('oninput')
+    if (onchange && CONTEXT_CHANGE_RE.test(onchange)) {
+      contextChangers.push({
+        el,
+        reason: 'Changing this control appears to navigate or submit: its onchange handler reaches for location, submit or window.open. WCAG 3.2.2 allows that only when users are warned beforehand',
+        fix: 'Describe the behaviour before the control, or navigate from an explicit "Go" button instead of the change event',
+      })
+    }
+  }
+
+  if (contextChangers.length > 0) {
+    incomplete.push(rule(
+      'checkfox-on-input-change',
+      'serious',
+      'Inline handler changes context on focus or on input',
+      HELP.onInput,
+      ['wcag322'],
+      contextChangers.map(({ el, reason, fix }) => nodeInfo(el, `${reason}. Verify what the handler actually does. Fix: ${fix}`)),
+    ))
+  }
+
+  // ── checkfox-link-text-generic ────────────────────────────────────────────
+  // RAWeb/RGAA 6.1 (WCAG 2.4.4). "Read more" / "En savoir plus" links whose
+  // accessible name says nothing about the destination. 2.4.4 lets the
+  // surrounding context supply the purpose, so this is always 'incomplete' —
+  // a human confirms. axe's link-name only checks a name *exists*.
+  const genericLinks = []
+  for (const el of document.querySelectorAll('a[href], [role="link"]')) {
+    if (genericLinks.length >= 50) break
+    const name = accessibleText(el)
+    if (!name) continue // nameless links are axe's link-name, not ours
+    if (GENERIC_LINK_TEXT.has(normalizeLinkName(name))) genericLinks.push({ el, name })
+  }
+
+  if (genericLinks.length > 0) {
+    incomplete.push(rule(
+      'checkfox-link-text-generic',
+      'moderate',
+      'Link text does not describe where the link goes',
+      HELP.linkPurpose,
+      ['wcag244'],
+      genericLinks.map(({ el, name }) => nodeInfo(el, `"${name}" does not say where this link goes. WCAG 2.4.4 lets the surrounding text supply the destination, so this passes only if the context a screen reader reaches (the same sentence, list item, table cell, or the heading of the card it sits in) makes it obvious. Verify it does, and remember that anyone browsing a list of the page's links sees this name on its own. Fix: put the destination in the link text itself, or extend the name with aria-label keeping the visible words at the start`)),
+    ))
+  }
+
+  // ── checkfox-auth-obstruction ─────────────────────────────────────────────
+  // WCAG 2.2 SC 3.3.8 (Accessible Authentication). Note 2 of the SC names two
+  // separate mechanisms: password-manager support, and copy and paste.
+  // Blocking paste removes one; autocomplete="off" discourages the other.
+  // Both at once is a failure; either alone is a review, because a password
+  // manager still fills a paste-blocked field and the page may offer an
+  // alternative (passkey, federated sign-in) that a DOM scan cannot see.
+  const authBlocked = []
+  const authReview = []
+  for (const el of document.querySelectorAll(AUTH_FIELD_SELECTOR)) {
+    const blocking = ['onpaste', 'ondrop'].find(attr => /return\s+false|preventDefault/.test(el.getAttribute(attr) || ''))
+    const autocompleteOff = (el.getAttribute('autocomplete') || '').trim().toLowerCase() === 'off'
+    const action = blocking === 'onpaste' ? 'pasting' : 'dropping'
+    if (blocking && autocompleteOff) {
+      authBlocked.push({ el, action })
+    } else if (blocking) {
+      authReview.push({ el, reason: `this field blocks ${action}, which removes copy and paste, one of the two mechanisms SC 3.3.8 names. A password manager fills the field directly and is unaffected, so this only fails if nothing else here helps` })
+    } else if (autocompleteOff) {
+      authReview.push({ el, reason: 'this field sets autocomplete="off", discouraging password managers. Browsers often fill anyway' })
+    }
+  }
+
+  if (authBlocked.length > 0) {
+    violations.push(rule(
+      'checkfox-auth-obstruction',
+      'serious',
+      'Authentication field blocks both paste and password managers',
+      HELP.accessibleAuth,
+      ['wcag338'],
+      authBlocked.map(({ el, action }) => nodeInfo(el, `This authentication field blocks ${action} AND sets autocomplete="off", so both of the mechanisms WCAG 3.3.8 names are obstructed at once: copy and paste, and password-manager entry. What is left is typing the credential from memory. Remove the paste/drop blocking and drop autocomplete="off"`)),
+    ))
+  }
+
+  if (authReview.length > 0) {
+    incomplete.push(rule(
+      'checkfox-auth-obstruction',
+      'moderate',
+      'Authentication field obstructs one of the mechanisms SC 3.3.8 relies on',
+      HELP.accessibleAuth,
+      ['wcag338'],
+      authReview.map(({ el, reason }) => nodeInfo(el, `${reason}. Verify a password manager can complete this login without retyping, or that the page offers another way in (a passkey, a federated sign-in, an emailed link)`)),
+    ))
+  }
+
+  // ── checkfox-placeholder-contrast ─────────────────────────────────────────
+  // RAWeb/RGAA 3.2 (WCAG 1.4.3). axe's color-contrast already measures the
+  // *value* text of form controls but never reads ::placeholder, which is
+  // routinely styled far too light. Measured, not guessed: a definite
+  // violation when the field background is known, review when it is not.
+  const placeholderFails = []
+  const placeholderUnknown = []
+  for (const el of document.querySelectorAll('input[placeholder], textarea[placeholder]')) {
+    if (placeholderFails.length + placeholderUnknown.length >= 30) break
+    if (!(el.getAttribute('placeholder') || '').trim()) continue
+    if (el.disabled || el.closest('[aria-disabled="true"]')) continue
+    if (!isRendered(el)) continue
+
+    const cs = getComputedStyle(el)
+    const ph = parseCssColor(getComputedStyle(el, '::placeholder').color)
+    if (!ph || ph.a === 0) continue // no distinct placeholder colour to measure
+
+    const own = parseCssColor(cs.backgroundColor)
+    let bg
+    if (own && own.a >= 1) {
+      bg = own
+    } else if (cs.backgroundImage && cs.backgroundImage !== 'none') {
+      placeholderUnknown.push({ el, reason: 'this field is see-through or painted with a background image or gradient, so its real placeholder contrast depends on the pixels behind it' })
+      continue
+    } else {
+      const behind = effectiveBackground(el.parentElement || el)
+      bg = own && own.a > 0 ? compositeOver(own, behind) : behind
+    }
+
+    // WCAG "large text": >= 24px, or >= 18.66px (14pt) when bold.
+    const size = parseFloat(cs.fontSize) || 16
+    const weight = parseInt(cs.fontWeight, 10) || 400
+    const required = size >= 24 || (size >= 18.66 && weight >= 700) ? 3 : 4.5
+    const ratio = contrastRatio(compositeOver(ph, bg), bg)
+    if (ratio < required) placeholderFails.push({ el, ratio: Math.round(ratio * 100) / 100, required })
+  }
+
+  if (placeholderFails.length > 0) {
+    violations.push(rule(
+      'checkfox-placeholder-contrast',
+      'serious',
+      'Placeholder text does not reach the minimum contrast ratio',
+      HELP.contrastMinimum,
+      ['wcag143'],
+      placeholderFails.map(({ el, ratio, required }) => nodeInfo(el, `This field's placeholder text has ${ratio}:1 contrast against the field background, below the ${required}:1 minimum required by WCAG 1.4.3. Darken the ::placeholder colour until it reaches ${required}:1. Note that placeholder text is not a substitute for a label in any case`)),
+    ))
+  }
+
+  if (placeholderUnknown.length > 0) {
+    incomplete.push(rule(
+      'checkfox-placeholder-contrast',
+      'moderate',
+      'Placeholder contrast could not be measured — verify it by eye',
+      HELP.contrastMinimum,
+      ['wcag143'],
+      placeholderUnknown.map(({ el, reason }) => nodeInfo(el, `${reason}. Check the placeholder reaches 4.5:1 (or 3:1 for large text) against what is actually behind it`)),
+    ))
+  }
+
+  // ── checkfox-text-spacing ─────────────────────────────────────────────────
+  // RAWeb/RGAA 10.12 (WCAG 1.4.12). Active probe, in the spirit of the
+  // criterion's own test procedure: apply the SC's exact spacing overrides and
+  // look for containers that start clipping. axe's avoid-inline-spacing only
+  // catches !important inline spacing declarations, not clipped boxes.
+  //
+  // Runs LAST, and synchronously: the probe stylesheet is injected and removed
+  // inside a single tick, so no other check (and no axe run) can observe it.
+  const textSpacing = probeTextSpacing()
+
+  if (textSpacing.length > 0) {
+    incomplete.push(rule(
+      'checkfox-text-spacing',
+      'serious',
+      'Container overflows under the WCAG text-spacing overrides',
+      HELP.textSpacing,
+      ['wcag1412'],
+      textSpacing.map(({ el, repeats }) => nodeInfo(el, `With the WCAG 1.4.12 text-spacing overrides applied (line-height 1.5, letter-spacing 0.12em, word-spacing 0.16em, paragraph spacing 2em) this container overflows instead of growing. If that hides text rather than empty trailing spacing, users who need wider spacing lose content.${repeats > 1 ? ` The same component clips ${repeats} times on this page, so one CSS fix covers them all (up to 3 examples are listed).` : ''} Verify with the overrides applied; to be safe, let the container grow (min-height instead of height, and avoid overflow:hidden on text)`)),
+    ))
+  }
+
   return { violations, incomplete }
 }
 
@@ -772,4 +1089,240 @@ function contrastRatio(c1, c2) {
   const hi = Math.max(l1, l2)
   const lo = Math.min(l1, l2)
   return (hi + 0.05) / (lo + 0.05)
+}
+
+// ═══ Helpers for the checks adapted from pour engine (MIT, David Yarham) ══════
+// https://github.com/pourdev/pour-engine — see docs/pour-engine-rule-port.md.
+
+// True if a visible modal dialog is open. SC 2.4.11 is not meaningfully
+// testable underneath one: everything behind the dialog is legitimately
+// covered, so checkfox-focus-obscured abstains entirely.
+function hasOpenModal() {
+  for (const el of document.querySelectorAll('dialog[open], [role="dialog"], [role="alertdialog"], [aria-modal="true"]')) {
+    const r = el.getBoundingClientRect()
+    if (r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden') return true
+  }
+  return false
+}
+
+// The fixed/sticky opaque panel currently covering `el` in full, or null.
+// Returns { edge } where edge is 'top' | 'bottom' | null, naming which viewport
+// edge the panel is pinned to, so the message can suggest the right
+// scroll-padding. `verdicts` memoises the "is this layer an opaque panel?"
+// answer across elements — the same header is hit over and over.
+function obscuringOverlayFor(el, verdicts) {
+  const win = document.defaultView
+  if (!win || el.matches(':disabled')) return null
+  const rect = el.getBoundingClientRect()
+  if (!rect.width || !rect.height) return null
+  // Off-screen elements are not "obscured", they are simply not shown yet.
+  if (rect.bottom < 0 || rect.right < 0 || rect.top > win.innerHeight || rect.left > win.innerWidth) return null
+
+  const x = Math.min(Math.max(rect.left + rect.width / 2, 0), win.innerWidth - 1)
+  const y = Math.min(Math.max(rect.top + rect.height / 2, 0), win.innerHeight - 1)
+  const stack = document.elementsFromPoint(x, y)
+  const index = stack.indexOf(el)
+  if (index <= 0) return null // topmost at its own centre, or not hit-testable
+
+  const isOpaquePanel = layer => {
+    if (verdicts.has(layer)) return verdicts.get(layer)
+    let verdict = false
+    const cs = getComputedStyle(layer)
+    if (cs.position === 'fixed' || cs.position === 'sticky') {
+      const parts = cs.backgroundColor.match(/rgba?\(([^)]+)\)/)?.[1]?.split(',')
+      const alpha = parts && parts[3] !== undefined ? parseFloat(parts[3]) : 1
+      const r = layer.getBoundingClientRect()
+      verdict = alpha >= 0.9 && r.width >= 40 && r.height >= 24
+    }
+    verdicts.set(layer, verdict)
+    return verdict
+  }
+
+  const blocker = stack.slice(0, index).find(layer => {
+    if (layer.contains(el) || el.contains(layer)) return false
+    if (!isOpaquePanel(layer)) return false
+    const p = layer.getBoundingClientRect()
+    // Fully covered, not merely overlapped: a partly-visible indicator passes.
+    return rect.left >= p.left && rect.right <= p.right && rect.top >= p.top && rect.bottom <= p.bottom
+  })
+  if (!blocker) return null
+
+  const p = blocker.getBoundingClientRect()
+  const edge = p.top <= 1 && p.bottom < win.innerHeight ? 'top'
+    : p.bottom >= win.innerHeight - 1 ? 'bottom'
+    : null
+
+  // scroll-padding on the scroller is what the Understanding document cites as
+  // sufficient: it keeps the browser's own scroll-into-view clear of the panel.
+  if (edge) {
+    const scroller = document.scrollingElement || document.documentElement
+    const cs = getComputedStyle(scroller)
+    const value = edge === 'top' ? cs.scrollPaddingTop : cs.scrollPaddingBottom
+    const px = value && value.endsWith('px') ? parseFloat(value) : 0
+    if (px >= p.height - 1) return null
+  }
+
+  return { edge }
+}
+
+// Flex/grid containers whose children are laid out in a different sequence from
+// the DOM (via `order` or a `*-reverse` direction), which makes Tab jump against
+// the visual order. Returns one entry per diverging container, anchored on its
+// first control: { el, count, cause }.
+function collectVisualOrderDivergence() {
+  const FLEXGRID = /^(inline-)?(flex|grid)$/
+  const groups = new Map()
+  const candidates = [...document.querySelectorAll(FOCUSABLE_SELECTOR)].slice(0, 1500)
+  for (const el of candidates) {
+    if (el.disabled || el.tabIndex < 0) continue
+    const parent = el.parentElement
+    if (!parent) continue
+    if (!groups.has(parent)) groups.set(parent, [])
+    groups.get(parent).push(el)
+  }
+
+  const found = []
+  for (const [parent, children] of groups) {
+    if (found.length >= 20) break
+    if (children.length < 2) continue
+    const pcs = getComputedStyle(parent)
+    if (!FLEXGRID.test(pcs.display)) continue
+
+    const entries = []
+    for (const el of children) {
+      const cs = getComputedStyle(el)
+      // Out-of-flow children are positioned by the author, not by the container.
+      if (cs.position === 'absolute' || cs.position === 'fixed') continue
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) entries.push({ el, order: cs.order, rect })
+    }
+    if (entries.length < 2) continue
+
+    const reversed = /-reverse$/.test(pcs.flexDirection)
+    const usesOrder = entries.some(e => e.order !== '0')
+    if (!reversed && !usesOrder) continue
+
+    const visual = visualSequence(entries, pcs.direction === 'rtl')
+    if (!visual.some((e, i) => e !== entries[i])) continue
+
+    found.push({
+      el: entries[0].el,
+      count: entries.length,
+      cause: reversed ? `flex-direction: ${pcs.flexDirection}` : 'CSS order',
+    })
+  }
+  return found
+}
+
+// Visual reading order of sibling rects: group into rows by vertical overlap,
+// rows top to bottom, then within a row along the inline direction.
+function visualSequence(entries, rightToLeft) {
+  const rows = []
+  for (const entry of [...entries].sort((a, b) => a.rect.top - b.rect.top)) {
+    const row = rows.find(candidates => {
+      const first = candidates[0].rect
+      const overlap = Math.min(first.bottom, entry.rect.bottom) - Math.max(first.top, entry.rect.top)
+      return overlap > Math.min(first.height, entry.rect.height) / 2
+    })
+    if (row) row.push(entry)
+    else rows.push([entry])
+  }
+  return rows.flatMap(row => row.sort((a, b) =>
+    rightToLeft ? b.rect.right - a.rect.right : a.rect.left - b.rect.left))
+}
+
+// Elements referenced by a space-separated IDREF list attribute, resolved
+// against the element's root so it works inside a shadow root too.
+function idRefTargets(el, attr) {
+  const root = el.getRootNode()
+  return (el.getAttribute(attr) || '').trim().split(/\s+/).filter(Boolean)
+    .map(id => (root.getElementById ? root.getElementById(id) : document.getElementById(id)))
+    .filter(Boolean)
+}
+
+// True if a referenced element actually exposes text a screen reader would read.
+function hasReadableText(el) {
+  if (!isRendered(el)) return false
+  return !!(el.textContent.trim() || accessibleText(el))
+}
+
+// Lowercased, accents folded, punctuation and arrows dropped, spaces collapsed,
+// so "Read more →", "Click here!", "READ  MORE" and "En savoir plus…" all
+// compare equal against GENERIC_LINK_TEXT.
+function normalizeLinkName(name) {
+  return name
+    .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Apply the WCAG 1.4.12 text-spacing overrides and return the containers that
+// only start clipping once they are applied. Injection and removal happen in a
+// single synchronous tick, so the page never paints the probed state and no
+// other check can observe it.
+//
+// Reported as review, never as a failure: the scroll-size delta proves the box
+// OVERFLOWS under the override, not that glyphs are lost. The 0.12em
+// letter-spacing lands after the final glyph too, so a snug box can overflow by
+// trailing empty spacing that hides no ink. Proving ink loss would need
+// per-glyph rects against the clip box; until then it is a human call.
+function probeTextSpacing() {
+  const OVERRIDE = `* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }`
+  const clipped = el => el.scrollWidth > el.clientWidth + 2 || el.scrollHeight > el.clientHeight + 2
+
+  const all = document.body ? document.body.getElementsByTagName('*') : []
+  // Past this scale the per-element getComputedStyle cost dwarfs the yield, and
+  // huge documents are mostly plain flowing text, the least likely to clip.
+  if (all.length > 20000) return []
+
+  // Only containers that hide overflow and hold text can lose content.
+  // Collapsed containers (an accordion panel at height 0) show nothing, so
+  // there is no visible text for the override to clip.
+  const candidates = []
+  const scanLimit = Math.min(all.length, 6000)
+  for (let i = 0; i < scanLimit && candidates.length < 400; i++) {
+    const el = all[i]
+    if (!el.textContent || !el.textContent.trim()) continue
+    const cs = getComputedStyle(el)
+    if (!/(hidden|clip)/.test(`${cs.overflowX} ${cs.overflowY}`)) continue
+    if (el.clientWidth > 4 && el.clientHeight > 4) candidates.push(el)
+  }
+  if (candidates.length === 0) return []
+
+  // Content already truncated by design (an ellipsis clamp) is judged
+  // as-authored, so only NEW clipping counts.
+  const before = candidates.map(clipped)
+  const probe = document.createElement('style')
+  probe.setAttribute('data-checkfox-probe', 'text-spacing')
+  probe.textContent = OVERRIDE
+  document.documentElement.appendChild(probe)
+  let after
+  try {
+    void document.documentElement.offsetHeight // force the reflow we measure
+    after = candidates.map(clipped)
+  } finally {
+    probe.remove()
+  }
+
+  const hits = candidates.filter((el, i) => !before[i] && after[i])
+
+  // One clipped design-system component repeated across a card grid is ONE CSS
+  // fix, so listing all 30 instances is noise, not evidence (measured on a real
+  // news homepage: 30 identical `div.ds-card` rows). Group by tag + classes and
+  // keep at most 3 examples per shape, carrying the true count in the message.
+  const bySignature = new Map()
+  for (const el of hits) {
+    const signature = `${el.tagName}.${[...el.classList].join('.')}`
+    if (!bySignature.has(signature)) bySignature.set(signature, [])
+    bySignature.get(signature).push(el)
+  }
+
+  const reported = []
+  for (const group of bySignature.values()) {
+    for (const el of group.slice(0, 3)) reported.push({ el, repeats: group.length })
+    if (reported.length >= 30) break
+  }
+  return reported.slice(0, 30)
 }

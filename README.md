@@ -21,6 +21,15 @@ audits smarter.
   opening new windows (13.2), obsolete presentational elements (8.9),
   downloadable documents (13.3), canvas/embedded images (1.1.7–1.1.8) and focus
   visibility (10.7).
+- **Pattern checks that need an auditor's eye** — eight advisory checks adapted
+  from the [pour.dev engine](https://github.com/pourdev/pour-engine) return
+  *review* verdicts (two also raise hard fails) for things automation can spot but
+  not conclude: focus obscured by sticky UI (10.7), text-spacing overrides
+  clipping content (10.12), CSS `order` diverging from tab order (12.8), auth
+  flows blocking paste/autofill (11.13), error text not linked to its field
+  (11.10), inline `onchange` causing a change of context (7.4), generic link text
+  in EN *and* FR (6.1), and `::placeholder` contrast (3.2) — the one thing
+  axe-core never measures.
 - **Criteria mapping** — every violation is mapped to WCAG 2.2, RGAA 4.1.2 and
   RAWeb 1.1 criterion IDs via a self-contained, auditable mapping layer.
 - **Visual audit tools** — 30+ toggleable in-page overlays that highlight
@@ -98,6 +107,10 @@ npm run build              # builds → dist/chrome/ and dist/firefox/ (each wit
 > doesn't understand (so neither store shows an "unrecognized key" warning) and
 > rewrite the Firefox `background` to `scripts` (Firefox ships MV3
 > `service_worker` disabled by default, still true at 140).
+> Each folder also gets `third-party/axe-core-LICENSE.txt` — axe-core ships
+> verbatim inside the content script and MPL-2.0 §3.2 requires its licence to
+> travel with the build. If `node_modules/` is absent the build warns rather than
+> failing, so never package a store upload from a tree you haven't `npm install`ed.
 > Zipping uses the system `zip` utility (standard on macOS/Linux); if it's
 > missing, the unpacked folders are still produced.
 
@@ -126,6 +139,22 @@ Open the extension → **Settings** → paste your `cfx_live_…` API key → **
 Connect**. The base URL defaults to `https://checkfox.eu`. Your key lives in
 *User Settings › Integrations* on checkfox.eu, and **Disconnect** removes it
 again at any time.
+
+---
+
+## Contributions, Inspiration & Sources
+
+| Who | Contribution |
+| --- | --- |
+| **Geoffrey Crofte** — [@geoffreycrofte](https://github.com/geoffreycrofte) | Author of [CheckFox.eu](https://checkfox.eu) and of this extension. |
+| **David Yarham** — [@davidyarham](https://github.com/davidyarham) | Author of the [pour.dev engine](https://github.com/pourdev/pour-engine), whose rules inspired 7 of the 8 checks added to the CheckFox checklist in 0.6.0. |
+| **Deque Systems** — [@dequelabs](https://github.com/dequelabs) | [axe-core](https://github.com/dequelabs/axe-core) does the DOM scanning that every CheckFox report is built on. Its pre-built bundle ships inside the extension's content script, unmodified, under the [MPL-2.0](https://github.com/dequelabs/axe-core/blob/develop/LICENSE). |
+
+The pour.dev-derived checks are adaptations, not copies: verdicts were re-tuned
+for manual auditing, findings deduplicated by component shape, generic link-text
+detection made bilingual (EN/FR), and every rule mapped explicitly to RGAA 4.1.2 /
+RAWeb 1.1 criteria. The eighth check, `checkfox-placeholder-contrast`, is
+CheckFox's own. See [`CHANGELOG.md`](./CHANGELOG.md#060---2026-08-16) for details.
 
 ---
 

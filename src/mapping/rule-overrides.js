@@ -52,6 +52,9 @@ export const RULE_CRITERIA = {
   'color-contrast':          both(['3.2']),
   'color-contrast-enhanced': both(['3.2']),
   'checkfox-nontext-contrast': both(['3.3']),   // UI-component / boundary contrast (WCAG 1.4.11)
+  // axe's color-contrast measures a control's *value* text but never reads
+  // ::placeholder, so placeholder contrast is ours alone. Same criterion (3.2).
+  'checkfox-placeholder-contrast': both(['3.2']),
 
   // ── Topic 4 — Multimedia ─────────────────────────────────────────────────────
   'no-autoplay-audio':       both(['4.10']),
@@ -84,6 +87,9 @@ export const RULE_CRITERIA = {
   // needs human judgement and axe can't verify). WCAG 2.4.4 fans to both; narrow it.
   'link-name':               both(['6.2']),
   'identical-links-same-purpose': both(['6.1', '6.2']),
+  // Generic link text ("Read more", "En savoir plus") is about the intitulé being
+  // *explicit* → 6.1, not about a name merely existing (6.2, covered by link-name).
+  'checkfox-link-text-generic': both(['6.1']),
 
   // ── Topic 7 — Scripts ────────────────────────────────────────────────────────
   'aria-allowed-attr':       both(['7.1']),
@@ -110,6 +116,9 @@ export const RULE_CRITERIA = {
   'aria-valid-attr-value':   both(['7.1']),
   'focus-order-semantics':   both(['7.3']),
   'presentation-role-conflict': both(['7.1']),
+  // Inline onchange/onfocus that navigates or submits = an uncontrolled change
+  // of context (WCAG 3.2.2 / 3.2.1), which is exactly criterion 7.4.
+  'checkfox-on-input-change': both(['7.4']),
 
   // ── Topic 8 — Mandatory elements ─────────────────────────────────────────────
   'document-title':          both(['8.5', '8.6']),
@@ -144,6 +153,9 @@ export const RULE_CRITERIA = {
   'aria-hidden-body':        both(['10.8']),
   'aria-hidden-focus':       both(['10.8']),
   'avoid-inline-spacing':    both(['10.12']),
+  // Same criterion, complementary evidence: axe flags !important inline spacing
+  // declarations; ours applies the SC's own overrides and looks for clipped boxes.
+  'checkfox-text-spacing':   both(['10.12']),
   'meta-viewport':           both(['10.4']),
   'meta-viewport-large':     both(['10.4']),
   'checkfox-focus-not-visible': both(['10.7']),
@@ -166,6 +178,9 @@ export const RULE_CRITERIA = {
   'label-title-only':        both(['11.1']),
   // CheckFox custom check added after this map was last synced (validate).
   'checkfox-fieldset-missing': both(['11.5', '11.6']),
+  // A field marked aria-invalid whose error text is not linked to it → 11.10
+  // (error identification), not 11.1/11.2 (labelling).
+  'checkfox-error-message-linkage': both(['11.10']),
   'select-name':             both(['11.1']),
   'summary-name':            both(['11.9']),
   'aria-input-field-name':   both(['11.1']),
@@ -195,6 +210,9 @@ export const RULE_CRITERIA = {
   'nested-interactive':      both(['12.9']),
   'skip-link':               both(['12.7']),
   'tabindex':                both(['12.8']),
+  // CSS `order` / `*-reverse` making Tab diverge from the visual layout is the
+  // same criterion as a positive tabindex: tab order vs reading order (12.8).
+  'checkfox-visual-order':   both(['12.8']),
 
   // ── Topic 13 — Consultation ──────────────────────────────────────────────────
   'css-orientation-lock':    both(['13.9']),
@@ -210,5 +228,17 @@ export const RULE_CRITERIA = {
   'checkfox-download-document': both(['13.3']),
 
   // ── No RGAA/RAWeb criterion yet (WCAG 2.2 additions) ─────────────────────────
+  // RGAA 4.2 and RAWeb 1.1 both track WCAG 2.1, so the SCs added in WCAG 2.2
+  // (2.4.11, 2.5.8, 3.3.8, …) have no criterion of their own yet. Rules below
+  // are parked on the nearest existing criterion so they still land somewhere an
+  // auditor will look, rather than disappearing from the referential view.
+  // Expect to revisit all of these when RAWeb 1.2 / RGAA 5.0 land: they should
+  // move to the dedicated criteria those versions are likely to introduce.
   'target-size':             both([]),
+  // 2.4.11 Focus Not Obscured: a focus indicator hidden behind a sticky panel is
+  // a visible-focus failure in practice, so 10.7 is a genuine fit, not a parking spot.
+  'checkfox-focus-obscured': both(['10.7']),
+  // 3.3.8 Accessible Authentication: parked on 11.13 (autocomplete / input
+  // purpose) because the rule's autocomplete="off" signal literally lives there.
+  'checkfox-auth-obstruction': both(['11.13']),
 }

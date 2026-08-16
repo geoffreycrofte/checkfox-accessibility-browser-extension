@@ -1,6 +1,6 @@
 {
   "name": "checkfox-browser-extension",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,7 @@
   "dependencies": {
     "@codemirror/lang-css": "^6.3.0",
     "@codemirror/theme-one-dark": "^6.1.2",
-    "axe-core": "^4.10.0",
+    "axe-core": "^4.11.4",
     "codemirror": "^6.0.1"
   },
   "devDependencies": {

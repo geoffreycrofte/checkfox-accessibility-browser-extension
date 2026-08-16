@@ -10,11 +10,33 @@
 
 import { resolve, join } from 'path'
 import { fileURLToPath } from 'url'
-import { readdirSync, cpSync, rmSync, writeFileSync, readFileSync } from 'fs'
+import { readdirSync, cpSync, rmSync, writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs'
 import { execFileSync } from 'child_process'
 
 const root = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const dist = resolve(root, 'dist')
+
+// Third-party code redistributed verbatim inside the built extension. axe-core is
+// MPL-2.0, whose §3.2 requires the licence text to travel with the binary — so the
+// bundled copy in the content script has to ship its LICENSE alongside it.
+const THIRD_PARTY = [
+  { name: 'axe-core', from: 'node_modules/axe-core/LICENSE', to: 'third-party/axe-core-LICENSE.txt' },
+]
+
+// Copy each dependency's licence into the target folder before it gets zipped.
+function copyThirdPartyLicenses(outDir) {
+  for (const { name, from, to } of THIRD_PARTY) {
+    const src = resolve(root, from)
+    if (!existsSync(src)) {
+      // Not fatal for a local build, but never ship a store upload without it.
+      console.warn(`[CheckFox] missing ${from} — ${name} licence NOT bundled. Run npm install before packaging a release.`)
+      continue
+    }
+    const dest = join(outDir, to)
+    mkdirSync(resolve(dest, '..'), { recursive: true })
+    cpSync(src, dest)
+  }
+}
 
 // Derive the Chrome and Firefox manifests from the canonical one.
 function manifestVariants() {
@@ -65,6 +87,8 @@ export function splitAndZip({ zip = true } = {}) {
 
     // Overwrite the copied canonical manifest with the browser-specific one.
     writeFileSync(join(outDir, 'manifest.json'), JSON.stringify(variants[target], null, 2) + '\n')
+
+    copyThirdPartyLicenses(outDir)
 
     if (!zip) continue
 
